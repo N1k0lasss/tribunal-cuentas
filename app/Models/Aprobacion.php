@@ -9,6 +9,8 @@ class Aprobacion extends Model
 {
     use HasFactory;
 
+    protected $table = 'aprobacions';
+
     protected $fillable = [
         'solicitud_id',
         'aprobado_por',
@@ -16,6 +18,10 @@ class Aprobacion extends Model
         'estado',
         'observacion',
         'fecha'
+    ];
+
+    protected $casts = [
+        'fecha' => 'date',
     ];
 
     public function solicitud()
@@ -26,7 +32,7 @@ class Aprobacion extends Model
 
     public function aprobador()
     {
-        return $this->belongsTo(Agente::class,'aprobado_por');
+        return $this->belongsTo(Agente::class, 'aprobado_por');
         // Una aprobacion pertenece a un agente
     }
 }

@@ -9,11 +9,17 @@ class Resolucion extends Model
 {
     use HasFactory;
 
+    protected $table = 'resolucions';
+
     protected $fillable = [
         'numero',
         'fecha_emision',
         'detalle',
         'solicitud_id'
+    ];
+
+    protected $casts = [
+        'fecha_emision' => 'date',
     ];
 
     public function solicitud()

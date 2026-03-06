@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Solicitud extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'agente_id',
         'tipo_solicitud_id',
@@ -20,7 +20,13 @@ class Solicitud extends Model
         'estado'
     ];
 
-     public function agente()
+    protected $casts = [
+        'fecha_solicitud' => 'date',
+        'fecha_inicio'    => 'date',
+        'fecha_fin'       => 'date',
+    ];
+
+    public function agente()
     {
         return $this->belongsTo(Agente::class);
         // Una solicitud pertenece a un agente

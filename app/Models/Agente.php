@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Agente extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'nombre',
         'apellido',
@@ -17,7 +18,12 @@ class Agente extends Model
         'area_id',
         'fecha_ingreso'
     ];
-     public function area()
+
+    protected $casts = [
+        'fecha_ingreso' => 'date',
+    ];
+
+    public function area()
     {
         return $this->belongsTo(Area::class);
         // Un agente pertenece a un area
@@ -26,18 +32,25 @@ class Agente extends Model
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);
-        // Un agente tiene muchas solicitudes
+        // Un agente puede tener muchas solicitudes
     }
 
     public function saldos()
     {
         return $this->hasMany(Saldo::class);
-        // Un agente tiene muchos saldos
+        // Un agente puede tener muchos saldos
     }
 
     public function documentos()
     {
         return $this->hasMany(Documento::class);
-        // Un agente tiene muchos documentos
+        // Un agente puede tener muchos documentos
+    }
+
+    public function aprobaciones()
+    {
+        return $this->hasMany(Aprobacion::class, 'aprobado_por');
+        // Un agente puede tener muchas aprobaciones
+        // Y un agente puede aprobar muchas solicitudes
     }
 } 
