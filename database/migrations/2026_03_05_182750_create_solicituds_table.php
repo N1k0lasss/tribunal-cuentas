@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('solicituds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('agente_id')
-            ->constrained()
-            ->cascadeOnDelete();
+                ->constrained()
+                ->cascadeOnDelete();
 
             $table->foreignId('tipo_solicitud_id')
-            ->constrained('tipo_solicituds');
+                ->constrained('tipo_solicituds');
 
             $table->date('fecha_solicitud');
 
@@ -31,14 +31,14 @@ return new class extends Migration
             $table->string('motivo')->nullable();
 
             $table->enum('estado', [
-            'pendiente',
-            'en_revision',
-            'aprobado',
-            'rechazado'
-            ])->default('pendiente');
-                $table->timestamps();
-            });
-        }
+                'pendiente',
+                'en_revision',
+                'aprobado',
+                'rechazado',
+                ])->default('pendiente');
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

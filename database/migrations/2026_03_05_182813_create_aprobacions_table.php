@@ -25,12 +25,14 @@ return new class extends Migration
                 'direccion'
             ]);
             $table->enum('estado', [
+                'pendiente',
                 'aprobado',
                 'rechazado'
-            ]);
-            $table->text('observacion')->nullable();
+            ])->default('pendiente');
 
+            $table->text('observacion')->nullable();
             $table->date('fecha');
+            
             $table->timestamps();
         });
     }
