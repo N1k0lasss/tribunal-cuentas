@@ -17,14 +17,17 @@ class Solicitud extends Model
         'fecha_fin',
         'dias_solicitados',
         'motivo',
-        'estado'
+        'estado',
     ];
 
-    protected $casts = [
-        'fecha_solicitud' => 'date',
-        'fecha_inicio'    => 'date',
-        'fecha_fin'       => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'fecha_solicitud' => 'date',
+            'fecha_inicio' => 'date',
+            'fecha_fin' => 'date',
+        ];
+    }
 
     public function agente()
     {

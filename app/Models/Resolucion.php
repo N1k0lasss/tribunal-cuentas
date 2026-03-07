@@ -15,12 +15,15 @@ class Resolucion extends Model
         'numero',
         'fecha_emision',
         'detalle',
-        'solicitud_id'
+        'solicitud_id',
     ];
 
-    protected $casts = [
-        'fecha_emision' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'fecha_emision' => 'date',
+        ];
+    }
 
     public function solicitud()
     {

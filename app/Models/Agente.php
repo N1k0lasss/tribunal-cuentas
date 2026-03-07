@@ -16,12 +16,15 @@ class Agente extends Model
         'cargo',
         'tipo_contrato',
         'area_id',
-        'fecha_ingreso'
+        'fecha_ingreso',
     ];
 
-    protected $casts = [
-        'fecha_ingreso' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'fecha_ingreso' => 'date',
+        ];
+    }
 
     public function area()
     {
@@ -53,4 +56,4 @@ class Agente extends Model
         // Un agente puede tener muchas aprobaciones
         // Y un agente puede aprobar muchas solicitudes
     }
-} 
+}

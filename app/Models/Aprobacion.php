@@ -17,12 +17,15 @@ class Aprobacion extends Model
         'etapa',
         'estado',
         'observacion',
-        'fecha'
+        'fecha',
     ];
 
-    protected $casts = [
-        'fecha' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'fecha' => 'date',
+        ];
+    }
 
     public function solicitud()
     {
