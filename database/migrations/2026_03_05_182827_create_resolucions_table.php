@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('resolucions', function (Blueprint $table) {
             $table->id();
-            $table->string('numero')->unique();
+            $table->string('numero', 50)->unique();
 
             $table->date('fecha_emision');
 
