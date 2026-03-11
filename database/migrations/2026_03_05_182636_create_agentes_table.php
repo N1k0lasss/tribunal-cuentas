@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('agentes', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('apellido');
+            $table->string('nombre', 50);
+            $table->string('apellido', 50);
 
-            $table->string('dni')->unique();
+            $table->string('dni', 10)->unique();
 
-            $table->string('cargo')->nullable();
-            $table->string('tipo_contrato')->nullable();
+            $table->string('cargo', 100)->nullable();
+            $table->string('tipo_contrato', 100)->nullable();
 
             $table->foreignId('area_id')
               ->constrained()

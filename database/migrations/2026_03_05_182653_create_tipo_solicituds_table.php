@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('tipo_solicituds', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('categoria')->nullable();
-            $table->string('articulo_legal')->nullable();
+            $table->string('categoria',50)->nullable();
+            $table->string('articulo_legal',50)->nullable();
             $table->integer('duracion_max_dias')->nullable();
             $table->boolean('requiere_adjunto')->default(false);
             $table->timestamps();

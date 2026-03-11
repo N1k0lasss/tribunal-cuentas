@@ -28,7 +28,7 @@ return new class extends Migration
 
             $table->integer('dias_solicitados');
 
-            $table->string('motivo')->nullable();
+            $table->string('motivo',100)->nullable();
 
             $table->enum('estado', [
                 'pendiente',

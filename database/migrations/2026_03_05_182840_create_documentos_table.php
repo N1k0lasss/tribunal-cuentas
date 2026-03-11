@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('documentos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_archivo');
+            $table->string('nombre_archivo', 100);
 
-            $table->string('ruta');
+            $table->string('ruta', 200);
 
-            $table->string('tipo_documento');
+            $table->string('tipo_documento', 50);
 
             $table->text('descripcion')->nullable();
 
