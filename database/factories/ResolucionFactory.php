@@ -1,0 +1,27 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Solicitud;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Resolucion>
+ */
+class ResolucionFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'numero' => $this->faker->unique()->bothify('RES-####-202?'),
+            'fecha_emision' => $this->faker->dateTimeBetween('-1 month', 'now')->format('Y-m-d'),
+            'detalle' => $this->faker->optional()->paragraph(),
+            'solicitud_id' => Solicitud::factory(),
+        ];
+    }
+}

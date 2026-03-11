@@ -1,4 +1,4 @@
-c<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('categoria',50)->nullable();
             $table->string('articulo_legal',50)->nullable();
-            $table->integer('duracion_max_dias')->nullable();
+            $table->integer('duracion_maxima_dias')->nullable();
             $table->boolean('requiere_adjunto')->default(false);
             $table->timestamps();
         });
