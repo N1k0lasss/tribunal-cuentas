@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Filament\Resources\TipoSolicituds;
+
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
+use App\Filament\Resources\TipoSolicituds\Pages\CreateTipoSolicitud;
+use App\Filament\Resources\TipoSolicituds\Pages\EditTipoSolicitud;
+use App\Filament\Resources\TipoSolicitudResource\Pages;
+use App\Models\TipoSolicitud;
+use Filament\Forms;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+
+class TipoSolicitudResource extends Resource
+{
+    protected static ?string $model = TipoSolicitud::class;
+
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
+
+    protected static ?string $navigationLabel = 'Tipos de Solicitud';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'Configuración';
+
+    protected static ?string $pluralModelLabel = 'Tipos de Solicitud';
+
+    protected static ?string $modelLabel = 'Tipo de Solicitud';
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextInput::make('nombre')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('categoria')
+                    ->label('Categoría')
+                    ->maxLength(255),
+                TextInput::make('articulo_legal')
+                    ->label('Artículo Legal')
+                    ->maxLength(255),
+                TextInput::make('duracion_max_dias')
+                    ->label('Duración Máxima (días)')
+                    ->numeric(),
+                Toggle::make('requiere_adjunto')
+                    ->label('Requiere Adjunto'),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('nombre')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('categoria')
+                    ->label('Categoría')
+                    ->sortable(),
+                TextColumn::make('articulo_legal')
+                    ->label('Artículo Legal'),
+                TextColumn::make('duracion_max_dias')
+                    ->label('Duración Máx. (días)')
+                    ->sortable(),
+                IconColumn::make('requiere_adjunto')
+                    ->label('Req. Adjunto')
+                    ->boolean(),
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListTipoSolicituds::route('/'),
+            'create' => CreateTipoSolicitud::route('/create'),
+            'edit' => EditTipoSolicitud::route('/{record}/edit'),
+        ];
+    }
+}

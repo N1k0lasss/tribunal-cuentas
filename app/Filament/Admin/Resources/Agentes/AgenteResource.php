@@ -20,7 +20,7 @@ class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | \BackedEnum | null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'apellido';
 
