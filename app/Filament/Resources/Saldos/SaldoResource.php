@@ -12,7 +12,7 @@ use Filament\Actions\DeleteBulkAction;
 use App\Filament\Resources\Saldos\Pages\ListSaldos;
 use App\Filament\Resources\Saldos\Pages\CreateSaldo;
 use App\Filament\Resources\Saldos\Pages\EditSaldo;
-use App\Filament\Resources\SaldoResource\Pages;
+use App\Filament\Resources\Saldos\Pages;
 use App\Models\Saldo;
 use Filament\Forms;
 use Filament\Resources\Resource;
