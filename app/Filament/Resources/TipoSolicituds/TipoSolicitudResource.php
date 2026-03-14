@@ -26,13 +26,13 @@ class TipoSolicitudResource extends Resource
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationLabel = 'Tipos de Solicitud';
+    protected static ?string $navigationLabel = 'Régimen Legal';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Configuración';
 
-    protected static ?string $pluralModelLabel = 'Tipos de Solicitud';
+    protected static ?string $pluralModelLabel = 'Régimenes Legales';
 
-    protected static ?string $modelLabel = 'Tipo de Solicitud';
+    protected static ?string $modelLabel = 'Régimen Legal';
 
     public static function form(Schema $schema): Schema
     {
@@ -47,7 +47,7 @@ class TipoSolicitudResource extends Resource
                 TextInput::make('articulo_legal')
                     ->label('Artículo Legal')
                     ->maxLength(255),
-                TextInput::make('duracion_max_dias')
+                TextInput::make('duracion_maxima_dias')
                     ->label('Duración Máxima (días)')
                     ->numeric(),
                 Toggle::make('requiere_adjunto')
@@ -67,7 +67,7 @@ class TipoSolicitudResource extends Resource
                     ->sortable(),
                 TextColumn::make('articulo_legal')
                     ->label('Artículo Legal'),
-                TextColumn::make('duracion_max_dias')
+                TextColumn::make('duracion_maxima_dias')
                     ->label('Duración Máx. (días)')
                     ->sortable(),
                 IconColumn::make('requiere_adjunto')

@@ -50,7 +50,7 @@ class SolicitudResource extends Resource
                     ->preload()
                     ->required(),
                 Select::make('tipo_solicitud_id')
-                    ->label('Tipo de Solicitud')
+                    ->label('Régimen Legal')
                     ->relationship('tipoSolicitud', 'nombre')
                     ->searchable()
                     ->preload()
@@ -125,7 +125,7 @@ class SolicitudResource extends Resource
                         'rechazada' => 'Rechazada',
                     ]),
                 SelectFilter::make('tipo_solicitud_id')
-                    ->label('Tipo de Solicitud')
+                    ->label('Régimen Legal')
                     ->relationship('tipoSolicitud', 'nombre'),
             ])
             ->recordActions([
