@@ -2,37 +2,33 @@
 
 namespace App\Filament\Resources\Aprobacions;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DatePicker;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Aprobacions\Pages\ListAprobacions;
 use App\Filament\Resources\Aprobacions\Pages\CreateAprobacion;
 use App\Filament\Resources\Aprobacions\Pages\EditAprobacion;
-use App\Filament\Resources\AprobacionResource\Pages;
+use App\Filament\Resources\Aprobacions\Pages\ListAprobacions;
 use App\Models\Aprobacion;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-check-badge';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 
@@ -60,8 +56,8 @@ class AprobacionResource extends Resource
                 Select::make('estado')
                     ->options([
                         'pendiente' => 'Pendiente',
-                        'aprobada' => 'Aprobada',
-                        'rechazada' => 'Rechazada',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
                     ])
                     ->default('pendiente')
                     ->required(),
@@ -87,11 +83,12 @@ class AprobacionResource extends Resource
                     ->sortable(),
                 TextColumn::make('etapa')
                     ->sortable(),
-                BadgeColumn::make('estado')
+                TextColumn::make('estado')
+                    ->badge()
                     ->colors([
                         'warning' => 'pendiente',
-                        'success' => 'aprobada',
-                        'danger' => 'rechazada',
+                        'success' => 'aprobado',
+                        'danger' => 'rechazado',
                     ]),
                 TextColumn::make('fecha')
                     ->date('d/m/Y')
@@ -101,8 +98,8 @@ class AprobacionResource extends Resource
                 SelectFilter::make('estado')
                     ->options([
                         'pendiente' => 'Pendiente',
-                        'aprobada' => 'Aprobada',
-                        'rechazada' => 'Rechazada',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
                     ]),
             ])
             ->recordActions([

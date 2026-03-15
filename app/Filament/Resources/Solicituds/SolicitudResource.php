@@ -2,37 +2,33 @@
 
 namespace App\Filament\Resources\Solicituds;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Solicituds\Pages\ListSolicituds;
 use App\Filament\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Resources\Solicituds\Pages\EditSolicitud;
-use App\Filament\Resources\SolicitudResource\Pages;
+use App\Filament\Resources\Solicituds\Pages\ListSolicituds;
 use App\Models\Solicitud;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class SolicitudResource extends Resource
 {
     protected static ?string $model = Solicitud::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Solicitudes';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Solicitudes';
 
@@ -75,8 +71,8 @@ class SolicitudResource extends Resource
                 Select::make('estado')
                     ->options([
                         'pendiente' => 'Pendiente',
-                        'aprobada' => 'Aprobada',
-                        'rechazada' => 'Rechazada',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
                     ])
                     ->default('pendiente')
                     ->required(),
@@ -110,19 +106,20 @@ class SolicitudResource extends Resource
                 TextColumn::make('dias_solicitados')
                     ->label('Días')
                     ->sortable(),
-                BadgeColumn::make('estado')
+                TextColumn::make('estado')
+                    ->badge()
                     ->colors([
                         'warning' => 'pendiente',
-                        'success' => 'aprobada',
-                        'danger' => 'rechazada',
+                        'success' => 'aprobado',
+                        'danger' => 'rechazado',
                     ]),
             ])
             ->filters([
                 SelectFilter::make('estado')
                     ->options([
                         'pendiente' => 'Pendiente',
-                        'aprobada' => 'Aprobada',
-                        'rechazada' => 'Rechazada',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
                     ]),
                 SelectFilter::make('tipo_solicitud_id')
                     ->label('Régimen Legal')
