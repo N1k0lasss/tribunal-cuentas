@@ -17,6 +17,14 @@ return new class extends Migration
             $table->string('categoria', 50)->nullable();
             $table->string('articulo_legal', 50)->nullable();
             $table->integer('duracion_maxima_dias')->nullable();
+            
+            // Nuevos campos del plan
+            $table->enum('unidad_medida', ['dias', 'horas'])->default('dias');
+            $table->enum('tipo_dias', ['corridos', 'habiles'])->nullable();
+            $table->integer('goce_sueldo_porcentaje')->default(100);
+            $table->boolean('requiere_intervencion_medica')->default(false);
+            $table->integer('limite_mensual_dias_horas')->nullable();
+            
             $table->boolean('requiere_adjunto')->default(false);
             $table->timestamps();
         });

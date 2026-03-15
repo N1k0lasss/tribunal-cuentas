@@ -31,6 +31,17 @@ class TipoSolicitudResource extends Resource
 
     protected static ?string $modelLabel = 'Régimen Legal';
 
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        // Check if Spatie permission is installed and user has method
+        if (method_exists($user, 'hasRole')) {
+            return $user->hasRole(['Super Admin', 'Admin']);
+        }
+        // Fallback for dev
+        return true;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

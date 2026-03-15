@@ -14,6 +14,8 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -45,38 +47,116 @@ class SolicitudResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
+                
+                Select::make('categoria')
+                    ->label('Categoría')
+                    ->options([
+                        'Receso' => 'Receso',
+                        'Salud y Maternidad' => 'Salud y Maternidad',
+                        'Extraordinaria' => 'Licencia Extraordinaria',
+                        'Justificación' => 'Justificación',
+                        'Franquicia' => 'Franquicia',
+                        'Falta/Tardanza' => 'Falta/Tardanza',
+                    ])
+                    ->live()
+                    ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null)),
+
                 Select::make('tipo_solicitud_id')
-                    ->label('Régimen Legal')
-                    ->relationship('tipoSolicitud', 'nombre')
-                    ->searchable()
-                    ->preload()
+                    ->label('Régimen Legal Específico')
+                    ->options(fn ($get) => \App\Models\TipoSolicitud::where('categoria', $get('categoria'))->pluck('nombre', 'id'))
+                    ->live()
                     ->required(),
+                    
                 DatePicker::make('fecha_solicitud')
                     ->label('Fecha de Solicitud')
+                    ->default(now())
                     ->required(),
+
+                // Fechas (Licencias por Días)
                 DatePicker::make('fecha_inicio')
-                    ->label('Fecha Inicio')
-                    ->required(),
+                    ->label('Fecha Inicio / Fecha de la Franquicia')
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($set, $get, $state) {
+                        $set('dias_solicitados', \App\Filament\Resources\Solicituds\SolicitudResource::calcularDias($get('tipo_solicitud_id'), $state, $get('fecha_fin')));
+                    }),
+                
                 DatePicker::make('fecha_fin')
                     ->label('Fecha Fin')
-                    ->required(),
+                    ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias')
+                    ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || !\App\Models\TipoSolicitud::find($get('tipo_solicitud_id')))
+                    ->live()
+                    ->afterStateUpdated(function ($set, $get, $state) {
+                         $set('dias_solicitados', \App\Filament\Resources\Solicituds\SolicitudResource::calcularDias($get('tipo_solicitud_id'), $get('fecha_inicio'), $state));
+                    }),
+
+                // Horas (Franquicias)
+                TimePicker::make('hora_inicio')
+                    ->label('Hora de Salida')
+                    ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
+                    ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'),
+                    
+                TimePicker::make('hora_fin')
+                    ->label('Hora de Regreso')
+                    ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
+                    ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'),
+
                 TextInput::make('dias_solicitados')
                     ->label('Días Solicitados')
                     ->numeric()
-                    ->required(),
-                Textarea::make('motivo')
-                    ->label('Motivo')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
+                    ->readOnly()
+                    ->helperText('Se calcula automáticamente según el régimen legal.')
+                    ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || !\App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))),
+                    
+                TextInput::make('motivo')
+                    ->label('Motivo / Observaciones')
+                    ->maxLength(100),
+
+                // Notice de Obligatoriedad de adjunto
+                Placeholder::make('requiere_adjunto_info')
+                    ->label('Atención')
+                    ->content('Este tipo de solicitud requiere subir documentación respaldatoria obligatoriamente.')
+                    ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->requiere_adjunto === true),
+                    
                 Select::make('estado')
                     ->options([
                         'pendiente' => 'Pendiente',
+                        'en_revision' => 'En Revisión (Reconocimiento Médico)',
                         'aprobado' => 'Aprobado',
                         'rechazado' => 'Rechazado',
                     ])
                     ->default('pendiente')
                     ->required(),
             ]);
+    }
+
+    public static function calcularDias($tipoId, $fechaInicio, $fechaFin)
+    {
+        if (!$tipoId || !$fechaInicio || !$fechaFin) {
+            return null;
+        }
+
+        $tipo = \App\Models\TipoSolicitud::find($tipoId);
+        
+        if (!$tipo || $tipo->unidad_medida !== 'dias') {
+            return null;
+        }
+
+        $inicio = \Carbon\Carbon::parse($fechaInicio);
+        $fin = \Carbon\Carbon::parse($fechaFin);
+
+        if ($fin->lessThan($inicio)) {
+            return 0; // Fechas invalidas
+        }
+
+        if ($tipo->tipo_dias === 'habiles') {
+            return $inicio->diffInDaysFiltered(function (\Carbon\Carbon $date) {
+                return !$date->isWeekend(); // Se puede mejorar para incluir feriados luego
+            }, $fin) + 1; // +1 porque diffInDaysFiltered no cuenta el primer día si es el mismo
+        }
+
+        // Días corridos
+        return $inicio->diffInDays($fin) + 1;
     }
 
     public static function table(Table $table): Table

@@ -23,10 +23,16 @@ return new class extends Migration
             $table->date('fecha_solicitud');
 
             $table->date('fecha_inicio');
+            
+            // fecha_fin pasa a ser nullable porque licencias de 1 día u horas no lo ocupan
+            $table->date('fecha_fin')->nullable();
 
-            $table->date('fecha_fin');
+            $table->integer('dias_solicitados')->nullable();
 
-            $table->integer('dias_solicitados');
+            // Nuevos campos para horas (franquicias)
+            $table->time('hora_inicio')->nullable();
+            $table->time('hora_fin')->nullable();
+            $table->decimal('horas_solicitadas', 4, 2)->nullable();
 
             $table->string('motivo', 100)->nullable();
 

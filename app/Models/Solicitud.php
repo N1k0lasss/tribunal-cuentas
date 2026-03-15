@@ -48,6 +48,9 @@ class Solicitud extends Model
         'fecha_inicio',
         'fecha_fin',
         'dias_solicitados',
+        'hora_inicio',
+        'hora_fin',
+        'horas_solicitadas',
         'motivo',
         'estado',
     ];

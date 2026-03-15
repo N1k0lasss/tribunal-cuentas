@@ -38,7 +38,12 @@ class TipoSolicitud extends Model
         'categoria',
         'articulo_legal',
         'duracion_maxima_dias',
-        'requiere_adjunto',
+        'unidad_medida',
+        'tipo_dias',
+        'goce_sueldo_porcentaje',
+        'requiere_intervencion_medica',
+        'limite_mensual_dias_horas',
+        'requiere_adjunto'
     ];
 
     /**
@@ -50,7 +55,10 @@ class TipoSolicitud extends Model
     {
         return [
             'requiere_adjunto' => 'boolean',
+            'requiere_intervencion_medica' => 'boolean',
             'duracion_maxima_dias' => 'integer',
+            'goce_sueldo_porcentaje' => 'integer',
+            'limite_mensual_dias_horas' => 'integer',
         ];
     }
 
