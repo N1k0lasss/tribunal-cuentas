@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Areas\Tables;
 
-use Dom\Text;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;

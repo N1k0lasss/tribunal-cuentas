@@ -2,27 +2,29 @@
 
 namespace App\Models;
 
+use Database\Factories\ResolucionFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $numero
- * @property \Illuminate\Support\Carbon $fecha_emision
+ * @property Carbon $fecha_emision
  * @property string|null $detalle
  * @property int $solicitud_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Solicitud $solicitud
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Documento> $documentos
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Solicitud $solicitud
+ * @property-read Collection<int, Documento> $documentos
  * @property-read int|null $documentos_count
  */
 class Resolucion extends Model
 {
-    /** @use HasFactory<\Database\Factories\ResolucionFactory> */
+    /** @use HasFactory<ResolucionFactory> */
     use HasFactory;
 
     protected $table = 'resolucions';
@@ -54,7 +56,7 @@ class Resolucion extends Model
     /**
      * Get the solicitud that owns the resolucion.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Solicitud, $this>
+     * @return BelongsTo<Solicitud, $this>
      */
     public function solicitud(): BelongsTo
     {
@@ -64,7 +66,7 @@ class Resolucion extends Model
     /**
      * Get the documentos for the resolucion.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Documento, $this>
+     * @return HasMany<Documento, $this>
      */
     public function documentos(): HasMany
     {

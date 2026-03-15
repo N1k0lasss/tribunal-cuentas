@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Database\Factories\DocumentoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -15,16 +17,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $solicitud_id
  * @property int|null $resolucion_id
  * @property int|null $agente_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Solicitud|null $solicitud
- * @property-read \App\Models\Resolucion|null $resolucion
- * @property-read \App\Models\Agente|null $agente
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Solicitud|null $solicitud
+ * @property-read Resolucion|null $resolucion
+ * @property-read Agente|null $agente
  */
 class Documento extends Model
 {
-    /** @use HasFactory<\Database\Factories\DocumentoFactory> */
+    /** @use HasFactory<DocumentoFactory> */
     use HasFactory;
 
     /**
@@ -39,13 +40,13 @@ class Documento extends Model
         'descripcion',
         'solicitud_id',
         'resolucion_id',
-        'agente_id'
+        'agente_id',
     ];
 
     /**
      * Get the solicitud that owns the documento.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Solicitud, $this>
+     * @return BelongsTo<Solicitud, $this>
      */
     public function solicitud(): BelongsTo
     {
@@ -55,7 +56,7 @@ class Documento extends Model
     /**
      * Get the resolucion that owns the documento.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Resolucion, $this>
+     * @return BelongsTo<Resolucion, $this>
      */
     public function resolucion(): BelongsTo
     {
@@ -65,7 +66,7 @@ class Documento extends Model
     /**
      * Get the agente that owns the documento.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Agente, $this>
+     * @return BelongsTo<Agente, $this>
      */
     public function agente(): BelongsTo
     {

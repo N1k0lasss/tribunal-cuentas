@@ -10,17 +10,17 @@ beforeEach(function () {
 
 it('can render Saldos list page', function () {
     $this->get(SaldoResource::getUrl('index'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Saldos create page', function () {
     $this->get(SaldoResource::getUrl('create'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Saldos edit page', function () {
     $saldo = Saldo::factory()->create();
 
     $this->get(SaldoResource::getUrl('edit', ['record' => $saldo]))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });

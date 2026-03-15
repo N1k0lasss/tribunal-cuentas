@@ -10,17 +10,17 @@ beforeEach(function () {
 
 it('can render Documentos list page', function () {
     $this->get(DocumentoResource::getUrl('index'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Documentos create page', function () {
     $this->get(DocumentoResource::getUrl('create'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Documentos edit page', function () {
     $documento = Documento::factory()->create();
 
     $this->get(DocumentoResource::getUrl('edit', ['record' => $documento]))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });

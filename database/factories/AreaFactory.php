@@ -28,7 +28,7 @@ class AreaFactory extends Factory
                 'Presidencia',
                 'Vocalía M',
                 'Vocalía R',
-                'Secretaría General'
+                'Secretaría General',
             ]),
         ];
     }

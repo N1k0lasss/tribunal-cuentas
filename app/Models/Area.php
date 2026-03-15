@@ -2,22 +2,24 @@
 
 namespace App\Models;
 
+use Database\Factories\AreaFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $nombre
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * 
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Agente> $agentes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Agente> $agentes
  * @property-read int|null $agentes_count
  */
 class Area extends Model
 {
-    /** @use HasFactory<\Database\Factories\AreaFactory> */
+    /** @use HasFactory<AreaFactory> */
     use HasFactory;
 
     /**
@@ -31,8 +33,8 @@ class Area extends Model
 
     /**
      * Get the agentes for the area.
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Agente, $this>
+     *
+     * @return HasMany<Agente, $this>
      */
     public function agentes(): HasMany
     {

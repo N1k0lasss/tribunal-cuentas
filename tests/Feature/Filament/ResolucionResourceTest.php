@@ -10,17 +10,17 @@ beforeEach(function () {
 
 it('can render Resolucions list page', function () {
     $this->get(ResolucionResource::getUrl('index'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Resolucions create page', function () {
     $this->get(ResolucionResource::getUrl('create'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Resolucions edit page', function () {
     $resolucion = Resolucion::factory()->create();
 
     $this->get(ResolucionResource::getUrl('edit', ['record' => $resolucion]))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });

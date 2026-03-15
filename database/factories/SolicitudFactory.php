@@ -3,12 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Agente;
+use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Solicitud>
+ * @extends Factory<Solicitud>
  */
 class SolicitudFactory extends Factory
 {
@@ -21,7 +21,7 @@ class SolicitudFactory extends Factory
     {
         $fechaInicio = $this->faker->dateTimeBetween('now', '+2 months');
         $diasSolicitados = $this->faker->numberBetween(1, 15);
-        $fechaFin = (clone $fechaInicio)->modify('+' . $diasSolicitados . ' days');
+        $fechaFin = (clone $fechaInicio)->modify('+'.$diasSolicitados.' days');
 
         return [
             'agente_id' => Agente::factory(),

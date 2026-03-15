@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Documentos\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\Documentos\DocumentoResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListDocumentos extends ListRecords

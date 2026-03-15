@@ -18,21 +18,21 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->foreignId('aprobado_por')
                 ->constrained('agentes');
-            $table->enum('etapa',  
-            [
-                'jefatura',
-                'secretaria',
-                'direccion'
-            ]);
+            $table->enum('etapa',
+                [
+                    'jefatura',
+                    'secretaria',
+                    'direccion',
+                ]);
             $table->enum('estado', [
                 'pendiente',
                 'aprobado',
-                'rechazado'
+                'rechazado',
             ])->default('pendiente');
 
             $table->text('observacion')->nullable();
             $table->date('fecha');
-            
+
             $table->timestamps();
         });
     }

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Solicituds\Pages;
 
 use App\Filament\Resources\Solicituds\SolicitudResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateSolicitud extends CreateRecord

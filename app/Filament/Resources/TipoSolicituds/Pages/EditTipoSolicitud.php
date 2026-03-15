@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\TipoSolicituds\Pages;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\TipoSolicituds\TipoSolicitudResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditTipoSolicitud extends EditRecord

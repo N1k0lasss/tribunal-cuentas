@@ -2,36 +2,38 @@
 
 namespace App\Models;
 
+use Database\Factories\SolicitudFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $agente_id
  * @property int $tipo_solicitud_id
- * @property \Illuminate\Support\Carbon $fecha_solicitud
- * @property \Illuminate\Support\Carbon $fecha_inicio
- * @property \Illuminate\Support\Carbon $fecha_fin
+ * @property Carbon $fecha_solicitud
+ * @property Carbon $fecha_inicio
+ * @property Carbon $fecha_fin
  * @property int $dias_solicitados
  * @property string|null $motivo
  * @property string $estado
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Agente $agente
- * @property-read \App\Models\TipoSolicitud $tipoSolicitud
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Aprobacion> $aprobaciones
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Agente $agente
+ * @property-read TipoSolicitud $tipoSolicitud
+ * @property-read Collection<int, Aprobacion> $aprobaciones
  * @property-read int|null $aprobaciones_count
- * @property-read \App\Models\Resolucion|null $resolucion
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Documento> $documentos
+ * @property-read Resolucion|null $resolucion
+ * @property-read Collection<int, Documento> $documentos
  * @property-read int|null $documentos_count
  */
 class Solicitud extends Model
 {
-    /** @use HasFactory<\Database\Factories\SolicitudFactory> */
+    /** @use HasFactory<SolicitudFactory> */
     use HasFactory;
 
     /**
@@ -68,7 +70,7 @@ class Solicitud extends Model
     /**
      * Get the agente that owns the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Agente, $this>
+     * @return BelongsTo<Agente, $this>
      */
     public function agente(): BelongsTo
     {
@@ -78,7 +80,7 @@ class Solicitud extends Model
     /**
      * Get the tipo de solicitud that owns the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\TipoSolicitud, $this>
+     * @return BelongsTo<TipoSolicitud, $this>
      */
     public function tipoSolicitud(): BelongsTo
     {
@@ -88,7 +90,7 @@ class Solicitud extends Model
     /**
      * Get the aprobaciones for the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Aprobacion, $this>
+     * @return HasMany<Aprobacion, $this>
      */
     public function aprobaciones(): HasMany
     {
@@ -98,7 +100,7 @@ class Solicitud extends Model
     /**
      * Get the resolucion associated with the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Resolucion, $this>
+     * @return HasOne<Resolucion, $this>
      */
     public function resolucion(): HasOne
     {
@@ -108,7 +110,7 @@ class Solicitud extends Model
     /**
      * Get the documentos for the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Documento, $this>
+     * @return HasMany<Documento, $this>
      */
     public function documentos(): HasMany
     {

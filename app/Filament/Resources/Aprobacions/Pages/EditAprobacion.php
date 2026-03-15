@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Aprobacions\Pages;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\Aprobacions\AprobacionResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditAprobacion extends EditRecord

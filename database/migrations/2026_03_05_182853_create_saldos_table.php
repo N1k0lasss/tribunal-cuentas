@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->integer('dias_usados')->default(0);
             $table->timestamps();
-            $table->unique(['agente_id','anio','tipo_saldo']);
+            $table->unique(['agente_id', 'anio', 'tipo_saldo']);
         });
     }
 

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\AgenteFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -15,23 +18,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $cargo
  * @property string|null $tipo_contrato
  * @property int $area_id
- * @property \Illuminate\Support\Carbon $fecha_ingreso
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Area $area
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Solicitud> $solicitudes
+ * @property Carbon $fecha_ingreso
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Area $area
+ * @property-read Collection<int, Solicitud> $solicitudes
  * @property-read int|null $solicitudes_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Saldo> $saldos
+ * @property-read Collection<int, Saldo> $saldos
  * @property-read int|null $saldos_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Documento> $documentos
+ * @property-read Collection<int, Documento> $documentos
  * @property-read int|null $documentos_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Aprobacion> $aprobaciones
+ * @property-read Collection<int, Aprobacion> $aprobaciones
  * @property-read int|null $aprobaciones_count
  */
 class Agente extends Model
 {
-    /** @use HasFactory<\Database\Factories\AgenteFactory> */
+    /** @use HasFactory<AgenteFactory> */
     use HasFactory;
 
     /**
@@ -64,7 +66,7 @@ class Agente extends Model
     /**
      * Get the area that owns the agente.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Area, $this>
+     * @return BelongsTo<Area, $this>
      */
     public function area(): BelongsTo
     {
@@ -74,7 +76,7 @@ class Agente extends Model
     /**
      * Get the solicitudes for the agente.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Solicitud, $this>
+     * @return HasMany<Solicitud, $this>
      */
     public function solicitudes(): HasMany
     {
@@ -84,7 +86,7 @@ class Agente extends Model
     /**
      * Get the saldos for the agente.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Saldo, $this>
+     * @return HasMany<Saldo, $this>
      */
     public function saldos(): HasMany
     {
@@ -94,7 +96,7 @@ class Agente extends Model
     /**
      * Get the documentos for the agente.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Documento, $this>
+     * @return HasMany<Documento, $this>
      */
     public function documentos(): HasMany
     {
@@ -104,7 +106,7 @@ class Agente extends Model
     /**
      * Get the aprobaciones made by the agente.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Aprobacion, $this>
+     * @return HasMany<Aprobacion, $this>
      */
     public function aprobaciones(): HasMany
     {

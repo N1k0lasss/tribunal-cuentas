@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Agente;
+use App\Models\Saldo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Saldo>
+ * @extends Factory<Saldo>
  */
 class SaldoFactory extends Factory
 {

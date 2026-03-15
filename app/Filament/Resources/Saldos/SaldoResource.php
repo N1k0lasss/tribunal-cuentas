@@ -2,32 +2,29 @@
 
 namespace App\Filament\Resources\Saldos;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Saldos\Pages\ListSaldos;
 use App\Filament\Resources\Saldos\Pages\CreateSaldo;
 use App\Filament\Resources\Saldos\Pages\EditSaldo;
-use App\Filament\Resources\Saldos\Pages;
+use App\Filament\Resources\Saldos\Pages\ListSaldos;
 use App\Models\Saldo;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class SaldoResource extends Resource
 {
     protected static ?string $model = Saldo::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calculator';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calculator';
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Gestión de Personal';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
 
     public static function form(Schema $schema): Schema
     {

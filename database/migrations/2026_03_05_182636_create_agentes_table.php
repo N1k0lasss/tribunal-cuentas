@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('tipo_contrato', 100)->nullable();
 
             $table->foreignId('area_id')
-              ->constrained()
-              ->cascadeOnDelete();
+                ->constrained()
+                ->cascadeOnDelete();
 
             $table->date('fecha_ingreso');
             $table->timestamps();

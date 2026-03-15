@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Agentes\Pages;
 
 use App\Filament\Resources\Agentes\AgenteResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateAgente extends CreateRecord

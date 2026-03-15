@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Database\Factories\AprobacionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,16 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $etapa
  * @property string $estado
  * @property string|null $observacion
- * @property \Illuminate\Support\Carbon $fecha
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Solicitud $solicitud
- * @property-read \App\Models\Agente $aprobador
+ * @property Carbon $fecha
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Solicitud $solicitud
+ * @property-read Agente $aprobador
  */
 class Aprobacion extends Model
 {
-    /** @use HasFactory<\Database\Factories\AprobacionFactory> */
+    /** @use HasFactory<AprobacionFactory> */
     use HasFactory;
 
     protected $table = 'aprobacions';
@@ -56,7 +57,7 @@ class Aprobacion extends Model
     /**
      * Get the solicitud that owns the aprobacion.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Solicitud, $this>
+     * @return BelongsTo<Solicitud, $this>
      */
     public function solicitud(): BelongsTo
     {
@@ -66,7 +67,7 @@ class Aprobacion extends Model
     /**
      * Get the agente who approved the solicitud.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Agente, $this>
+     * @return BelongsTo<Agente, $this>
      */
     public function aprobador(): BelongsTo
     {

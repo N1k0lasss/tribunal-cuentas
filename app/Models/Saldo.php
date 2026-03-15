@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Database\Factories\SaldoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,14 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $tipo_saldo
  * @property int $dias_otorgados
  * @property int $dias_usados
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Agente $agente
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Agente $agente
  */
 class Saldo extends Model
 {
-    /** @use HasFactory<\Database\Factories\SaldoFactory> */
+    /** @use HasFactory<SaldoFactory> */
     use HasFactory;
 
     /**
@@ -33,7 +34,7 @@ class Saldo extends Model
         'anio',
         'tipo_saldo',
         'dias_otorgados',
-        'dias_usados'
+        'dias_usados',
     ];
 
     /**
@@ -53,7 +54,7 @@ class Saldo extends Model
     /**
      * Get the agente that owns the saldo.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Agente, $this>
+     * @return BelongsTo<Agente, $this>
      */
     public function agente(): BelongsTo
     {

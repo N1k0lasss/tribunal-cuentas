@@ -28,14 +28,14 @@ return new class extends Migration
 
             $table->integer('dias_solicitados');
 
-            $table->string('motivo',100)->nullable();
+            $table->string('motivo', 100)->nullable();
 
             $table->enum('estado', [
                 'pendiente',
                 'en_revision',
                 'aprobado',
                 'rechazado',
-                ])->default('pendiente');
+            ])->default('pendiente');
             $table->timestamps();
         });
     }

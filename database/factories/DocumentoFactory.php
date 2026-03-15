@@ -3,12 +3,13 @@
 namespace Database\Factories;
 
 use App\Models\Agente;
+use App\Models\Documento;
 use App\Models\Resolucion;
 use App\Models\Solicitud;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Documento>
+ * @extends Factory<Documento>
  */
 class DocumentoFactory extends Factory
 {
@@ -20,8 +21,8 @@ class DocumentoFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre_archivo' => $this->faker->regexify('[A-Za-z0-9]{10}') . '.pdf',
-            'ruta' => 'documentos/' . $this->faker->uuid() . '.pdf',
+            'nombre_archivo' => $this->faker->regexify('[A-Za-z0-9]{10}').'.pdf',
+            'ruta' => 'documentos/'.$this->faker->uuid().'.pdf',
             'tipo_documento' => $this->faker->randomElement(['Certificado Médico', 'DNI', 'Nota Interna', 'Justificativo']),
             'descripcion' => $this->faker->optional()->sentence(),
             'solicitud_id' => $this->faker->boolean(70) ? Solicitud::factory() : null,

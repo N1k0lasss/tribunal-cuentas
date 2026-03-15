@@ -10,17 +10,17 @@ beforeEach(function () {
 
 it('can render Aprobacions list page', function () {
     $this->get(AprobacionResource::getUrl('index'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Aprobacions create page', function () {
     $this->get(AprobacionResource::getUrl('create'))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
 
 it('can render Aprobacions edit page', function () {
     $aprobacion = Aprobacion::factory()->create();
 
     $this->get(AprobacionResource::getUrl('edit', ['record' => $aprobacion]))
-         ->assertSuccessful();
+        ->assertSuccessful();
 });
