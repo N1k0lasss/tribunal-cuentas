@@ -2,33 +2,30 @@
 
 namespace App\Filament\Resources\TipoSolicituds;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
 use App\Filament\Resources\TipoSolicituds\Pages\CreateTipoSolicitud;
 use App\Filament\Resources\TipoSolicituds\Pages\EditTipoSolicitud;
-use App\Filament\Resources\TipoSolicitudResource\Pages;
+use App\Filament\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
 use App\Models\TipoSolicitud;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class TipoSolicitudResource extends Resource
 {
     protected static ?string $model = TipoSolicitud::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?string $navigationLabel = 'Régimen Legal';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Configuración';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
 
     protected static ?string $pluralModelLabel = 'Régimenes Legales';
 

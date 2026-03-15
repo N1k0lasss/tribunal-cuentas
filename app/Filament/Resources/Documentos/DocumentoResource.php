@@ -2,34 +2,31 @@
 
 namespace App\Filament\Resources\Documentos;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Documentos\Pages\ListDocumentos;
 use App\Filament\Resources\Documentos\Pages\CreateDocumento;
 use App\Filament\Resources\Documentos\Pages\EditDocumento;
-use App\Filament\Resources\DocumentoResource\Pages;
+use App\Filament\Resources\Documentos\Pages\ListDocumentos;
 use App\Models\Documento;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class DocumentoResource extends Resource
 {
     protected static ?string $model = Documento::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-paper-clip';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-paper-clip';
 
     protected static ?string $navigationLabel = 'Documentos';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     public static function form(Schema $schema): Schema
     {

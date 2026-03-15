@@ -2,35 +2,31 @@
 
 namespace App\Filament\Resources\Agentes;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Agentes\Pages\ListAgentes;
 use App\Filament\Resources\Agentes\Pages\CreateAgente;
 use App\Filament\Resources\Agentes\Pages\EditAgente;
-use App\Filament\Resources\AgenteResource\Pages;
+use App\Filament\Resources\Agentes\Pages\ListAgentes;
 use App\Models\Agente;
-use App\Models\Area;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationLabel = 'Agentes';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Gestión de Personal';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
 
     public static function form(Schema $schema): Schema
     {

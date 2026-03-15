@@ -2,35 +2,32 @@
 
 namespace App\Filament\Resources\Resolucions;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Resolucions\Pages\ListResolucions;
 use App\Filament\Resources\Resolucions\Pages\CreateResolucion;
 use App\Filament\Resources\Resolucions\Pages\EditResolucion;
-use App\Filament\Resources\ResolucionResource\Pages;
+use App\Filament\Resources\Resolucions\Pages\ListResolucions;
 use App\Models\Resolucion;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ResolucionResource extends Resource
 {
     protected static ?string $model = Resolucion::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-check';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
 
     protected static ?string $navigationLabel = 'Resoluciones';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Resoluciones';
 
