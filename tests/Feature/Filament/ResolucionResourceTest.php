@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Resolucions\ResolucionResource;
+use App\Filament\Admin\Resources\Resolucions\ResolucionResource;
 use App\Models\Resolucion;
 use App\Models\User;
 

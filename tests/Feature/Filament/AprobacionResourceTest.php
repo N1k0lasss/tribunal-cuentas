@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Aprobacions\AprobacionResource;
+use App\Filament\Admin\Resources\Aprobacions\AprobacionResource;
 use App\Models\Aprobacion;
 use App\Models\User;
 

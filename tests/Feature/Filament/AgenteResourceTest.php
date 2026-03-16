@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Agentes\AgenteResource;
+use App\Filament\Admin\Resources\Agentes\AgenteResource;
 use App\Models\Agente;
 use App\Models\User;
 

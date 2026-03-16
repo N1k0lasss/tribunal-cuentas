@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Saldos\SaldoResource;
+use App\Filament\Admin\Resources\Saldos\SaldoResource;
 use App\Models\Saldo;
 use App\Models\User;
 

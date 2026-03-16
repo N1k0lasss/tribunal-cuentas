@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Documentos\DocumentoResource;
+use App\Filament\Admin\Resources\Documentos\DocumentoResource;
 use App\Models\Documento;
 use App\Models\User;
 

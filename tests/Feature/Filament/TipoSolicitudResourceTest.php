@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\TipoSolicituds\TipoSolicitudResource;
+use App\Filament\Admin\Resources\TipoSolicituds\TipoSolicitudResource;
 use App\Models\TipoSolicitud;
 use App\Models\User;
 
