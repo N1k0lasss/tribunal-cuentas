@@ -85,4 +85,15 @@ class User extends Authenticatable implements FilamentUser
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+    /**
+     * TO-DO: Implementar roles en usuario mediante la libreria
+     * `spatie/laravel-roles` y eliminar este metodo.
+     */
+    public function hasRole(string $role): bool
+    {
+        $roles = ['administrador'];
+
+        return in_array($role, $roles);
+    }
 }
