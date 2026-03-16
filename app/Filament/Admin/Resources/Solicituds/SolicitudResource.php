@@ -21,6 +21,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class SolicitudResource extends Resource
 {
@@ -214,6 +216,16 @@ class SolicitudResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $usuarioEsAdministrador = Auth::user()->hasRole('administrador');
+
+        return parent::getEloquentQuery()
+            ->when(!$usuarioEsAdministrador, function ($query) {
+                return $query->where('agente_id', Auth::id());
+            });
     }
 
     public static function getRelations(): array
