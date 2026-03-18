@@ -203,25 +203,36 @@ class SolicitudResource extends Resource
                     ->label('Agente')
                     ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}")
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->icon('heroicon-m-user'),
                 TextColumn::make('tipoSolicitud.nombre')
                     ->label('Tipo')
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn ($record) => mb_substr($record->categoria, 0, 30))
+                    ->color('primary')
+                    ->weight('medium'),
                 TextColumn::make('fecha_solicitud')
                     ->label('Fecha Solicitud')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-m-calendar'),
                 TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-m-calendar-days'),
                 TextColumn::make('fecha_fin')
                     ->label('Hasta')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-m-calendar-days'),
                 TextColumn::make('dias_solicitados')
                     ->label('Días')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
                 TextColumn::make('estado')
                     ->badge()
                     ->colors([
@@ -229,6 +240,12 @@ class SolicitudResource extends Resource
                         'info' => Solicitud::ESTADO_EN_REVISION,
                         'success' => Solicitud::ESTADO_APROBADO,
                         'danger' => Solicitud::ESTADO_RECHAZADO,
+                    ])
+                    ->icons([
+                        'heroicon-m-clock' => Solicitud::ESTADO_PENDIENTE,
+                        'heroicon-m-arrow-path' => Solicitud::ESTADO_EN_REVISION,
+                        'heroicon-m-check-badge' => Solicitud::ESTADO_APROBADO,
+                        'heroicon-m-x-circle' => Solicitud::ESTADO_RECHAZADO,
                     ]),
             ])
             ->filters([
@@ -244,15 +261,20 @@ class SolicitudResource extends Resource
                     ->relationship('tipoSolicitud', 'nombre'),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('Ver Detalles'),
                 EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Editar Solicitud')
                     ->visible(fn (Solicitud $record) => $record->puedeSerEditada()),
 
                 // ── Action: Aprobar ────────────────────────────────
                 Action::make('aprobar')
                     ->label('Aprobar')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('heroicon-m-check-circle')
                     ->color('success')
+                    ->button()
                     ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de ' . ($etapaLabels[$record->etapaActual()] ?? 'desconocida') . '.')
@@ -275,8 +297,10 @@ class SolicitudResource extends Resource
                 // ── Action: Rechazar ───────────────────────────────
                 Action::make('rechazar')
                     ->label('Rechazar')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('heroicon-m-x-circle')
                     ->color('danger')
+                    ->button()
+                    ->outlined()
                     ->requiresConfirmation()
                     ->modalHeading('Rechazar Solicitud')
                     ->modalDescription('Esta acción rechazará la solicitud y detendrá el flujo de aprobación.')
