@@ -36,6 +36,93 @@ class Solicitud extends Model
     /** @use HasFactory<SolicitudFactory> */
     use HasFactory;
 
+    // ── Estados del workflow ────────────────────────────────────
+    public const ESTADO_PENDIENTE = 'pendiente';
+    public const ESTADO_EN_REVISION = 'en_revision';
+    public const ESTADO_APROBADO = 'aprobado';
+    public const ESTADO_RECHAZADO = 'rechazado';
+
+    // ── Etapas de aprobación (valores del enum en la DB) ───────
+    // Nota: 'direccion' en la DB representa "Presidencia" en el negocio.
+    public const ETAPA_JEFATURA = 'jefatura';
+    public const ETAPA_SECRETARIA = 'secretaria';
+    public const ETAPA_DIRECCION = 'direccion'; // = Presidencia
+
+    /**
+     * Flujo secuencial de etapas de aprobación.
+     *
+     * @var list<string>
+     */
+    public const FLUJO_ETAPAS = [
+        self::ETAPA_JEFATURA,
+        self::ETAPA_SECRETARIA,
+        self::ETAPA_DIRECCION,
+    ];
+
+    /**
+     * Mapeo: etapa de aprobación → rol del usuario responsable.
+     *
+     * @var array<string, string>
+     */
+    public const ETAPA_ROL_MAP = [
+        self::ETAPA_JEFATURA => 'jefatura',
+        self::ETAPA_SECRETARIA => 'secretaria_general',
+        self::ETAPA_DIRECCION => 'presidencia',
+    ];
+
+    /**
+     * Determina si la solicitud ya entró al flujo de aprobación.
+     */
+    public function estaEnFlujo(): bool
+    {
+        return $this->estado !== self::ESTADO_PENDIENTE;
+    }
+
+    /**
+     * Determina si la solicitud puede ser editada por el agente.
+     * Solo se permite mientras esté en estado "pendiente".
+     */
+    public function puedeSerEditada(): bool
+    {
+        return $this->estado === self::ESTADO_PENDIENTE;
+    }
+
+    /**
+     * Devuelve la etapa actual de aprobación pendiente, o null si ya se completaron todas.
+     */
+    public function etapaActual(): ?string
+    {
+        foreach (self::FLUJO_ETAPAS as $etapa) {
+            $aprobacion = $this->aprobaciones->firstWhere('etapa', $etapa);
+
+            if (! $aprobacion || $aprobacion->estado === 'pendiente') {
+                return $etapa;
+            }
+
+            if ($aprobacion->estado === 'rechazado') {
+                return null; // Flujo detenido por rechazo
+            }
+        }
+
+        return null; // Todas las etapas aprobadas
+    }
+
+    /**
+     * Devuelve la siguiente etapa de aprobación después de la actual, o null si es la última.
+     */
+    public function siguienteEtapa(): ?string
+    {
+        $actual = $this->etapaActual();
+
+        if ($actual === null) {
+            return null;
+        }
+
+        $index = array_search($actual, self::FLUJO_ETAPAS, true);
+
+        return self::FLUJO_ETAPAS[$index + 1] ?? null;
+    }
+
     /**
      * The attributes that are mass assignable.
      *

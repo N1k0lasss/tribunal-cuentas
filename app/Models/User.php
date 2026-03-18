@@ -7,12 +7,14 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -25,13 +27,14 @@ use Illuminate\Support\Str;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Agente|null $agente
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  */
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -87,13 +90,12 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * TO-DO: Implementar roles en usuario mediante la libreria
-     * `spatie/laravel-roles` y eliminar este metodo.
+     * Get the agente record linked to this user.
+     *
+     * @return HasOne<Agente, $this>
      */
-    public function hasRole(string $role): bool
+    public function agente(): HasOne
     {
-        $roles = ['administrador'];
-
-        return in_array($role, $roles);
+        return $this->hasOne(Agente::class);
     }
 }

@@ -16,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class TipoSolicitudResource extends Resource
 {
@@ -30,6 +31,11 @@ class TipoSolicitudResource extends Resource
     protected static ?string $pluralModelLabel = 'Régimenes Legales';
 
     protected static ?string $modelLabel = 'Régimen Legal';
+
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
 
     public static function form(Schema $schema): Schema
     {

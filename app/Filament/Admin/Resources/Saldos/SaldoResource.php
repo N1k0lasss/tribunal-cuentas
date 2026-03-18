@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class SaldoResource extends Resource
 {
@@ -25,6 +26,11 @@ class SaldoResource extends Resource
     protected static ?string $navigationLabel = 'Saldos';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
+
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
 
     public static function form(Schema $schema): Schema
     {

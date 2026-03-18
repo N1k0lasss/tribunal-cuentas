@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class AprobacionResource extends Resource
 {
@@ -33,6 +34,11 @@ class AprobacionResource extends Resource
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 
     protected static ?string $modelLabel = 'Aprobación';
+
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
 
     public static function form(Schema $schema): Schema
     {
