@@ -41,8 +41,8 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
                 \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
                 \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                //AccountWidget::class,
+                //FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
