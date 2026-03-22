@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int|null $user_id 
+ * @property-read User|null $user 
  * @property int $id
  * @property string $nombre
  * @property string $apellido
@@ -49,6 +51,7 @@ class Agente extends Model
         'tipo_contrato',
         'area_id',
         'fecha_ingreso',
+        'user_id',
     ];
 
     /**
@@ -111,5 +114,10 @@ class Agente extends Model
     public function aprobaciones(): HasMany
     {
         return $this->hasMany(Aprobacion::class, 'aprobado_por');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
