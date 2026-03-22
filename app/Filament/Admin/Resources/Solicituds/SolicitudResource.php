@@ -440,6 +440,13 @@ class SolicitudResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-m-calendar'),
+                TextColumn::make('agente.id')
+                    ->label('Legajo')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(),
                 TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y')
