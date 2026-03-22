@@ -28,6 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile()
+            ->passwordReset()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -40,8 +42,9 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
                 \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
+                //AccountWidget::class,
+                //FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
