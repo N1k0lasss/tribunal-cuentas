@@ -22,8 +22,10 @@ php artisan db:seed
 php artisan serve
 ```
 # Usuario	Email	Contraseña
+```
 Admin	admin@test.com (mailto:admin@test.com)	password
 Agente	agente@test.com (mailto:agente@test.com)	password
 Jefe	jefe@test.com (mailto:jefe@test.com)	password
 Secretario	secretario@test.com (mailto:secretario@test.com)	password
 Presidente	presidente@test.com (mailto:presidente@test.com)	password
+
