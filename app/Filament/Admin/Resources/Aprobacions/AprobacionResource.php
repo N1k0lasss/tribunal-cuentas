@@ -26,7 +26,7 @@ class AprobacionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 
-    protected static ?string $navigationLabel = 'Aprobaciones';
+    protected static ?string $navigationGroup = 'Aprobaciones';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
