@@ -11,6 +11,7 @@ use App\Models\Area;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class AreaResource extends Resource
 {
@@ -19,6 +20,11 @@ class AreaResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'nombre';
+
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
 
     protected static ?string $pluralModelLabel = 'Áreas';
 

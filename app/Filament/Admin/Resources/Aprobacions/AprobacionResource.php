@@ -15,14 +15,22 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
-    
-    protected static ?string $navigationGroup = 'Aprobaciones';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
+
+    protected static ?string $navigationLabel = 'Aprobaciones';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+
+    protected static ?string $pluralModelLabel = 'Aprobaciones';
+
+    protected static ?string $modelLabel = 'Aprobación';
 
     public static function form(Form $form): Form
     {

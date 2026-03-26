@@ -14,7 +14,6 @@ use Filament\Resources\Resource;
 use Filament\Forms\Form;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Filament\Infolists\Infolist;
 
 class AgenteResource extends Resource
 {
@@ -23,6 +22,11 @@ class AgenteResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'apellido';
+
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
 
     public static function form(Form $form): Form
     {

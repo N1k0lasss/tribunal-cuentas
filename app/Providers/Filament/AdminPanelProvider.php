@@ -29,9 +29,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->plugin(
-                \Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make(),
-            )
             ->colors([
                 'primary' => Color::hex('#1A365D')
             ])
@@ -43,10 +40,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                \Filament\Widgets\AccountWidget::class,
-                \Filament\Widgets\FilamentInfoWidget::class,
-               \App\Filament\Widgets\CalendarioLicenciasWidget::class, // <-- Tu nuevo calendario
-         ])
+                AccountWidget::class,
+                FilamentInfoWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

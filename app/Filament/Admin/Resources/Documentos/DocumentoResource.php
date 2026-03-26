@@ -17,6 +17,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentoResource extends Resource
 {
@@ -26,11 +27,7 @@ class DocumentoResource extends Resource
 
     protected static ?string $navigationLabel = 'Documentos';
 
-    protected static ?string $navigationGroup = 'Licencias';
-
-    protected static ?string $pluralModelLabel = 'Documentos';
-
-    protected static ?string $modelLabel = 'Documento';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     public static function form(Form $form): Form
     {

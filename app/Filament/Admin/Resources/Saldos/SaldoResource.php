@@ -16,6 +16,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class SaldoResource extends Resource
 {
@@ -25,11 +26,7 @@ class SaldoResource extends Resource
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static ?string $navigationGroup = 'Gestión de Personal';
-
-    protected static ?string $pluralModelLabel = 'Saldos';
-
-    protected static ?string $modelLabel = 'Saldo';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
 
     public static function form(Form $form): Form
     {
