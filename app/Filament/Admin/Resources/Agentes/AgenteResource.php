@@ -11,27 +11,29 @@ use App\Filament\Admin\Resources\Agentes\Schemas\AgenteInfolist;
 use App\Filament\Admin\Resources\Agentes\Tables\AgentesTable;
 use App\Models\Agente;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
 
 class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'apellido';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return AgenteForm::configure($schema);
+        return AgenteForm::configure($form);
     }
 
-    public static function infolist(Schema $schema): Schema
+    public static function infolist(Infolist $infolist): Infolist
     {
-        return AgenteInfolist::configure($schema);
+        return AgenteInfolist::configure($infolist);
     }
+   
 
     public static function table(Table $table): Table
     {

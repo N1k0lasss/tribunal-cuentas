@@ -6,13 +6,14 @@ use App\Filament\Admin\Resources\Saldos\Pages\CreateSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\EditSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\ListSaldos;
 use App\Models\Saldo;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -20,16 +21,20 @@ class SaldoResource extends Resource
 {
     protected static ?string $model = Saldo::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calculator';
+    protected static ?string $navigationIcon = 'heroicon-o-calculator';
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
+    protected static ?string $navigationGroup = 'Gestión de Personal';
 
-    public static function form(Schema $schema): Schema
+    protected static ?string $pluralModelLabel = 'Saldos';
+
+    protected static ?string $modelLabel = 'Saldo';
+
+    public static function form(Form $form): Form
     {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 Select::make('agente_id')
                     ->label('Agente')
                     ->relationship('agente', 'apellido')
@@ -82,10 +87,10 @@ class SaldoResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

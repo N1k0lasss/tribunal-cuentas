@@ -6,13 +6,14 @@ use App\Filament\Admin\Resources\TipoSolicituds\Pages\CreateTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\EditTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
 use App\Models\TipoSolicitud;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -21,21 +22,22 @@ class TipoSolicitudResource extends Resource
 {
     protected static ?string $model = TipoSolicitud::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?string $navigationLabel = 'Régimen Legal';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Régimenes Legales';
 
     protected static ?string $modelLabel = 'Régimen Legal';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 TextInput::make('nombre')
+                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('categoria')
@@ -57,6 +59,7 @@ class TipoSolicitudResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('nombre')
+                    ->label('Nombre')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('categoria')
@@ -74,10 +77,11 @@ class TipoSolicitudResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
+                ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

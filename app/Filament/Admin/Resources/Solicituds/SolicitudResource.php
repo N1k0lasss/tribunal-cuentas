@@ -6,18 +6,18 @@ use App\Filament\Admin\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\EditSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
 use App\Models\Solicitud;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -28,20 +28,20 @@ class SolicitudResource extends Resource
 {
     protected static ?string $model = Solicitud::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Solicitudes';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Solicitudes';
 
     protected static ?string $modelLabel = 'Solicitud';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 Select::make('agente_id')
                     ->label('Agente')
                     ->relationship('agente', 'apellido')
@@ -49,7 +49,7 @@ class SolicitudResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
-                
+
                 Select::make('categoria')
                     ->label('Categoría')
                     ->options([
@@ -68,7 +68,7 @@ class SolicitudResource extends Resource
                     ->options(fn ($get) => \App\Models\TipoSolicitud::where('categoria', $get('categoria'))->pluck('nombre', 'id'))
                     ->live()
                     ->required(),
-                    
+
                 DatePicker::make('fecha_solicitud')
                     ->label('Fecha de Solicitud')
                     ->default(now())
@@ -82,14 +82,14 @@ class SolicitudResource extends Resource
                     ->afterStateUpdated(function ($set, $get, $state) {
                         $set('dias_solicitados', \App\Filament\Admin\Resources\Solicituds\SolicitudResource::calcularDias($get('tipo_solicitud_id'), $state, $get('fecha_fin')));
                     }),
-                
+
                 DatePicker::make('fecha_fin')
                     ->label('Fecha Fin')
                     ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias')
                     ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || !\App\Models\TipoSolicitud::find($get('tipo_solicitud_id')))
                     ->live()
                     ->afterStateUpdated(function ($set, $get, $state) {
-                         $set('dias_solicitados', \App\Filament\Admin\Resources\Solicituds\SolicitudResource::calcularDias($get('tipo_solicitud_id'), $get('fecha_inicio'), $state));
+                        $set('dias_solicitados', \App\Filament\Admin\Resources\Solicituds\SolicitudResource::calcularDias($get('tipo_solicitud_id'), $get('fecha_inicio'), $state));
                     }),
 
                 // Horas (Franquicias)
@@ -97,7 +97,7 @@ class SolicitudResource extends Resource
                     ->label('Hora de Salida')
                     ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
                     ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'),
-                    
+
                 TimePicker::make('hora_fin')
                     ->label('Hora de Regreso')
                     ->required(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
@@ -109,7 +109,7 @@ class SolicitudResource extends Resource
                     ->readOnly()
                     ->helperText('Se calcula automáticamente según el régimen legal.')
                     ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || !\App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))),
-                    
+
                 TextInput::make('motivo')
                     ->label('Motivo / Observaciones')
                     ->maxLength(100),
@@ -119,8 +119,9 @@ class SolicitudResource extends Resource
                     ->label('Atención')
                     ->content('Este tipo de solicitud requiere subir documentación respaldatoria obligatoriamente.')
                     ->visible(fn ($get) => \App\Models\TipoSolicitud::find($get('tipo_solicitud_id'))?->requiere_adjunto === true),
-                    
+
                 Select::make('estado')
+                    ->label('Estado')
                     ->options([
                         'pendiente' => 'Pendiente',
                         'en_revision' => 'En Revisión (Reconocimiento Médico)',
@@ -139,7 +140,7 @@ class SolicitudResource extends Resource
         }
 
         $tipo = \App\Models\TipoSolicitud::find($tipoId);
-        
+
         if (!$tipo || $tipo->unidad_medida !== 'dias') {
             return null;
         }
@@ -167,7 +168,7 @@ class SolicitudResource extends Resource
             ->columns([
                 TextColumn::make('agente.apellido')
                     ->label('Agente')
-                    ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}")
+                    ->formatStateUsing(fn ($record) => $record->agente ? "{$record->agente->apellido}, {$record->agente->nombre}" : '-')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('tipoSolicitud.nombre')
@@ -189,6 +190,7 @@ class SolicitudResource extends Resource
                     ->label('Días')
                     ->sortable(),
                 TextColumn::make('estado')
+                    ->label('Estado')
                     ->badge()
                     ->colors([
                         'warning' => 'pendiente',
@@ -207,11 +209,11 @@ class SolicitudResource extends Resource
                     ->label('Régimen Legal')
                     ->relationship('tipoSolicitud', 'nombre'),
             ])
-            ->recordActions([
+            ->actions([
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

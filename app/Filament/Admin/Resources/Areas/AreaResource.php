@@ -9,21 +9,24 @@ use App\Filament\Admin\Resources\Areas\Schemas\AreaForm;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 
 class AreaResource extends Resource
 {
     protected static ?string $model = Area::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
-    public static function form(Schema $schema): Schema
+    protected static ?string $pluralModelLabel = 'Áreas';
+
+    protected static ?string $modelLabel = 'Área';
+
+    public static function form(Form $form): Form
     {
-        return AreaForm::configure($schema);
+        return AreaForm::configure($form);
     }
 
     public static function table(Table $table): Table

@@ -16,4 +16,10 @@ class ListAprobacions extends ListRecords
             CreateAction::make(),
         ];
     }
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Admin\Resources\Aprobacions\Widgets\ResumenLicenciasWidget::class,
+        ];
+    }
 }
