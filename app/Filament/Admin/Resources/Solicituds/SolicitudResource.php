@@ -342,6 +342,7 @@ class SolicitudResource extends Resource
         $user = Auth::user();
 
         return parent::getEloquentQuery()
+            ->with(['agente', 'tipoSolicitud'])
             ->when($user->hasRole('agente'), function (Builder $query) use ($user) {
                 // El agente solo ve sus propias solicitudes
                 return $query->where('agente_id', $user->agente?->id);

@@ -15,6 +15,8 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
 
 class SaldoResource extends Resource
 {
@@ -92,10 +94,16 @@ class SaldoResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with('agente');
+    }
+
     public static function getRelations(): array
     {
         return [
-            //
+            
         ];
     }
 
