@@ -10,10 +10,11 @@ use App\Filament\Admin\Resources\Agentes\Schemas\AgenteForm;
 use App\Filament\Admin\Resources\Agentes\Schemas\AgenteInfolist;
 use App\Filament\Admin\Resources\Agentes\Tables\AgentesTable;
 use App\Models\Agente;
-use Filament\Resources\Resource;
 use Filament\Forms\Form;
-use Filament\Support\Icons\Heroicon;
+use Filament\Infolists\Infolist;
+use Filament\Resources\Resource;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class AgenteResource extends Resource
 {
@@ -37,7 +38,6 @@ class AgenteResource extends Resource
     {
         return AgenteInfolist::configure($infolist);
     }
-   
 
     public static function table(Table $table): Table
     {

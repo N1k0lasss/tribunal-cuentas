@@ -13,7 +13,9 @@
         "filament/filament": "^3.0",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^4.1"
+        "livewire/livewire": "^3.5",
+        "saade/filament-fullcalendar": "^3.2",
+        "spatie/laravel-permission": "^6.0"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",

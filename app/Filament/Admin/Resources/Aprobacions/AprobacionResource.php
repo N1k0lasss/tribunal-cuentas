@@ -2,31 +2,28 @@
 
 namespace App\Filament\Admin\Resources\Aprobacions;
 
-use App\Filament\Admin\Resources\Aprobacions\Pages;
 use App\Models\Aprobacion;
-use Filament\Tables\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Forms\Form;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DatePicker;
-use Filament\Resources\Resource;
-use Filament\Tables\Table;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
+    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
 
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 

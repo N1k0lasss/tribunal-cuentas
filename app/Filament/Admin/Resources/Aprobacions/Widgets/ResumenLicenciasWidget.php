@@ -14,12 +14,12 @@ class ResumenLicenciasWidget extends BaseWidget
                 ->description('Licencias aprobadas')
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('success'), // Esto le dará el color verde
-            
+
             Stat::make('Pendientes', '1')
                 ->description('Esperando revisión')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning'), // Esto le dará el color amarillo
-            
+
             Stat::make('Rechazadas', '0')
                 ->description('Licencias denegadas')
                 ->descriptionIcon('heroicon-m-x-circle')

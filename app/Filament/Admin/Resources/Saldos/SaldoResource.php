@@ -6,17 +6,15 @@ use App\Filament\Admin\Resources\Saldos\Pages\CreateSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\EditSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\ListSaldos;
 use App\Models\Saldo;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class SaldoResource extends Resource
 {
@@ -26,7 +24,7 @@ class SaldoResource extends Resource
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
+    protected static ?string $navigationGroup = 'Gestión de Personal';
 
     public static function form(Form $form): Form
     {

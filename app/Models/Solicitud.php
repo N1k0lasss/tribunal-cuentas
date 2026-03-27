@@ -38,14 +38,19 @@ class Solicitud extends Model
 
     // ── Estados del workflow ────────────────────────────────────
     public const ESTADO_PENDIENTE = 'pendiente';
+
     public const ESTADO_EN_REVISION = 'en_revision';
+
     public const ESTADO_APROBADO = 'aprobado';
+
     public const ESTADO_RECHAZADO = 'rechazado';
 
     // ── Etapas de aprobación (valores del enum en la DB) ───────
     // Nota: 'direccion' en la DB representa "Presidencia" en el negocio.
     public const ETAPA_JEFATURA = 'jefatura';
+
     public const ETAPA_SECRETARIA = 'secretaria';
+
     public const ETAPA_DIRECCION = 'direccion'; // = Presidencia
 
     /**

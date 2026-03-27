@@ -7,7 +7,8 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 class CalendarioLicenciasWidget extends FullCalendarWidget
 {
     // Le decimos que se ponga debajo de tu perfil y ocupe todo el ancho
-    protected int | string | array $columnSpan = 'full'; 
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 2;
 
     public function fetchEvents(array $fetchInfo): array
@@ -17,3 +18,4 @@ class CalendarioLicenciasWidget extends FullCalendarWidget
         return [];
     }
 }
+

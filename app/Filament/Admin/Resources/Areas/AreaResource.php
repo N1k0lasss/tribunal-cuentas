@@ -8,8 +8,8 @@ use App\Filament\Admin\Resources\Areas\Pages\ListAreas;
 use App\Filament\Admin\Resources\Areas\Schemas\AreaForm;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
-use Filament\Resources\Resource;
 use Filament\Forms\Form;
+use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 

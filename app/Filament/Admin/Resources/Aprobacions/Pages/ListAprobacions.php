@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Aprobacions\Pages;
 
 use App\Filament\Admin\Resources\Aprobacions\AprobacionResource;
+use App\Filament\Admin\Resources\Aprobacions\Widgets\ResumenLicenciasWidget;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
@@ -16,10 +17,11 @@ class ListAprobacions extends ListRecords
             CreateAction::make(),
         ];
     }
+
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Resources\Aprobacions\Widgets\ResumenLicenciasWidget::class,
+            ResumenLicenciasWidget::class,
         ];
     }
 }

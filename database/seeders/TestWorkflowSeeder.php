@@ -43,7 +43,7 @@ class TestWorkflowSeeder extends Seeder
                     'cargo' => 'Administrativo',
                     'tipo_contrato' => 'Planta Permanente',
                     'fecha_ingreso' => '2020-01-01',
-                ]
+                ],
             ],
             [
                 'name' => 'Usuario Jefe',
@@ -73,7 +73,7 @@ class TestWorkflowSeeder extends Seeder
         foreach ($usuarios as $userData) {
             $roleName = $userData['role'];
             $agenteData = $userData['agente_data'] ?? null;
-            
+
             unset($userData['role'], $userData['agente_data']);
 
             $user = User::firstOrCreate(
@@ -82,16 +82,16 @@ class TestWorkflowSeeder extends Seeder
             );
 
             // Asignar el rol
-            if (!$user->hasRole($roleName)) {
+            if (! $user->hasRole($roleName)) {
                 $user->assignRole($roleName);
             }
 
             // Si es agente, crear la ficha vinculada
-            if ($agenteData && !$user->agente) {
+            if ($agenteData && ! $user->agente) {
                 $agenteData['user_id'] = $user->id;
                 $agenteData['area_id'] = $area->id;
-                
-                app(\App\Models\Agente::class)->create($agenteData);
+
+                app(Agente::class)->create($agenteData);
             }
         }
     }
