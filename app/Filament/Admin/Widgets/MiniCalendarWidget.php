@@ -9,7 +9,7 @@ class MiniCalendarWidget extends Widget
 {
     protected string $view = 'filament.admin.widgets.mini-calendar-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool
     {

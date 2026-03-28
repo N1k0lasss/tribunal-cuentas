@@ -43,7 +43,7 @@ class TipoSolicitud extends Model
         'goce_sueldo_porcentaje',
         'requiere_intervencion_medica',
         'limite_mensual_dias_horas',
-        'requiere_adjunto'
+        'requiere_adjunto',
     ];
 
     /**

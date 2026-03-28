@@ -6,16 +6,16 @@ use App\Filament\Admin\Resources\Resolucions\Pages\CreateResolucion;
 use App\Filament\Admin\Resources\Resolucions\Pages\EditResolucion;
 use App\Filament\Admin\Resources\Resolucions\Pages\ListResolucions;
 use App\Models\Resolucion;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -24,11 +24,11 @@ class ResolucionResource extends Resource
 {
     protected static ?string $model = Resolucion::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
+    protected static ?string $navigationIcon = 'heroicon-o-document-check';
 
     protected static ?string $navigationLabel = 'Resoluciones';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Resoluciones';
 
@@ -39,10 +39,10 @@ class ResolucionResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 TextInput::make('numero')
                     ->label('Número')
                     ->required()
@@ -51,6 +51,7 @@ class ResolucionResource extends Resource
                     ->label('Fecha de Emisión')
                     ->required(),
                 Textarea::make('detalle')
+                    ->label('Detalle')
                     ->maxLength(65535)
                     ->columnSpanFull(),
                 Select::make('solicitud_id')
@@ -75,6 +76,7 @@ class ResolucionResource extends Resource
                     ->date('d/m/Y')
                     ->sortable(),
                 TextColumn::make('detalle')
+                    ->label('Detalle')
                     ->limit(50),
                 TextColumn::make('solicitud_id')
                     ->label('Solicitud #')
@@ -83,11 +85,11 @@ class ResolucionResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

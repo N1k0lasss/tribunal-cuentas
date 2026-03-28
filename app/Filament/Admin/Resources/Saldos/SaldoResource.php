@@ -6,37 +6,32 @@ use App\Filament\Admin\Resources\Saldos\Pages\CreateSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\EditSaldo;
 use App\Filament\Admin\Resources\Saldos\Pages\ListSaldos;
 use App\Models\Saldo;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+
 
 class SaldoResource extends Resource
 {
     protected static ?string $model = Saldo::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calculator';
+    protected static ?string $navigationIcon = 'heroicon-o-calculator';
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
+    protected static ?string $navigationGroup = 'Gestión de Personal';
 
-    public static function canAccess(): bool
+    public static function form(Form $form): Form
     {
-        return ! Auth::user()?->hasRole('agente');
-    }
-
-    public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 Select::make('agente_id')
                     ->label('Agente')
                     ->relationship('agente', 'apellido')
@@ -89,10 +84,10 @@ class SaldoResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
@@ -102,8 +97,8 @@ class SaldoResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['agente']);
-    }   
+            ->with('agente');
+    }
 
     public static function getRelations(): array
     {
