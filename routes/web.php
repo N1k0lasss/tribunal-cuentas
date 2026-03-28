@@ -18,3 +18,7 @@ Route::get('/recibos', function () {
 })->name('recibos.index');
 
 require __DIR__.'/settings.php';
+Route::post('/logout', function () {
+    auth()->logout();
+    return redirect('/');
+})->name('logout');
