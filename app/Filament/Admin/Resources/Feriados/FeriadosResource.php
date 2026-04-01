@@ -10,7 +10,7 @@ use App\Filament\Admin\Resources\Feriados\Tables\FeriadosTable;
 use App\Models\Feriados;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 //use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
@@ -18,13 +18,13 @@ class FeriadosResource extends Resource
 {
     protected static ?string $model = Feriados::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Calendario';
 
-    public static function form(Schema $schema): Schema
-    {
-        return FeriadosForm::configure($schema);
+   public static function form(Form $form): Form
+   {
+    return FeriadosForm::configure($form);
     }
 
     public static function table(Table $table): Table
