@@ -11346,7 +11346,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "saade/filament-fullcalendar": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
