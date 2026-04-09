@@ -8,16 +8,16 @@ use App\Filament\Admin\Resources\Areas\Pages\ListAreas;
 use App\Filament\Admin\Resources\Areas\Schemas\AreaForm;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class AreaResource extends Resource
 {
     protected static ?string $model = Area::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
@@ -26,13 +26,18 @@ class AreaResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    {
+        return 'heroicon-o-rectangle-stack';
+    }
+
     protected static ?string $pluralModelLabel = 'Áreas';
 
     protected static ?string $modelLabel = 'Área';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return AreaForm::configure($form);
+        return AreaForm::configure($schema);
     }
 
     public static function table(Table $table): Table

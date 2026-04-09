@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\CreateAction;
+use Illuminate\Contracts\Support\Htmlable;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
@@ -24,9 +25,13 @@ class FeriadosResource extends Resource
 {
     protected static ?string $model = Feriados::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
     //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Calendario';
+
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    {
+        return 'heroicon-o-calendar-days';
+    }
 
     public static function form(Schema $schema): Schema
     {

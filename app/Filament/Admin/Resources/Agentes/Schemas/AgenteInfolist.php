@@ -3,13 +3,13 @@
 namespace App\Filament\Admin\Resources\Agentes\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 
 class AgenteInfolist
 {
-    public static function configure(Infolist $infolist): Infolist
+    public static function configure(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
                 TextEntry::make('nombre'),
                 TextEntry::make('apellido'),

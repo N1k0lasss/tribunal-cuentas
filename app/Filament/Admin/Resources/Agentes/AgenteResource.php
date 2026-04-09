@@ -22,8 +22,6 @@ class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
     protected static ?string $recordTitleAttribute = 'apellido';
 
     public static function canAccess(): bool
@@ -31,14 +29,19 @@ class AgenteResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function form(Form $form): Form
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return AgenteForm::configure($form);
+        return 'heroicon-o-rectangle-stack';
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function form(Schema $schema): Schema
     {
-        return AgenteInfolist::configure($infolist);
+        return AgenteForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return AgenteInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table

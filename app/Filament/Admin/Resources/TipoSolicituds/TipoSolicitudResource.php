@@ -26,8 +26,6 @@ class TipoSolicitudResource extends Resource
 {
     protected static ?string $model = TipoSolicitud::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-
     protected static ?string $navigationLabel = 'Régimen Legal';
 
     protected static UnitEnum|string|null $navigationGroup = 'Licencias';

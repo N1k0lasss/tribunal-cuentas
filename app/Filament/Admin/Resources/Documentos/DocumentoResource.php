@@ -9,7 +9,7 @@ use App\Models\Documento;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -17,20 +17,26 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class DocumentoResource extends Resource
 {
     protected static ?string $model = Documento::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paper-clip';
-
     protected static ?string $navigationLabel = 'Documentos';
 
-    protected static ?string $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
-    public static function form(Form $form): Form
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return $form
+        return 'heroicon-o-paper-clip';
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
             ->schema([
                 TextInput::make('nombre_archivo')
                     ->label('Nombre del Archivo')

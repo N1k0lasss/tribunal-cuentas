@@ -15,7 +15,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -29,26 +29,32 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class SolicitudResource extends Resource
 {
     protected static ?string $model = Solicitud::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static ?string $navigationLabel = 'Solicitudes';
 
-    protected static ?string $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Solicitudes';
 
     protected static ?string $modelLabel = 'Solicitud';
 
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    {
+        return 'heroicon-o-document-text';
+    }
+
     // ── Formulario ─────────────────────────────────────────────
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Select::make('agente_id')
                     ->label('Agente')
