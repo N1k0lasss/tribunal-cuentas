@@ -21,7 +21,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 
 class AprobacionResource extends Resource
 {
@@ -124,21 +123,8 @@ class AprobacionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['aprobador', 'solicitud']);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
         /** @var Builder<Aprobacion> $query */
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['aprobador', 'solicitud']);
 
         $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['agente', 'secretaria_general', 'presidencia']) ?? false;
 
