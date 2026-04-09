@@ -18,11 +18,17 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -187,6 +193,221 @@ class SolicitudResource extends Resource
         return $inicio->diffInDays($fin) + 1;
     }
 
+    // ── Infolist (Divulgación Progresiva — modal) ─────────────
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                // ── Sección 1: Datos del Agente ───────────────────
+                Section::make('Datos del Agente')
+                    ->icon('heroicon-o-user-circle')
+                    ->collapsible()
+                    ->components([
+                        Grid::make(4)
+                            ->components([
+                                TextEntry::make('agente.apellido')
+                                    ->label('Apellido')
+                                    ->weight('bold')
+                                    ->formatStateUsing(fn ($record) => $record->agente?->apellido ?? '—'),
+
+                                TextEntry::make('agente.nombre')
+                                    ->label('Nombre')
+                                    ->formatStateUsing(fn ($record) => $record->agente?->nombre ?? '—'),
+
+                                TextEntry::make('agente.id')
+                                    ->label('Nº de Legajo')
+                                    ->badge()
+                                    ->color('gray'),
+
+                                TextEntry::make('agente.area.nombre')
+                                    ->label('Área')
+                                    ->icon('heroicon-m-building-office'),
+                            ]),
+                        Grid::make(2)
+                            ->components([
+                                TextEntry::make('agente.cargo')
+                                    ->label('Cargo')
+                                    ->icon('heroicon-m-briefcase')
+                                    ->default('Sin cargo asignado'),
+
+                                TextEntry::make('agente.fecha_ingreso')
+                                    ->label('Fecha de Ingreso')
+                                    ->date('d/m/Y')
+                                    ->icon('heroicon-m-calendar'),
+                            ]),
+                    ]),
+
+                // ── Sección 2: Detalle de la Solicitud ────────────
+                Section::make('Detalle de la Solicitud')
+                    ->icon('heroicon-o-document-text')
+                    ->collapsible()
+                    ->components([
+                        Grid::make(3)
+                            ->components([
+                                TextEntry::make('tipoSolicitud.nombre')
+                                    ->label('Régimen Legal')
+                                    ->weight('bold')
+                                    ->color('primary'),
+
+                                TextEntry::make('tipoSolicitud.categoria')
+                                    ->label('Categoría')
+                                    ->badge()
+                                    ->color('info'),
+
+                                TextEntry::make('tipoSolicitud.articulo_legal')
+                                    ->label('Artículo Legal')
+                                    ->icon('heroicon-m-scale')
+                                    ->default('—'),
+                            ]),
+                        Grid::make(4)
+                            ->components([
+                                TextEntry::make('fecha_solicitud')
+                                    ->label('Fecha de Solicitud')
+                                    ->date('d/m/Y')
+                                    ->icon('heroicon-m-calendar'),
+
+                                TextEntry::make('fecha_inicio')
+                                    ->label('Fecha Inicio')
+                                    ->date('d/m/Y')
+                                    ->icon('heroicon-m-calendar-days'),
+
+                                TextEntry::make('fecha_fin')
+                                    ->label('Fecha Fin')
+                                    ->date('d/m/Y')
+                                    ->icon('heroicon-m-calendar-days')
+                                    ->default('—'),
+
+                                TextEntry::make('dias_solicitados')
+                                    ->label('Días Solicitados')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->suffix(' días')
+                                    ->default('—'),
+                            ]),
+                        Grid::make(3)
+                            ->components([
+                                TextEntry::make('hora_inicio')
+                                    ->label('Hora de Salida')
+                                    ->icon('heroicon-m-clock')
+                                    ->default('—')
+                                    ->visible(fn ($record) => $record->hora_inicio !== null),
+
+                                TextEntry::make('hora_fin')
+                                    ->label('Hora de Regreso')
+                                    ->icon('heroicon-m-clock')
+                                    ->default('—')
+                                    ->visible(fn ($record) => $record->hora_fin !== null),
+
+                                TextEntry::make('estado')
+                                    ->label('Estado')
+                                    ->badge()
+                                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        'pendiente' => 'Pendiente',
+                                        'en_revision' => 'En Revisión',
+                                        'aprobado' => 'Aprobado',
+                                        'rechazado' => 'Rechazado',
+                                        default => $state,
+                                    })
+                                    ->color(fn (string $state): string => match ($state) {
+                                        'pendiente' => 'warning',
+                                        'en_revision' => 'info',
+                                        'aprobado' => 'success',
+                                        'rechazado' => 'danger',
+                                        default => 'gray',
+                                    })
+                                    ->icon(fn (string $state): string => match ($state) {
+                                        'pendiente' => 'heroicon-m-clock',
+                                        'en_revision' => 'heroicon-m-arrow-path',
+                                        'aprobado' => 'heroicon-m-check-badge',
+                                        'rechazado' => 'heroicon-m-x-circle',
+                                        default => 'heroicon-m-question-mark-circle',
+                                    }),
+                            ]),
+                        TextEntry::make('motivo')
+                            ->label('Motivo / Observaciones')
+                            ->icon('heroicon-m-chat-bubble-left-ellipsis')
+                            ->default('Sin observaciones')
+                            ->columnSpanFull(),
+                    ]),
+
+                // ── Sección 3: Documentos Adjuntos ────────────────
+                Section::make('Documentos Adjuntos')
+                    ->icon('heroicon-o-paper-clip')
+                    ->collapsible()
+                    ->collapsed()
+                    ->components([
+                        RepeatableEntry::make('documentos')
+                            ->label('')
+                            ->columns(3)
+                            ->components([
+                                TextEntry::make('nombre_archivo')
+                                    ->label('Archivo')
+                                    ->icon('heroicon-m-document')
+                                    ->weight('medium'),
+
+                                TextEntry::make('tipo_documento')
+                                    ->label('Tipo')
+                                    ->badge()
+                                    ->color('gray'),
+
+                                TextEntry::make('descripcion')
+                                    ->label('Descripción')
+                                    ->default('—'),
+                            ])
+                            ->placeholder('No hay documentos adjuntos.'),
+                    ]),
+
+                // ── Sección 4: Historial de Aprobaciones ──────────
+                Section::make('Historial de Aprobaciones')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->collapsible()
+                    ->collapsed()
+                    ->components([
+                        RepeatableEntry::make('aprobaciones')
+                            ->label('')
+                            ->columns(4)
+                            ->components([
+                                TextEntry::make('etapa')
+                                    ->label('Etapa')
+                                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        'jefatura' => 'Jefatura',
+                                        'secretaria' => 'Secretaría General',
+                                        'direccion' => 'Presidencia',
+                                        default => $state,
+                                    })
+                                    ->weight('bold'),
+
+                                TextEntry::make('estado')
+                                    ->label('Resolución')
+                                    ->badge()
+                                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        'aprobado' => 'Aprobado',
+                                        'rechazado' => 'Rechazado',
+                                        'pendiente' => 'Pendiente',
+                                        default => $state,
+                                    })
+                                    ->color(fn (string $state): string => match ($state) {
+                                        'aprobado' => 'success',
+                                        'rechazado' => 'danger',
+                                        'pendiente' => 'warning',
+                                        default => 'gray',
+                                    }),
+
+                                TextEntry::make('observacion')
+                                    ->label('Observación')
+                                    ->default('—'),
+
+                                TextEntry::make('fecha')
+                                    ->label('Fecha')
+                                    ->date('d/m/Y')
+                                    ->icon('heroicon-m-calendar'),
+                            ])
+                            ->placeholder('Sin registros de aprobación.'),
+                    ]),
+            ]);
+    }
+
     // ── Tabla ──────────────────────────────────────────────────
 
     public static function table(Table $table): Table
@@ -198,38 +419,77 @@ class SolicitudResource extends Resource
         ];
 
         return $table
+            ->defaultSort('fecha_solicitud', 'desc')
             ->columns([
                 TextColumn::make('agente.apellido')
                     ->label('Agente')
                     ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}")
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->icon('heroicon-m-user'),
                 TextColumn::make('tipoSolicitud.nombre')
                     ->label('Tipo')
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn ($record) => $record->tipoSolicitud?->categoria ? mb_substr($record->tipoSolicitud->categoria, 0, 30) : null)
+                    ->color('primary')
+                    ->weight('medium'),
                 TextColumn::make('fecha_solicitud')
                     ->label('Fecha Solicitud')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-m-calendar'),
+                TextColumn::make('agente.id')
+                    ->label('Legajo')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(),
                 TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-m-calendar-days'),
                 TextColumn::make('fecha_fin')
                     ->label('Hasta')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-m-calendar-days'),
                 TextColumn::make('dias_solicitados')
                     ->label('Días')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
+                TextColumn::make('motivo')
+                    ->label('Motivo')
+                    ->limit(30)
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->tooltip(fn ($record) => $record->motivo),
                 TextColumn::make('estado')
                     ->badge()
-                    ->colors([
-                        'warning' => Solicitud::ESTADO_PENDIENTE,
-                        'info' => Solicitud::ESTADO_EN_REVISION,
-                        'success' => Solicitud::ESTADO_APROBADO,
-                        'danger' => Solicitud::ESTADO_RECHAZADO,
-                    ]),
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pendiente' => 'Pendiente',
+                        'en_revision' => 'En Revisión',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
+                        default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'pendiente' => 'warning',
+                        'en_revision' => 'info',
+                        'aprobado' => 'success',
+                        'rechazado' => 'danger',
+                        default => 'gray',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'pendiente' => 'heroicon-m-clock',
+                        'en_revision' => 'heroicon-m-arrow-path',
+                        'aprobado' => 'heroicon-m-check-badge',
+                        'rechazado' => 'heroicon-m-x-circle',
+                        default => 'heroicon-m-question-mark-circle',
+                    }),
             ])
             ->filters([
                 SelectFilter::make('estado')
@@ -242,17 +502,55 @@ class SolicitudResource extends Resource
                 SelectFilter::make('tipo_solicitud_id')
                     ->label('Régimen Legal')
                     ->relationship('tipoSolicitud', 'nombre'),
+                Filter::make('fecha_solicitud')
+                    ->form([
+                        DatePicker::make('desde')
+                            ->label('Desde'),
+                        DatePicker::make('hasta')
+                            ->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['desde'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('fecha_solicitud', '>=', $date),
+                            )
+                            ->when(
+                                $data['hasta'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('fecha_solicitud', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['desde'] ?? null) {
+                            $indicators[] = 'Desde: ' . \Carbon\Carbon::parse($data['desde'])->format('d/m/Y');
+                        }
+
+                        if ($data['hasta'] ?? null) {
+                            $indicators[] = 'Hasta: ' . \Carbon\Carbon::parse($data['hasta'])->format('d/m/Y');
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('Ver Detalles')
+                    ->modalWidth('4xl')
+                    ->slideOver(),
                 EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Editar Solicitud')
                     ->visible(fn (Solicitud $record) => $record->puedeSerEditada()),
 
                 // ── Action: Aprobar ────────────────────────────────
                 Action::make('aprobar')
                     ->label('Aprobar')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('heroicon-m-check-circle')
                     ->color('success')
+                    ->button()
                     ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de ' . ($etapaLabels[$record->etapaActual()] ?? 'desconocida') . '.')
@@ -275,8 +573,10 @@ class SolicitudResource extends Resource
                 // ── Action: Rechazar ───────────────────────────────
                 Action::make('rechazar')
                     ->label('Rechazar')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('heroicon-m-x-circle')
                     ->color('danger')
+                    ->button()
+                    ->outlined()
                     ->requiresConfirmation()
                     ->modalHeading('Rechazar Solicitud')
                     ->modalDescription('Esta acción rechazará la solicitud y detendrá el flujo de aprobación.')
