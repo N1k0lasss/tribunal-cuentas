@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('saldos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('agente_id')
-                ->constrained();
-
+                ->constrained()
+                ->cascadeOnDelete();
             $table->integer('anio');
 
             $table->string('tipo_saldo');

@@ -17,7 +17,8 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
             $table->foreignId('aprobado_por')
-                ->constrained('agentes');
+                ->constrained('agentes')
+                ->cascadeOnDelete();
             $table->enum('etapa',
                 [
                     'jefatura',
