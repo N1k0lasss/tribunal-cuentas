@@ -122,8 +122,18 @@ class AprobacionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['aprobador', 'solicitud']);
+
+        $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+
+        if (!$tienePermisosDeAdmin) {
+            $query->whereHas('solicitud', function (Builder $query): void {
+                $query->where('agente_id', Auth::user()->agente?->id);
+            });
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array
