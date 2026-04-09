@@ -19,7 +19,6 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -37,6 +36,11 @@ class AprobacionResource extends Resource
 
     protected static ?string $modelLabel = 'Aprobación';
 
+    public static function canAccess(): bool
+    {
+        return ! Auth::user()?->hasRole('agente');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -50,7 +54,7 @@ class AprobacionResource extends Resource
                 Select::make('aprobado_por')
                     ->label('Aprobado por')
                     ->relationship('aprobador', 'apellido')
-                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->apellido}, {$record->nombre}")
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido}, {$record->nombre}")
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -82,13 +86,7 @@ class AprobacionResource extends Resource
                     ->sortable(),
                 TextColumn::make('aprobador.apellido')
                     ->label('Aprobado por')
-                    ->visible(function (): bool {
-                        $puedeVisualizarAprobaciones = Auth::user()
-                            ->hasAnyRole(['secretaria_general', 'jefatura', 'administrador', 'presidencia']);
-
-                        return $puedeVisualizarAprobaciones;
-                    })
-                    ->formatStateUsing(fn($record) => $record->aprobador ? "{$record->aprobador->apellido}, {$record->aprobador->nombre}" : '-')
+                    ->formatStateUsing(fn ($record) => $record->aprobador ? "{$record->aprobador->apellido}, {$record->aprobador->nombre}" : '-')
                     ->sortable(),
                 TextColumn::make('etapa')
                     ->sortable(),
@@ -124,8 +122,18 @@ class AprobacionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['aprobador', 'solicitud']);
+
+        $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+
+        if (!$tienePermisosDeAdmin) {
+            $query->whereHas('solicitud', function (Builder $query): void {
+                $query->where('agente_id', Auth::user()->agente?->id);
+            });
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array
@@ -133,22 +141,6 @@ class AprobacionResource extends Resource
         return [
             //
         ];
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        /** @var Builder<Aprobacion> $query */
-        $query = parent::getEloquentQuery();
-
-        $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['agente', 'secretaria_general', 'presidencia']) ?? false;
-
-        if (!$tienePermisosDeAdmin) {
-            $query->whereHas('solicitud', function (Builder $query): void {
-                $query->where('agente_id', Auth::user()->id);
-            });
-        }
-
-        return $query;
     }
 
     public static function getPages(): array

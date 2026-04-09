@@ -33,14 +33,14 @@ class AprobacionPolicy
      * Un agente solo puede ver su propia Aprobacion.
      * Jefatura, Secretaría General y Presidencia pueden ver cualquier Aprobacion.
      */
-    public function view(User $user, Aprobacion $Aprobacion): bool
+    public function view(User $user, Aprobacion $aprobacion): bool
     {
         if ($user->hasAnyRole(['jefatura', 'secretaria_general', 'presidencia'])) {
             return true;
         }
 
         // Agente: solo puede ver sus propias Aprobaciones
-        return $user->agente?->id === $Aprobacion->agente_id;
+        return $user->agente?->id === $aprobacion->solicitud->agente_id;
     }
 
     /**
