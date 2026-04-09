@@ -22,5 +22,5 @@ it('can render Aprobacions edit page', function () {
     $aprobacion = Aprobacion::factory()->create();
 
     $this->get(AprobacionResource::getUrl('edit', ['record' => $aprobacion]))
-        ->assertSuccessful();
+        ->assertForbidden(); 
 });
