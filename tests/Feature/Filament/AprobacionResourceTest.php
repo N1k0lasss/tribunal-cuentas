@@ -17,14 +17,14 @@ it('can render Aprobacions list page', function () {
         ->assertSuccessful();
 });
 
-it('can render Aprobacions create page', function () {
+it('cannot access Aprobacions create page', function () {
     get(AprobacionResource::getUrl('create'))
-        ->assertSuccessful();
+        ->assertForbidden();
 });
 
-it('can render Aprobacions edit page', function () {
+it('cannot access Aprobacions edit page for unowned record', function () {
     $aprobacion = Aprobacion::factory()->create();
 
     get(AprobacionResource::getUrl('edit', ['record' => $aprobacion]))
-        ->assertForbidden();
+        ->assertNotFound();
 });
