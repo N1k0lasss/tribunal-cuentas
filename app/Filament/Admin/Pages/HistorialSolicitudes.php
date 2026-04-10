@@ -6,6 +6,7 @@ use App\Models\Agente;
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Pages\Page;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -53,38 +54,63 @@ class HistorialSolicitudes extends Page implements HasTable
             ->columns([
                 TextColumn::make('agente.apellido')
                     ->label('Agente')
-                    ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}")
+                    ->formatStateUsing(fn ($record) => "{$record->agente->nombre} {$record->agente->apellido}")
+                    ->description(fn ($record) => $record->agente->legajo ?? null)
                     ->searchable(['agentes.apellido', 'agentes.nombre'])
                     ->sortable()
+                    ->weight(FontWeight::SemiBold)
+                    ->icon('heroicon-o-user')
                     ->visible(fn () => ! $esAgente),
                 TextColumn::make('tipoSolicitud.nombre')
                     ->label('Tipo de Licencia')
                     ->sortable()
-                    ->wrap(),
+                    ->wrap()
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray'),
                 TextColumn::make('fecha_solicitud')
                     ->label('Fecha Solicitud')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn ($record) => $record->fecha_solicitud?->diffForHumans() ?? null)
+                    ->color('gray'),
                 TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->color('gray'),
                 TextColumn::make('fecha_fin')
                     ->label('Hasta')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->color('gray'),
                 TextColumn::make('dias_solicitados')
                     ->label('Días')
                     ->sortable()
-                    ->alignCenter(),
+                    ->alignCenter()
+                    ->weight(FontWeight::Bold)
+                    ->placeholder('—'),
                 TextColumn::make('estado')
                     ->badge()
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'pendiente' => 'Pendiente',
+                        'en_revision' => 'En Revisión',
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
+                        default => ucfirst($state),
+                    })
                     ->colors([
                         'warning' => Solicitud::ESTADO_PENDIENTE,
                         'info' => Solicitud::ESTADO_EN_REVISION,
                         'success' => Solicitud::ESTADO_APROBADO,
                         'danger' => Solicitud::ESTADO_RECHAZADO,
-                    ]),
+                    ])
+                    ->icon(fn (string $state) => match ($state) {
+                        'pendiente' => 'heroicon-o-clock',
+                        'en_revision' => 'heroicon-o-magnifying-glass',
+                        'aprobado' => 'heroicon-o-check-circle',
+                        'rechazado' => 'heroicon-o-x-circle',
+                        default => null,
+                    }),
             ])
             ->filters([
                 SelectFilter::make('anio')
@@ -131,11 +157,14 @@ class HistorialSolicitudes extends Page implements HasTable
             ->recordAction('ver_detalle')
             ->recordActions([
                 Action::make('ver_detalle')
-                    ->label('Ver Detalle')
+                    ->label('')
                     ->icon('heroicon-o-eye')
                     ->color('gray')
+                    ->tooltip('Ver detalle de la solicitud')
                     ->modalHeading(fn (Solicitud $record) => "Solicitud #{$record->id}")
-                    ->modalWidth('2xl')
+                    ->modalDescription(fn (Solicitud $record) => "Enviada el {$record->fecha_solicitud?->format('d/m/Y')} por {$record->agente->nombre} {$record->agente->apellido}")
+                    ->modalIcon('heroicon-o-document-magnifying-glass')
+                    ->modalWidth('3xl')
                     ->modalSubmitAction(false)
                     ->infolist([
                         Section::make('Datos de la Solicitud')
@@ -145,11 +174,20 @@ class HistorialSolicitudes extends Page implements HasTable
                                     ->schema([
                                         TextEntry::make('agente.apellido')
                                             ->label('Agente')
-                                            ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}"),
+                                            ->icon('heroicon-o-user')
+                                            ->formatStateUsing(fn ($record) => "{$record->agente->nombre} {$record->agente->apellido}"),
                                         TextEntry::make('tipoSolicitud.nombre')
-                                            ->label('Tipo de Licencia'),
+                                            ->label('Tipo de Licencia')
+                                            ->icon('heroicon-o-document-text'),
                                         TextEntry::make('estado')
                                             ->badge()
+                                            ->formatStateUsing(fn (string $state) => match ($state) {
+                                                'pendiente' => 'Pendiente',
+                                                'en_revision' => 'En Revisión',
+                                                'aprobado' => 'Aprobado',
+                                                'rechazado' => 'Rechazado',
+                                                default => ucfirst($state),
+                                            })
                                             ->colors([
                                                 'warning' => 'pendiente',
                                                 'success' => 'aprobado',
@@ -161,18 +199,23 @@ class HistorialSolicitudes extends Page implements HasTable
                                     ->schema([
                                         TextEntry::make('fecha_solicitud')
                                             ->label('Fecha de Solicitud')
+                                            ->icon('heroicon-o-calendar')
                                             ->date('d/m/Y'),
                                         TextEntry::make('fecha_inicio')
                                             ->label('Desde')
+                                            ->icon('heroicon-o-arrow-right-circle')
                                             ->date('d/m/Y'),
                                         TextEntry::make('fecha_fin')
                                             ->label('Hasta')
+                                            ->icon('heroicon-o-arrow-left-circle')
                                             ->date('d/m/Y'),
                                         TextEntry::make('dias_solicitados')
-                                            ->label('Días Solicitados'),
+                                            ->label('Días Solicitados')
+                                            ->icon('heroicon-o-hashtag'),
                                     ]),
                                 TextEntry::make('motivo')
                                     ->label('Motivo / Observaciones')
+                                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
                                     ->placeholder('Sin motivo registrado')
                                     ->columnSpanFull(),
                             ]),
@@ -186,6 +229,7 @@ class HistorialSolicitudes extends Page implements HasTable
                                             ->schema([
                                                 TextEntry::make('etapa')
                                                     ->label('Etapa')
+                                                    ->icon('heroicon-o-flag')
                                                     ->formatStateUsing(fn (string $state) => match ($state) {
                                                         'jefatura' => 'Jefatura',
                                                         'secretaria' => 'Secretaría General',
@@ -195,6 +239,12 @@ class HistorialSolicitudes extends Page implements HasTable
                                                 TextEntry::make('estado')
                                                     ->label('Estado')
                                                     ->badge()
+                                                    ->formatStateUsing(fn (string $state) => match ($state) {
+                                                        'pendiente' => 'Pendiente',
+                                                        'aprobado' => 'Aprobado',
+                                                        'rechazado' => 'Rechazado',
+                                                        default => ucfirst($state),
+                                                    })
                                                     ->colors([
                                                         'warning' => 'pendiente',
                                                         'success' => 'aprobado',
@@ -202,15 +252,18 @@ class HistorialSolicitudes extends Page implements HasTable
                                                     ]),
                                                 TextEntry::make('aprobador.apellido')
                                                     ->label('Responsable')
+                                                    ->icon('heroicon-o-user-circle')
                                                     ->formatStateUsing(fn ($record) => $record->aprobador
-                                                        ? "{$record->aprobador->apellido}, {$record->aprobador->nombre}"
-                                                        : '-'),
+                                                        ? "{$record->aprobador->nombre} {$record->aprobador->apellido}"
+                                                        : '—'),
                                                 TextEntry::make('fecha')
                                                     ->label('Fecha')
+                                                    ->icon('heroicon-o-calendar-days')
                                                     ->date('d/m/Y'),
                                             ]),
                                         TextEntry::make('observacion')
                                             ->label('Observación')
+                                            ->icon('heroicon-o-chat-bubble-bottom-center-text')
                                             ->placeholder('Sin observación')
                                             ->columnSpanFull(),
                                     ]),
@@ -228,7 +281,7 @@ class HistorialSolicitudes extends Page implements HasTable
             Action::make('exportar_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->color('danger')
+                ->color('info')
                 ->action(function () {
                     $user = Auth::user();
                     $esAgente = $user?->hasRole('agente');
