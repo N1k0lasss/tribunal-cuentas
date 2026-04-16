@@ -44,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
                 \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                \App\Filament\Admin\Widgets\MiniCalendarWidget::class,
+                //\App\Filament\Admin\Widgets\MiniCalendarWidget::class,
                 \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
                 //AccountWidget::class,
                 //FilamentInfoWidget::class,
