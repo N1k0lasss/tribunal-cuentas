@@ -5,9 +5,11 @@ namespace App\Filament\Admin\Resources\Solicituds;
 use App\Filament\Admin\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\EditSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
-use App\Models\Aprobacion;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
+use App\Services\WorkflowSolicitudesService;
+use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,7 +20,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Infolists\Components\IconEntry;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -26,7 +29,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -52,114 +54,235 @@ class SolicitudResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $user = Auth::user();
+        $user     = Auth::user();
         $esAgente = $user?->hasRole('agente');
 
-        return $schema
-            ->components([
-                Select::make('agente_id')
-                    ->label('Agente')
-                    ->relationship('agente', 'apellido')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido}, {$record->nombre}")
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    // Para agentes: se autocompleta con su propio agente y se deshabilita
-                    ->default(fn () => $esAgente ? $user->agente?->id : null)
-                    ->disabled(fn () => $esAgente)
-                    ->dehydrated(), // Asegura que el valor se guarde aunque esté disabled
+        return $schema->components([
 
-                Select::make('categoria')
-                    ->label('Categoría')
-                    ->options([
-                        'Receso' => 'Receso',
-                        'Salud y Maternidad' => 'Salud y Maternidad',
-                        'Extraordinaria' => 'Licencia Extraordinaria',
-                        'Justificación' => 'Justificación',
-                        'Franquicia' => 'Franquicia',
-                        'Falta/Tardanza' => 'Falta/Tardanza',
-                    ])
-                    ->live()
-                    ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 1 — Identificación de la Solicitud
+            // Los campos que definen QUÉ se solicita. Van primero.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Identificación')
+                ->description('Seleccioná el agente y el tipo de licencia que se tramitará.')
+                ->icon('heroicon-o-identification')
+                ->columns(3)
+                ->schema([
 
-                Select::make('tipo_solicitud_id')
-                    ->label('Régimen Legal Específico')
-                    ->options(fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))->pluck('nombre', 'id'))
-                    ->live()
-                    ->required()
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    Select::make('agente_id')
+                        ->label('Agente')
+                        ->relationship('agente', 'apellido')
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record) => "{$record->apellido}, {$record->nombre}"
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->default(fn () => $esAgente ? $user->agente?->id : null)
+                        ->disabled(fn () => $esAgente)
+                        ->dehydrated()
+                        ->columnSpan(1),
 
-                DatePicker::make('fecha_solicitud')
-                    ->label('Fecha de Solicitud')
-                    ->default(now())
-                    ->required()
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    Select::make('categoria')
+                        ->label('Categoría')
+                        ->options([
+                            'Receso'             => 'Receso',
+                            'Salud y Maternidad' => 'Salud y Maternidad',
+                            'Extraordinaria'     => 'Licencia Extraordinaria',
+                            'Justificación'      => 'Justificación',
+                            'Franquicia'         => 'Franquicia',
+                            'Falta/Tardanza'     => 'Falta/Tardanza',
+                        ])
+                        ->live()
+                        ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->dehydrated(false) // Campo de UI auxiliar; no persiste en DB
+                        ->columnSpan(1),
 
-                // Fechas (Licencias por Días)
-                DatePicker::make('fecha_inicio')
-                    ->label('Fecha Inicio / Fecha de la Franquicia')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function ($set, $get, $state) {
-                        $set('dias_solicitados', static::calcularDias($get('tipo_solicitud_id'), $state, $get('fecha_fin')));
-                    })
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    Select::make('tipo_solicitud_id')
+                        ->label('Tipo de Licencia')
+                        ->helperText('El régimen legal determina el cálculo de días y los requisitos.')
+                        ->options(
+                            fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))
+                                ->pluck('nombre', 'id')
+                        )
+                        ->live()
+                        ->required()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpan(1),
+                ]),
 
-                DatePicker::make('fecha_fin')
-                    ->label('Fecha Fin')
-                    ->required(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias')
-                    ->visible(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || ! TipoSolicitud::find($get('tipo_solicitud_id')))
-                    ->live()
-                    ->afterStateUpdated(function ($set, $get, $state) {
-                        $set('dias_solicitados', static::calcularDias($get('tipo_solicitud_id'), $get('fecha_inicio'), $state));
-                    })
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 2 — Aviso de Documentación Obligatoria (Poka-Yoke)
+            // Aparece ANTES de las fechas para que el operador lo lea
+            // ANTES de continuar, no después de completar todo el form.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('')
+                ->visible(
+                    fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->requiere_adjunto === true
+                )
+                ->schema([
+                    Placeholder::make('requiere_adjunto_info')
+                        ->label('')
+                        ->content(
+                            new HtmlString(
+                                '<div class="flex items-start gap-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:border-amber-500 dark:bg-amber-950">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div>
+                                        <p class="font-semibold text-amber-800 dark:text-amber-200">Documentación obligatoria</p>
+                                        <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                                            Este tipo de solicitud <strong>requiere adjuntar documentación respaldatoria</strong> antes de ser enviada.
+                                            Sin el adjunto, la solicitud no podrá avanzar en el flujo de aprobación.
+                                        </p>
+                                    </div>
+                                </div>'
+                            )
+                        ),
+                ]),
 
-                // Horas (Franquicias)
-                TimePicker::make('hora_inicio')
-                    ->label('Hora de Salida')
-                    ->required(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
-                    ->visible(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 3 — Período y Duración
+            // Layout de 2 columnas para pares lógicos de campos.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Período Solicitado')
+                ->description('Ingresá las fechas y/o horas del período de licencia.')
+                ->icon('heroicon-o-calendar-days')
+                ->columns(2)
+                ->schema([
 
-                TimePicker::make('hora_fin')
-                    ->label('Hora de Regreso')
-                    ->required(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
-                    ->visible(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas')
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    DatePicker::make('fecha_inicio')
+                        ->label(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                                ? 'Fecha de la Franquicia'
+                                : 'Fecha de Inicio'
+                        )
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($set, $get, $state) {
+                            $set('dias_solicitados', static::calcularDias(
+                                $get('tipo_solicitud_id'), $state, $get('fecha_fin')
+                            ));
+                        })
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                TextInput::make('dias_solicitados')
-                    ->label('Días Solicitados')
-                    ->numeric()
-                    ->readOnly()
-                    ->helperText('Se calcula automáticamente según el régimen legal.')
-                    ->visible(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias' || ! TipoSolicitud::find($get('tipo_solicitud_id'))),
+                    DatePicker::make('fecha_fin')
+                        ->label('Fecha de Fin')
+                        ->required(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                        )
+                        ->visible(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! TipoSolicitud::find($get('tipo_solicitud_id'))
+                        )
+                        ->minDate(fn ($get) => $get('fecha_inicio')) // Poka-Yoke: impide fecha_fin < fecha_inicio
+                        ->live()
+                        ->afterStateUpdated(function ($set, $get, $state) {
+                            $set('dias_solicitados', static::calcularDias(
+                                $get('tipo_solicitud_id'), $get('fecha_inicio'), $state
+                            ));
+                        })
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                TextInput::make('motivo')
-                    ->label('Motivo / Observaciones')
-                    ->maxLength(100)
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    // Franquicias: par de horas en 2 columnas
+                    TimePicker::make('hora_inicio')
+                        ->label('Hora de Salida')
+                        ->required(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->visible(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                // Notice de Obligatoriedad de adjunto
-                Placeholder::make('requiere_adjunto_info')
-                    ->label('Atención')
-                    ->content('Este tipo de solicitud requiere subir documentación respaldatoria obligatoriamente.')
-                    ->visible(fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->requiere_adjunto === true),
+                    TimePicker::make('hora_fin')
+                        ->label('Hora de Regreso')
+                        ->required(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->visible(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                // El estado se oculta para agentes; siempre pendiente al crear
-                Select::make('estado')
-                    ->options([
-                        'pendiente' => 'Pendiente',
-                        'en_revision' => 'En Revisión',
-                        'aprobado' => 'Aprobado',
-                        'rechazado' => 'Rechazado',
-                    ])
-                    ->default('pendiente')
-                    ->required()
-                    ->visible(fn () => ! $esAgente)
-                    ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
-            ]);
+                    // Campo calculado — diferenciado visualmente del resto
+                    TextInput::make('dias_solicitados')
+                        ->label('Días Solicitados')
+                        ->numeric()
+                        ->readOnly()
+                        ->suffix('días')
+                        ->helperText('Calculado automáticamente según el régimen legal seleccionado.')
+                        ->extraInputAttributes(['class' => 'bg-gray-100 dark:bg-white/5 cursor-not-allowed'])
+                        ->visible(
+                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! TipoSolicitud::find($get('tipo_solicitud_id'))
+                        ),
+                ]),
+
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 4 — Datos Administrativos
+            // Estado, prórroga y observaciones. Sección de menor urgencia.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Datos Administrativos')
+                ->description('Estado del trámite, prórroga y observaciones.')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->columns(2)
+                ->schema([
+
+                    DatePicker::make('fecha_solicitud')
+                        ->label('Fecha de Solicitud')
+                        ->default(now())
+                        ->required()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+
+                    // El estado se oculta para agentes; siempre pendiente al crear
+                    Select::make('estado')
+                        ->label('Estado')
+                        ->options([
+                            'pendiente'   => 'Pendiente',
+                            'en_revision' => 'En Revisión',
+                            'aprobado'    => 'Aprobado',
+                            'rechazado'   => 'Rechazado',
+                        ])
+                        ->default('pendiente')
+                        ->required()
+                        ->visible(fn () => ! $esAgente)
+                        // Poka-Yoke: bloquear cambio manual si el flujo ya comenzó
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+
+                    // Toggle booleano (reemplaza Select 0/1 que era confuso)
+                    Toggle::make('es_prorroga')
+                        ->label('¿Es prórroga de una solicitud anterior?')
+                        ->default(false)
+                        ->live()
+                        ->dehydrated() // Necesario para que el cast :boolean funcione
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+
+                    Select::make('solicitud_origen_id')
+                        ->label('Solicitud Origen (prórroga)')
+                        ->helperText('Seleccioná la solicitud original que se está prorrogando.')
+                        ->relationship('solicitudOrigen', 'id')
+                        ->getOptionLabelFromRecordUsing(
+                            fn (Solicitud $record) => "#{$record->id} — {$record->fecha_inicio?->format('d/m/Y')} al {$record->fecha_fin?->format('d/m/Y')}"
+                        )
+                        ->required(fn ($get) => (bool) $get('es_prorroga'))
+                        ->visible(fn ($get)  => (bool) $get('es_prorroga'))
+                        ->searchable()
+                        ->preload()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+
+                    Textarea::make('motivo')
+                        ->label('Motivo / Observaciones')
+                        ->helperText('Opcional. Máximo 100 caracteres.')
+                        ->maxLength(100)
+                        ->rows(3)
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+                ]),
+        ]);
     }
 
     // ── Cálculo de días ────────────────────────────────────────
@@ -176,15 +299,15 @@ class SolicitudResource extends Resource
             return null;
         }
 
-        $inicio = \Carbon\Carbon::parse($fechaInicio);
-        $fin = \Carbon\Carbon::parse($fechaFin);
+        $inicio = Carbon::parse($fechaInicio);
+        $fin = Carbon::parse($fechaFin);
 
         if ($fin->lessThan($inicio)) {
             return 0;
         }
 
         if ($tipo->tipo_dias === 'habiles') {
-            return $inicio->diffInDaysFiltered(function (\Carbon\Carbon $date) {
+            return $inicio->diffInDaysFiltered(function (Carbon $date) {
                 return ! $date->isWeekend();
             }, $fin) + 1;
         }
@@ -524,11 +647,11 @@ class SolicitudResource extends Resource
                         $indicators = [];
 
                         if ($data['desde'] ?? null) {
-                            $indicators[] = 'Desde: ' . \Carbon\Carbon::parse($data['desde'])->format('d/m/Y');
+                            $indicators[] = 'Desde: '.Carbon::parse($data['desde'])->format('d/m/Y');
                         }
 
                         if ($data['hasta'] ?? null) {
-                            $indicators[] = 'Hasta: ' . \Carbon\Carbon::parse($data['hasta'])->format('d/m/Y');
+                            $indicators[] = 'Hasta: '.Carbon::parse($data['hasta'])->format('d/m/Y');
                         }
 
                         return $indicators;
@@ -553,7 +676,7 @@ class SolicitudResource extends Resource
                     ->button()
                     ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
-                    ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de ' . ($etapaLabels[$record->etapaActual()] ?? 'desconocida') . '.')
+                    ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
                     ->form([
                         Textarea::make('observacion')
                             ->label('Observación (opcional)')
@@ -608,38 +731,15 @@ class SolicitudResource extends Resource
 
     protected static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion): void
     {
-        $etapa = $record->etapaActual();
         $user = Auth::user();
 
-        // Crear registro de aprobación
-        Aprobacion::create([
-            'solicitud_id' => $record->id,
-            'aprobado_por' => $user->agente?->id ?? $user->id,
-            'etapa' => $etapa,
-            'estado' => $estado,
-            'observacion' => $observacion,
-            'fecha' => now(),
-        ]);
-
-        if ($estado === 'rechazado') {
-            // Rechazar cierra el flujo completamente
-            $record->update(['estado' => Solicitud::ESTADO_RECHAZADO]);
-
+        if ($user === null) {
             return;
         }
 
-        // Si aprobado, verificar si es la última etapa
-        $siguienteEtapa = $record->siguienteEtapa();
-
-        if ($siguienteEtapa === null) {
-            // Última etapa aprobada → solicitud aprobada
-            $record->update(['estado' => Solicitud::ESTADO_APROBADO]);
-        } else {
-            // Aún quedan etapas → mantener en revisión
-            $record->update(['estado' => Solicitud::ESTADO_EN_REVISION]);
-        }
-
-        // Refrescar relaciones para que la vista refleje el cambio
+        /** @var WorkflowSolicitudesService $workflow */
+        $workflow = app(WorkflowSolicitudesService::class);
+        $workflow->resolver($record, $user, $estado, $observacion);
         $record->load('aprobaciones');
     }
 
@@ -659,21 +759,21 @@ class SolicitudResource extends Resource
                 // Jefatura ve solicitudes pendientes en su etapa + las que ya procesó
                 return $query->where(function (Builder $q) {
                     $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                      ->orWhere('estado', Solicitud::ESTADO_PENDIENTE);
+                        ->orWhere('estado', Solicitud::ESTADO_PENDIENTE);
                 });
             })
             ->when($user->hasRole('secretaria_general'), function (Builder $query) {
                 // Secretaría General ve solicitudes que ya pasaron por jefatura
                 return $query->where(function (Builder $q) {
                     $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                      ->orWhere('estado', Solicitud::ESTADO_APROBADO);
+                        ->orWhere('estado', Solicitud::ESTADO_APROBADO);
                 });
             })
             ->when($user->hasRole('presidencia'), function (Builder $query) {
                 // Presidencia ve solicitudes que ya pasaron por secretaría
                 return $query->where(function (Builder $q) {
                     $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                      ->orWhere('estado', Solicitud::ESTADO_APROBADO);
+                        ->orWhere('estado', Solicitud::ESTADO_APROBADO);
                 });
             });
         // Administrador: no se aplica filtro (ve todo)
