@@ -19,8 +19,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class AprobacionResource extends Resource
 {
@@ -127,7 +127,7 @@ class AprobacionResource extends Resource
 
         $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
 
-        if (!$tienePermisosDeAdmin) {
+        if (! $tienePermisosDeAdmin) {
             $query->whereHas('solicitud', function (Builder $query): void {
                 $query->where('agente_id', Auth::user()->agente?->id);
             });

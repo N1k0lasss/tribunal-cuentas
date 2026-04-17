@@ -2,11 +2,11 @@
 
 namespace App\Filament\Admin\Resources\Feriados\Schemas;
 
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker; 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
@@ -39,21 +39,21 @@ class FeriadosForm
                     ->displayFormat('d/m/Y H:i')
                     ->required()
                     ->hidden(fn ($get) => $get('todo_el_dia')),
-                
+
                 TextInput::make('nombre')
                     ->label('Nombre del Feriado')
                     ->placeholder('Ej: Dia de la Independencia')
-                    ->required(), 
+                    ->required(),
 
                 Select::make('tipo')
                     ->label('Tipo de Feriado')
                     ->options([
-                        'Nacional' => 'Nacional', 
+                        'Nacional' => 'Nacional',
                         'Provincial' => 'Provincial',
                         'Local' => 'Local',
                     ])
                     ->required(),
-                    
+
                 Checkbox::make('recurrente')
                     ->label('Recurrente')
                     ->default(false),

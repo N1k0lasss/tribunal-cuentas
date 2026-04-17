@@ -15,8 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class SaldoResource extends Resource
 {
@@ -103,12 +103,12 @@ class SaldoResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with(['agente']);
-    }   
+    }
 
     public static function getRelations(): array
     {
         return [
-            
+
         ];
     }
 

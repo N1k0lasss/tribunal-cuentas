@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('fecha_solicitud');
 
             $table->date('fecha_inicio');
-            
+
             // fecha_fin pasa a ser nullable porque licencias de 1 día u horas no lo ocupan
             $table->date('fecha_fin')->nullable();
 

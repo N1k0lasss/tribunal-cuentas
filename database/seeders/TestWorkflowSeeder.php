@@ -105,7 +105,7 @@ class TestWorkflowSeeder extends Seeder
         foreach ($usuarios as $userData) {
             $roleName = $userData['role'];
             $agenteData = $userData['agente_data'];
-            
+
             unset($userData['role'], $userData['agente_data']);
 
             $user = User::firstOrCreate(
@@ -113,11 +113,11 @@ class TestWorkflowSeeder extends Seeder
                 $userData
             );
 
-            if (!$user->hasRole($roleName)) {
+            if (! $user->hasRole($roleName)) {
                 $user->assignRole($roleName);
             }
 
-            if (!$user->agente) {
+            if (! $user->agente) {
                 $agenteData['user_id'] = $user->id;
                 Agente::create($agenteData);
             } else {
