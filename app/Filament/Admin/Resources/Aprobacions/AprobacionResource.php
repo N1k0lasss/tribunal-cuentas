@@ -10,8 +10,11 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Filters\Filter;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -23,6 +26,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
 
 class AprobacionResource extends Resource
 {
@@ -85,7 +89,11 @@ class AprobacionResource extends Resource
             ->groups([
                 Group::make('solicitud_id')
                     ->label('Solicitud')
-                    ->getTitleFromRecordUsing(fn ($record) => "Solicitud #{$record->solicitud_id} — {$record->solicitud->agente->apellido}, {$record->solicitud->agente->nombre} ({$record->solicitud->tipoSolicitud->nombre})")
+                    ->getTitleFromRecordUsing(function ($record) {
+                        $sol = $record->solicitud;
+                        $count = $sol->aprobaciones->count() ?? 0;
+                        return "Solicitud #{$record->solicitud_id} — {$sol->agente->apellido}, {$sol->agente->nombre} ({$sol->tipoSolicitud->nombre}) — {$count} aprob.";
+                    })
                     ->collapsible(),
             ])
             ->defaultGroup('solicitud_id')
@@ -102,11 +110,13 @@ class AprobacionResource extends Resource
                 TextColumn::make('solicitud.tipoSolicitud.nombre')
                     ->label('Licencia')
                     ->description(fn ($record) => $record->solicitud->tipoSolicitud->categoria)
-                    ->color('primary')
+                    ->color('warning')
+                    ->weight('semibold')
+                    ->wrap()
                     ->sortable(),
                 TextColumn::make('periodo')
                     ->label('Período Licencia')
-                    ->formatStateUsing(fn ($record) => $record->solicitud->fecha_inicio->format('d/m') . ' al ' . $record->solicitud->fecha_fin->format('d/m/y'))
+                    ->formatStateUsing(fn ($record) => $record->solicitud->fecha_inicio->format('d/m/Y') . ' al ' . $record->solicitud->fecha_fin->format('d/m/Y'))
                     ->icon('heroicon-m-calendar-days')
                     ->color('gray'),
                 TextColumn::make('aprobador.apellido')
@@ -161,6 +171,13 @@ class AprobacionResource extends Resource
                     ->label('Agente Solicitante')
                     ->searchable()
                     ->preload(),
+                SelectFilter::make('etapa')
+                    ->label('Etapa')
+                    ->options([
+                        'jefatura' => 'Jefatura',
+                        'secretaria' => 'Secretaría Gral.',
+                        'direccion' => 'Presidencia',
+                    ]),
                 Filter::make('fecha_aprobacion')
                     ->form([
                         DatePicker::make('desde')->label('Resolución desde'),
@@ -175,10 +192,58 @@ class AprobacionResource extends Resource
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('aprobar')
+                    ->label('Aprobar')
+                    ->icon('heroicon-m-check-circle')
+                    ->iconButton()
+                    ->tooltip('Aprobar')
+                    ->action(function (Aprobacion $record): void {
+                        $record->update(['estado' => 'aprobado']);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Aprobación actualizada')
+                            ->body('La aprobación se marcó como aprobada.')
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->hidden(fn ($record) => $record->estado === 'aprobado')
+                    ->color('success'),
+                Action::make('rechazar')
+                    ->label('Rechazar')
+                    ->icon('heroicon-m-x-circle')
+                    ->iconButton()
+                    ->tooltip('Rechazar')
+                    ->action(function (Aprobacion $record): void {
+                        $record->update(['estado' => 'rechazado']);
+
+                        Notification::make()
+                            ->danger()
+                            ->title('Aprobación actualizada')
+                            ->body('La aprobación se marcó como rechazada.')
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->hidden(fn ($record) => $record->estado === 'rechazado')
+                    ->color('danger'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('aprobar_seleccion')
+                        ->label('Aprobar seleccionadas')
+                        ->icon('heroicon-m-check-badge')
+                        ->action(function (Collection $records): void {
+                            $updated = Aprobacion::whereIn('id', $records->pluck('id'))->update(['estado' => 'aprobado']);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Acción masiva completada')
+                                ->body("Se aprobaron {$updated} registro(s).")
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->color('success'),
                 ]),
             ]);
     }
@@ -186,7 +251,7 @@ class AprobacionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['aprobador', 'solicitud']);
+            ->with(['aprobador', 'solicitud', 'solicitud.agente', 'solicitud.tipoSolicitud', 'solicitud.aprobaciones']);
 
         $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
 
