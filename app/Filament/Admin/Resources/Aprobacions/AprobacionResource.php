@@ -10,6 +10,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Grouping\Group;
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -80,24 +82,70 @@ class AprobacionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Group::make('solicitud_id')
+                    ->label('Solicitud')
+                    ->getTitleFromRecordUsing(fn ($record) => "Solicitud #{$record->solicitud_id} — {$record->solicitud->agente->apellido}, {$record->solicitud->agente->nombre} ({$record->solicitud->tipoSolicitud->nombre})")
+                    ->collapsible(),
+            ])
+            ->defaultGroup('solicitud_id')
             ->columns([
                 TextColumn::make('solicitud_id')
-                    ->label('Solicitud #')
+                    ->label('ID')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('solicitud.agente.apellido')
+                    ->label('Agente Solicitante')
+                    ->formatStateUsing(fn ($record) => "{$record->solicitud->agente->apellido}, {$record->solicitud->agente->nombre}")
+                    ->searchable()
                     ->sortable(),
+                TextColumn::make('solicitud.tipoSolicitud.nombre')
+                    ->label('Licencia')
+                    ->description(fn ($record) => $record->solicitud->tipoSolicitud->categoria)
+                    ->color('primary')
+                    ->sortable(),
+                TextColumn::make('periodo')
+                    ->label('Período Licencia')
+                    ->formatStateUsing(fn ($record) => $record->solicitud->fecha_inicio->format('d/m') . ' al ' . $record->solicitud->fecha_fin->format('d/m/y'))
+                    ->icon('heroicon-m-calendar-days')
+                    ->color('gray'),
                 TextColumn::make('aprobador.apellido')
-                    ->label('Aprobado por')
+                    ->label('Resuelto por')
                     ->formatStateUsing(fn ($record) => $record->aprobador ? "{$record->aprobador->apellido}, {$record->aprobador->nombre}" : '-')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('etapa')
+                    ->label('Etapa')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'jefatura' => 'Jefatura',
+                        'secretaria' => 'Secretaría Gral.',
+                        'direccion' => 'Presidencia',
+                        default => $state,
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'jefatura' => 'heroicon-m-building-office',
+                        'secretaria' => 'heroicon-m-document-text',
+                        'direccion' => 'heroicon-m-shield-check',
+                        default => 'heroicon-m-question-mark-circle',
+                    })
+                    ->color('info')
+                    ->weight('bold')
                     ->sortable(),
                 TextColumn::make('estado')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'aprobado' => 'Aprobado',
+                        'rechazado' => 'Rechazado',
+                        'pendiente' => 'Pendiente',
+                        default => $state,
+                    })
                     ->colors([
                         'warning' => 'pendiente',
                         'success' => 'aprobado',
                         'danger' => 'rechazado',
                     ]),
                 TextColumn::make('fecha')
+                    ->label('Fecha Resolución')
                     ->date('d/m/Y')
                     ->sortable(),
             ])
@@ -108,6 +156,21 @@ class AprobacionResource extends Resource
                         'aprobado' => 'Aprobado',
                         'rechazado' => 'Rechazado',
                     ]),
+                SelectFilter::make('agente')
+                    ->relationship('solicitud.agente', 'apellido')
+                    ->label('Agente Solicitante')
+                    ->searchable()
+                    ->preload(),
+                Filter::make('fecha_aprobacion')
+                    ->form([
+                        DatePicker::make('desde')->label('Resolución desde'),
+                        DatePicker::make('hasta')->label('Resolución hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['desde'], fn ($q, $date) => $q->whereDate('fecha', '>=', $date))
+                            ->when($data['hasta'], fn ($q, $date) => $q->whereDate('fecha', '<=', $date));
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),
