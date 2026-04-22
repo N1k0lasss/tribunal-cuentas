@@ -22,6 +22,8 @@ class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
+
     protected static ?string $recordTitleAttribute = 'apellido';
 
     public static function canAccess(): bool

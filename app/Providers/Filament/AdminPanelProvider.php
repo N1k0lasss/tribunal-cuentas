@@ -36,15 +36,19 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::hex('#1A365D'),
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
                 Dashboard::class,
 
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
+                \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
+                \App\Filament\Admin\Widgets\MiniCalendarWidget::class,
+                \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
+                //AccountWidget::class,
+                //FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

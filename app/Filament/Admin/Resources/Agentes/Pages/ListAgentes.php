@@ -10,10 +10,15 @@ class ListAgentes extends ListRecords
 {
     protected static string $resource = AgenteResource::class;
 
+    protected ?string $heading = 'Agentes';
+
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Nuevo agente')
+                ->color('warning')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }

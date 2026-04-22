@@ -9,7 +9,7 @@
             <div class="flex items-center gap-5">
                 <!-- Icono circular tipo Avatar -->
                 <div class="flex items-center justify-center w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400">
-                    <x-heroicon-o-calendar class="w-7 h-7"/>
+                    <x-heroicon-o-calendar class="text-gray-500 dark:text-gray-400" style="width: 1.75rem; height: 1.75rem;"/>
                 </div>
                 
                 <!-- Textos centrales -->
@@ -23,7 +23,7 @@
             
             <!-- Botón / Tag derecho -->
             <div class="px-4 py-2 bg-[#1e293b] text-white text-sm font-medium rounded-lg flex items-center gap-2 shadow-sm">
-                <x-heroicon-o-calendar-days class="w-4 h-4"/>
+                <x-heroicon-o-calendar-days class="text-white" style="width: 1rem; height: 1rem;"/>
                 Hoy
             </div>
         </div>
