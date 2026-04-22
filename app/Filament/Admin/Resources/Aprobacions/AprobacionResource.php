@@ -17,6 +17,8 @@ use Filament\Tables\Table;
 use UnitEnum;
 use Illuminate\Contracts\Support\Htmlable;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class AprobacionResource extends Resource
 {

@@ -6,6 +6,7 @@ use App\Models\Saldo;
 use App\Models\Solicitud;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class MisSaldosStatsWidget extends BaseWidget
@@ -28,21 +29,22 @@ class MisSaldosStatsWidget extends BaseWidget
         $anioActual = (int) date('Y');
 
         // Calcular licencias disponibles
+        /** @var int $diasDisponibles */
         $saldos = Saldo::where('agente_id', $agenteId)
             ->where('anio', $anioActual)
             ->get();
 
-
-        $diasDisponibles = $saldos->sum(fn ($saldo) => $saldo->dias_otorgados - $saldo->dias_usados);
+        $diasDisponibles = $saldos->sum(fn($saldo) => $saldo->dias_otorgados - $saldo->dias_usados);
 
         // Solicitudes aprobadas del año
+        /** @var int $solicitudesAprobadas */
         $solicitudesAprobadas = Solicitud::where('agente_id', $agenteId)
             ->where('estado', 'aprobado')
             ->whereYear('fecha_solicitud', $anioActual)
             ->count();
 
-
         // Solicitudes en curso (pendientes / en revisión)
+        /** @var int $solicitudesPendientes */
         $solicitudesPendientes = Solicitud::where('agente_id', $agenteId)
             ->whereIn('estado', ['pendiente', 'en_revision'])
             ->count();
@@ -52,13 +54,9 @@ class MisSaldosStatsWidget extends BaseWidget
         $chartPendientes = $this->getMonthlyChart($agenteId, ['pendiente', 'en_revision']);
 
         return [
-            Stat::make('Días Disponibles', max(0, $diasDisponibles).' días')
-                ->description('Para el año en curso')
             Stat::make('Días Disponibles', max(0, $diasDisponibles) . ' días')
                 ->description('Saldo para el año ' . $anioActual)
                 ->descriptionIcon('heroicon-m-calendar-days')
-                ->color('success'),
-
                 ->color('success')
                 ->chart([max(0, $diasDisponibles), max(0, $diasDisponibles)])
                 ->extraAttributes([
@@ -68,8 +66,6 @@ class MisSaldosStatsWidget extends BaseWidget
             Stat::make('Solicitudes Aprobadas', $solicitudesAprobadas)
                 ->description('Licencias finalizadas ' . $anioActual)
                 ->descriptionIcon('heroicon-m-check-badge')
-                ->color('info'),
-
                 ->color('info')
                 ->chart($chartAprobadas)
                 ->extraAttributes([
@@ -89,6 +85,10 @@ class MisSaldosStatsWidget extends BaseWidget
 
     /**
      * Genera datos para mini-chart mensual (últimos 6 meses).
+     *
+     * @param int $agenteId
+     * @param string|array $estado
+     * @return array<int>
      */
     private function getMonthlyChart(int $agenteId, string|array $estado): array
     {
@@ -97,6 +97,7 @@ class MisSaldosStatsWidget extends BaseWidget
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
 
+            /** @var Builder $query */
             $query = Solicitud::where('agente_id', $agenteId)
                 ->whereYear('fecha_solicitud', $date->year)
                 ->whereMonth('fecha_solicitud', $date->month);

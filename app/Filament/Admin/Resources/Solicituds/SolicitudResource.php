@@ -24,7 +24,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -535,6 +534,7 @@ class SolicitudResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+            ])
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
