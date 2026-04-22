@@ -80,7 +80,16 @@
                 <p class="text-xs text-slate-500 mt-2">Visualiza y descarga tus recibos de sueldo digitales.</p>
                 <div class="mt-4 text-blue-600 text-xs font-semibold group-hover:underline">Ver últimos 3 →</div>
             </a>
-
+           <a href="{{ \App\Filament\Admin\Resources\Solicituds\SolicitudResource::getUrl('create') }}" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition cursor-pointer group block">
+    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+    </div>
+    <h3 class="font-bold text-slate-700 uppercase text-sm tracking-wide">Nueva Solicitud</h3>
+    <p class="text-xs text-slate-500 mt-2">Inicia un nuevo trámite para vacaciones, permisos o certificados.</p>
+    <div class="mt-4 text-purple-600 text-xs font-semibold group-hover:underline">Crear solicitud &rarr;</div>
+</a>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition cursor-pointer group">
                 <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -8,13 +8,16 @@ use App\Filament\Admin\Resources\Saldos\Pages\ListSaldos;
 use App\Models\Saldo;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 
 
@@ -22,15 +25,18 @@ class SaldoResource extends Resource
 {
     protected static ?string $model = Saldo::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calculator';
-
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static ?string $navigationGroup = 'Gestión de Personal';
+    protected static UnitEnum|string|null $navigationGroup = 'Gestión de Personal';
 
-    public static function form(Form $form): Form
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return $form
+        return 'heroicon-o-calculator';
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
             ->schema([
                 Select::make('agente_id')
                     ->label('Agente')

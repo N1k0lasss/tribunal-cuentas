@@ -7,31 +7,39 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
+use Illuminate\Contracts\Support\Htmlable;
+use BackedEnum;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
-
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static ?string $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 
     protected static ?string $modelLabel = 'Aprobación';
 
-    public static function form(Form $form): Form
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return $form
+        return 'heroicon-o-check-badge';
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
             ->schema([
                 Select::make('solicitud_id')
                     ->label('Solicitud')
@@ -90,6 +98,29 @@ class AprobacionResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->with(['aprobador', 'solicitud']);
+
+        $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+
+        if (!$tienePermisosDeAdmin) {
+            $query->whereHas('solicitud', function (Builder $query): void {
+                $query->where('agente_id', Auth::user()->agente?->id);
+            });
+        }
+
+        return $query;
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
     }
 
     public static function getPages(): array

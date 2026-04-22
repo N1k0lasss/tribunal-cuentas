@@ -10,11 +10,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "filament/filament": "^3.0",
+        "bezhansalleh/filament-shield": "^4.2",
+        "filament/filament": "^5.5",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.5",
-        "saade/filament-fullcalendar": "^3.2",
+        "livewire/livewire": "^4.1",
+        "saade/filament-fullcalendar": "^4.0",
         "spatie/laravel-permission": "^6.0"
     },
     "require-dev": {
@@ -102,6 +103,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "beta",
     "prefer-stable": true
 }
