@@ -10,8 +10,8 @@ use App\Models\TipoSolicitud;
 use App\Services\WorkflowSolicitudesService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
@@ -28,7 +28,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
+use Filament\Infolists\Infolist;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -40,11 +41,11 @@ class SolicitudResource extends Resource
 {
     protected static ?string $model = Solicitud::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Solicitudes';
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Solicitudes';
 
@@ -52,12 +53,12 @@ class SolicitudResource extends Resource
 
     // ── Formulario ─────────────────────────────────────────────
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
         $user     = Auth::user();
         $esAgente = $user?->hasRole('agente');
 
-        return $schema->components([
+        return $form->components([
 
             // ═══════════════════════════════════════════════════════════
             // SECCIÓN 1 — Identificación de la Solicitud
@@ -318,10 +319,10 @@ class SolicitudResource extends Resource
 
     // ── Infolist (Divulgación Progresiva — modal) ─────────────
 
-    public static function infolist(Schema $schema): Schema
+    public static function infolist (Infolist $infolist): Infolist
     {
-        return $schema
-            ->components([
+        return $infolist
+            ->schema([
                 // ── Sección 1: Datos del Agente ───────────────────
                 Section::make('Datos del Agente')
                     ->icon('heroicon-o-user-circle')

@@ -11,7 +11,7 @@ use App\Models\Feriados;
 use BackedEnum;
 use Illuminate\Support\Facades\Log;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -24,13 +24,13 @@ class FeriadosResource extends Resource
 {
     protected static ?string $model = Feriados::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Calendario';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return FeriadosForm::configure($schema);
+        return FeriadosForm::configure($form);
     }
 
     public static function table(Table $table): Table
