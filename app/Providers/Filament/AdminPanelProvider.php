@@ -31,12 +31,16 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
-            ->path('admin')
+            ->path('')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
+            ->brandName('Tribunal de Cuentas')
+            ->brandLogo(asset('images/tcse_logo.png'))
+            ->brandLogoHeight('15rem')
             ->colors([
-                'primary' => Color::hex('#1A365D'),
+                'primary' => \Filament\Support\Colors\Color::hex('#1e3a8a'),
             ])
+
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
