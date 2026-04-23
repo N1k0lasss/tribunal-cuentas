@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
+
 class HistorialSolicitudes extends Page implements HasTable
 {
     use InteractsWithTable;

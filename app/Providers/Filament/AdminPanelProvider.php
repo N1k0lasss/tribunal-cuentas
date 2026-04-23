@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\AgenteInfoWidget;
 use App\Filament\Admin\Widgets\LicenseStatsWidget;
-use App\Filament\Admin\Widgets\MiniCalendarWidget;
 use App\Filament\Admin\Widgets\MisSaldosStatsWidget;
 use App\Filament\Auth\Pages\Login;
 use Filament\Http\Middleware\Authenticate;
@@ -55,7 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AgenteInfoWidget::class,
                 MisSaldosStatsWidget::class,
-                MiniCalendarWidget::class,
+                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
                 LicenseStatsWidget::class,
                 // AccountWidget::class,
                 // FilamentInfoWidget::class,
