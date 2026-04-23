@@ -22,15 +22,21 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 class EmpleadoPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
-
     {
         return $panel
+
             ->id('empleado')
-            ->path('') // Esto lo pone en la ruta principal (127.0.0.1:8000)
-            ->login()  // Habilita la pantalla de login para este panel
+            ->default()
+            ->path('')
+            ->login()
+            ->brandName('Tribunal de Cuentas') // Cambia el texto "tribunal-cuentas"
+            ->brandLogo(asset('images/tcse_logo.png')) // Agrega tu logo
+            ->brandLogoHeight('15rem') // Ajusta el tamaño del logo
             ->colors([
-                'primary' => Color::Blue, // Puedes poner los colores del Tribunal aquí
+                // Puedes usar un color predeterminado o el HEX exacto de tu diseño anterior
+                'primary' => Color::hex('#1e3a8a'),
             ])
+
 
             ->discoverResources(in: app_path('Filament/Empleado/Resources'), for: 'App\Filament\Empleado\Resources')
             ->discoverPages(in: app_path('Filament/Empleado/Pages'), for: 'App\Filament\Empleado\Pages')
