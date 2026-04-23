@@ -2,10 +2,9 @@
 
 use App\Filament\Admin\Resources\Agentes\AgenteResource;
 use App\Models\Agente;
-use App\Models\User;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    loginAsRole('administrador');
 });
 
 it('can render Agentes list page', function () {

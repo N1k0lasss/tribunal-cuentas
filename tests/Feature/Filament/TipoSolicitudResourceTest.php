@@ -2,10 +2,9 @@
 
 use App\Filament\Admin\Resources\TipoSolicituds\TipoSolicitudResource;
 use App\Models\TipoSolicitud;
-use App\Models\User;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    loginAsRole('administrador');
 });
 
 it('can render TipoSolicituds list page', function () {
