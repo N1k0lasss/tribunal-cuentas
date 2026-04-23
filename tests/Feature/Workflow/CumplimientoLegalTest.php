@@ -99,3 +99,33 @@ it('rechaza prorroga fuera del plazo legal de 48 horas', function () {
     expect(fn () => $service->validarCreacion($prorroga))
         ->toThrow(ValidationException::class);
 });
+
+it('rechaza regimen legal no habilitado para tipo de contrato del agente', function () {
+    $area = Area::factory()->create();
+    $agente = Agente::factory()->create([
+        'area_id' => $area->id,
+        'tipo_contrato' => Agente::TIPO_CONTRATO_SERVICIO,
+    ]);
+
+    $tipo = TipoSolicitud::factory()->create([
+        'nombre' => 'Receso Planta',
+        'unidad_medida' => 'dias',
+        'tipo_dias' => 'corridos',
+        'contratos_habilitados' => [Agente::TIPO_CONTRATO_PLANTA_PERMANENTE],
+    ]);
+
+    $solicitud = new Solicitud([
+        'agente_id' => $agente->id,
+        'tipo_solicitud_id' => $tipo->id,
+        'fecha_solicitud' => now()->toDateString(),
+        'fecha_inicio' => now()->addDays(2)->toDateString(),
+        'fecha_fin' => now()->addDays(4)->toDateString(),
+        'dias_solicitados' => 3,
+        'estado' => Solicitud::ESTADO_PENDIENTE,
+    ]);
+
+    $service = app(CumplimientoLegalService::class);
+
+    expect(fn () => $service->validarCreacion($solicitud))
+        ->toThrow(ValidationException::class);
+});

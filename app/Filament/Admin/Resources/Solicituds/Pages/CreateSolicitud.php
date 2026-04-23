@@ -13,6 +13,8 @@ class CreateSolicitud extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data['estado'] = Solicitud::ESTADO_PENDIENTE;
+
         if (array_key_exists('es_prorroga', $data)) {
             $data['es_prorroga'] = (bool) $data['es_prorroga'];
         }

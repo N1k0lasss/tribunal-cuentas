@@ -5,8 +5,10 @@ namespace App\Filament\Admin\Resources\Solicituds;
 use App\Filament\Admin\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\EditSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
+use App\Models\Agente;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
+use App\Services\SaldoLicenciaService;
 use App\Services\WorkflowSolicitudesService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -15,15 +17,14 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\FileUpload;
-use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -37,6 +38,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 
 class SolicitudResource extends Resource
 {
@@ -56,7 +59,7 @@ class SolicitudResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $user     = Auth::user();
+        $user = Auth::user();
         $esAgente = $user?->hasRole('agente');
 
         return $schema->components([
@@ -88,12 +91,12 @@ class SolicitudResource extends Resource
                     Select::make('categoria')
                         ->label('Categoría')
                         ->options([
-                            'Receso'             => 'Receso',
+                            'Receso' => 'Receso',
                             'Salud y Maternidad' => 'Salud y Maternidad',
-                            'Extraordinaria'     => 'Licencia Extraordinaria',
-                            'Justificación'      => 'Justificación',
-                            'Franquicia'         => 'Franquicia',
-                            'Falta/Tardanza'     => 'Falta/Tardanza',
+                            'Extraordinaria' => 'Licencia Extraordinaria',
+                            'Justificación' => 'Justificación',
+                            'Franquicia' => 'Franquicia',
+                            'Falta/Tardanza' => 'Falta/Tardanza',
                         ])
                         ->live()
                         ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
@@ -104,10 +107,25 @@ class SolicitudResource extends Resource
                     Select::make('tipo_solicitud_id')
                         ->label('Tipo de Licencia')
                         ->helperText('El régimen legal determina el cálculo de días y los requisitos.')
-                        ->options(
-                            fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))
-                                ->pluck('nombre', 'id')
-                        )
+                        ->options(function ($get) {
+                            $agenteId = $get('agente_id');
+                            $agente = $agenteId ? Agente::find($agenteId) : null;
+
+                            // Si el admin no eligió agente aún, fallback al propio por defecto
+                            $tipoContrato = $agente ? $agente->tipo_contrato : Auth::user()?->agente?->tipo_contrato;
+
+                            return TipoSolicitud::query()
+                                ->where('categoria', $get('categoria'))
+                                ->get()
+                                ->filter(function (TipoSolicitud $tipoSolicitud) use ($tipoContrato): bool {
+                                    if ($tipoContrato === null) {
+                                        return true;
+                                    }
+
+                                    return $tipoSolicitud->permiteContrato($tipoContrato);
+                                })
+                                ->pluck('nombre', 'id');
+                        })
                         ->live()
                         ->required()
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
@@ -275,16 +293,15 @@ class SolicitudResource extends Resource
                     Select::make('estado')
                         ->label('Estado')
                         ->options([
-                            'pendiente'   => 'Pendiente',
+                            'pendiente' => 'Pendiente',
                             'en_revision' => 'En Revisión',
-                            'aprobado'    => 'Aprobado',
-                            'rechazado'   => 'Rechazado',
+                            'aprobado' => 'Aprobado',
+                            'rechazado' => 'Rechazado',
                         ])
                         ->default('pendiente')
-                        ->required()
+                        ->dehydrated(false)
                         ->visible(fn () => ! $esAgente)
-                        // Poka-Yoke: bloquear cambio manual si el flujo ya comenzó
-                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                        ->disabled(),
 
                     // Toggle booleano (reemplaza Select 0/1 que era confuso)
                     Toggle::make('es_prorroga')
@@ -303,7 +320,7 @@ class SolicitudResource extends Resource
                             fn (Solicitud $record) => "#{$record->id} — {$record->fecha_inicio?->format('d/m/Y')} al {$record->fecha_fin?->format('d/m/Y')}"
                         )
                         ->required(fn ($get) => (bool) $get('es_prorroga'))
-                        ->visible(fn ($get)  => (bool) $get('es_prorroga'))
+                        ->visible(fn ($get) => (bool) $get('es_prorroga'))
                         ->searchable()
                         ->preload()
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
@@ -703,28 +720,124 @@ class SolicitudResource extends Resource
                     ->tooltip('Editar Solicitud')
                     ->visible(fn (Solicitud $record) => $record->puedeSerEditada()),
 
+                Action::make('enviar_revision')
+                    ->label('Enviar')
+                    ->icon('heroicon-m-paper-airplane')
+                    ->color('info')
+                    ->button()
+                    ->requiresConfirmation()
+                    ->modalHeading('Enviar solicitud a revisión')
+                    ->modalDescription('La solicitud saldrá del estado borrador y comenzará el circuito formal de aprobación.')
+                    ->action(function (Solicitud $record): void {
+                        $user = Auth::user();
+
+                        if ($user === null) {
+                            return;
+                        }
+
+                        app(WorkflowSolicitudesService::class)->enviarParaRevision($record, $user);
+                        $record->refresh();
+
+                        Notification::make()
+                            ->success()
+                            ->title('Solicitud enviada')
+                            ->body('La solicitud fue enviada correctamente al circuito de aprobación.')
+                            ->send();
+                    })
+                    ->visible(fn (Solicitud $record): bool => Auth::user()?->hasRole('agente') === true
+                        && Auth::user()?->agente?->id === $record->agente_id
+                        && $record->estado === Solicitud::ESTADO_PENDIENTE
+                    ),
+
                 // ── Action: Aprobar ────────────────────────────────
                 Action::make('aprobar')
                     ->label('Aprobar')
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
                     ->button()
-                    ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
+                    ->modalSubmitActionLabel('Confirmar Aprobación')
+                    ->modalCancelActionLabel('Cancelar')
                     ->form([
+                        Placeholder::make('saldo_disponible')
+                            ->label('Saldo disponible')
+                            ->content(fn (?Solicitud $record): string => $record === null
+                                    ? '—'
+                                    : '<div>Disponible: <strong>'.app(SaldoLicenciaService::class)->calcularDiasDisponibles($record->agente, $record->tipoSolicitud).' días</strong></div>'
+                            )
+                            ->columnSpanFull(),
                         Textarea::make('observacion')
                             ->label('Observación (opcional)')
                             ->maxLength(500),
                     ])
-                    ->action(function (Solicitud $record, array $data) {
-                        static::procesarAprobacion($record, 'aprobado', $data['observacion'] ?? null);
+                    ->disabled(function (?Solicitud $record): bool {
+                        if ($record === null) {
+                            return true;
+                        }
 
-                        Notification::make()
-                            ->success()
-                            ->title('Solicitud aprobada')
-                            ->body('La solicitud fue aprobada correctamente en esta etapa.')
-                            ->send();
+                        // Verificar resolución final
+                        $hasResolucion = $record->resolucion !== null
+                            && ! blank($record->resolucion->numero)
+                            && ! blank($record->resolucion->gde_expediente)
+                            && ! blank($record->resolucion->gde_documento)
+                            && $record->resolucion->fecha_emision !== null;
+
+                        if (! $hasResolucion) {
+                            return true;
+                        }
+
+                        $available = app(SaldoLicenciaService::class)->calcularDiasDisponibles($record->agente, $record->tipoSolicitud);
+
+                        return ($record->dias_solicitados ?? 0) > $available;
+                    })
+                    ->tooltip(function (?Solicitud $record): ?string {
+                        if ($record === null) {
+                            return null;
+                        }
+
+                        $hasResolucion = $record->resolucion !== null
+                            && ! blank($record->resolucion->numero)
+                            && ! blank($record->resolucion->gde_expediente)
+                            && ! blank($record->resolucion->gde_documento)
+                            && $record->resolucion->fecha_emision !== null;
+
+                        if (! $hasResolucion) {
+                            return 'Falta la resolución final (número, fecha y referencias GDE).';
+                        }
+
+                        $available = app(SaldoLicenciaService::class)->calcularDiasDisponibles($record->agente, $record->tipoSolicitud);
+
+                        if (($record->dias_solicitados ?? 0) > $available) {
+                            return 'No hay saldo suficiente para aprobar esta solicitud.';
+                        }
+
+                        return null;
+                    })
+                    ->action(function (Solicitud $record, array $data) {
+                        try {
+                            static::procesarAprobacion($record, 'aprobado', $data['observacion'] ?? null);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Solicitud aprobada')
+                                ->body('La solicitud fue aprobada correctamente en esta etapa.')
+                                ->send();
+                        } catch (ValidationException $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se pudo aprobar la solicitud')
+                                ->body(collect($e->errors())->flatten()->implode(' '))
+                                ->persistent()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Error inesperado')
+                                ->body($e->getMessage())
+                                ->persistent()
+                                ->send();
+                        }
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('aprobar', $record)),
 
@@ -735,9 +848,10 @@ class SolicitudResource extends Resource
                     ->color('danger')
                     ->button()
                     ->outlined()
-                    ->requiresConfirmation()
                     ->modalHeading('Rechazar Solicitud')
                     ->modalDescription('Esta acción rechazará la solicitud y detendrá el flujo de aprobación.')
+                    ->modalSubmitActionLabel('Confirmar Rechazo')
+                    ->modalCancelActionLabel('Cancelar')
                     ->form([
                         Textarea::make('observacion')
                             ->label('Motivo del rechazo')
@@ -745,13 +859,29 @@ class SolicitudResource extends Resource
                             ->maxLength(500),
                     ])
                     ->action(function (Solicitud $record, array $data) {
-                        static::procesarAprobacion($record, 'rechazado', $data['observacion']);
+                        try {
+                            static::procesarAprobacion($record, 'rechazado', $data['observacion']);
 
-                        Notification::make()
-                            ->danger()
-                            ->title('Solicitud rechazada')
-                            ->body('La solicitud fue rechazada.')
-                            ->send();
+                            Notification::make()
+                                ->danger()
+                                ->title('Solicitud rechazada')
+                                ->body('La solicitud fue rechazada.')
+                                ->send();
+                        } catch (ValidationException $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se pudo rechazar la solicitud')
+                                ->body(collect($e->errors())->flatten()->implode(' '))
+                                ->persistent()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Error inesperado')
+                                ->body($e->getMessage())
+                                ->persistent()
+                                ->send();
+                        }
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('rechazar', $record)),
             ])
@@ -793,8 +923,7 @@ class SolicitudResource extends Resource
             ->when($user->hasRole('jefatura'), function (Builder $query) {
                 // Jefatura ve solicitudes pendientes en su etapa + las que ya procesó
                 return $query->where(function (Builder $q) {
-                    $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_PENDIENTE);
+                    $q->where('estado', Solicitud::ESTADO_EN_REVISION);
                 });
             })
             ->when($user->hasRole('secretaria_general'), function (Builder $query) {

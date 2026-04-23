@@ -16,12 +16,49 @@ class WorkflowSolicitudesService
         private readonly DelegacionService $delegacionService,
         private readonly WorkflowAuditoriaService $auditoriaService,
         private readonly SaldoLicenciaService $saldoLicenciaService,
+        private readonly ResolucionService $resolucionService,
     ) {}
+
+    public function enviarParaRevision(Solicitud $solicitud, User $actor): void
+    {
+        if ($actor->agente?->id !== $solicitud->agente_id) {
+            throw ValidationException::withMessages([
+                'autorizacion' => 'Solo el agente titular puede enviar la solicitud a revisión.',
+            ]);
+        }
+
+        if ($solicitud->estado !== Solicitud::ESTADO_PENDIENTE) {
+            throw ValidationException::withMessages([
+                'estado' => 'Solo se pueden enviar solicitudes en estado pendiente.',
+            ]);
+        }
+
+        $estadoAnterior = $solicitud->estado;
+
+        $solicitud->update([
+            'estado' => Solicitud::ESTADO_EN_REVISION,
+        ]);
+
+        $this->auditoriaService->registrar(
+            solicitud: $solicitud,
+            evento: 'solicitud_enviada_revision',
+            estadoAnterior: $estadoAnterior,
+            estadoNuevo: $solicitud->estado,
+            detalle: 'Solicitud enviada por agente al circuito de aprobación.',
+            actor: $actor,
+        );
+    }
 
     public function resolver(Solicitud $solicitud, User $actor, string $estado, ?string $observacion = null): Aprobacion
     {
         return DB::transaction(function () use ($solicitud, $actor, $estado, $observacion): Aprobacion {
             $solicitud->loadMissing('aprobaciones', 'tipoSolicitud', 'agente');
+
+            if ($solicitud->estado !== Solicitud::ESTADO_EN_REVISION) {
+                throw ValidationException::withMessages([
+                    'estado' => 'Solo se puede aprobar o rechazar una solicitud en revisión.',
+                ]);
+            }
 
             $etapa = $solicitud->etapaActual();
 
@@ -55,6 +92,10 @@ class WorkflowSolicitudesService
                 throw ValidationException::withMessages([
                     'solicitud' => 'La etapa actual ya fue resuelta previamente.',
                 ]);
+            }
+
+            if ($estado === 'aprobado' && $etapa === Solicitud::ETAPA_DIRECCION) {
+                $this->resolucionService->asegurarResolucionFinal($solicitud);
             }
 
             $estadoAnterior = $solicitud->estado;

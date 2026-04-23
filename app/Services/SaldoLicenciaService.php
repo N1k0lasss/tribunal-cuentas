@@ -7,6 +7,8 @@ use App\Models\Saldo;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class SaldoLicenciaService
 {
@@ -33,30 +35,49 @@ class SaldoLicenciaService
 
     public function consumirSaldoPorAprobacion(Solicitud $solicitud): void
     {
-        $solicitud->loadMissing('agente', 'tipoSolicitud');
+        DB::transaction(function () use ($solicitud): void {
+            $solicitud->loadMissing('agente', 'tipoSolicitud');
 
-        if ($solicitud->dias_solicitados === null || $solicitud->dias_solicitados <= 0) {
-            return;
-        }
-
-        $pendiente = $solicitud->dias_solicitados;
-        $saldos = $this->obtenerSaldosVigentes($solicitud->agente, $solicitud->tipoSolicitud)
-            ->sortBy('anio');
-
-        foreach ($saldos as $saldo) {
-            if ($pendiente <= 0) {
-                break;
+            if ($solicitud->dias_solicitados === null || $solicitud->dias_solicitados <= 0) {
+                return;
             }
 
-            $disponible = max(0, $saldo->dias_otorgados - $saldo->dias_usados);
-
-            if ($disponible === 0) {
-                continue;
+            if ($solicitud->agente === null || $solicitud->tipoSolicitud === null) {
+                throw ValidationException::withMessages([
+                    'solicitud' => 'No se puede consumir saldo sin agente y régimen legal vinculados.',
+                ]);
             }
 
-            $aConsumir = min($pendiente, $disponible);
-            $saldo->increment('dias_usados', $aConsumir);
-            $pendiente -= $aConsumir;
-        }
+            $pendiente = $solicitud->dias_solicitados;
+            $saldos = Saldo::query()
+                ->where('agente_id', $solicitud->agente->id)
+                ->where('tipo_saldo', $solicitud->tipoSolicitud->nombre)
+                ->whereBetween('anio', [now()->year - 2, now()->year])
+                ->orderBy('anio')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($saldos as $saldo) {
+                if ($pendiente <= 0) {
+                    break;
+                }
+
+                $disponible = max(0, $saldo->dias_otorgados - $saldo->dias_usados);
+
+                if ($disponible === 0) {
+                    continue;
+                }
+
+                $aConsumir = min($pendiente, $disponible);
+                $saldo->increment('dias_usados', $aConsumir);
+                $pendiente -= $aConsumir;
+            }
+
+            if ($pendiente > 0) {
+                throw ValidationException::withMessages([
+                    'dias_solicitados' => 'No hay saldo suficiente para completar la imputación de la licencia aprobada.',
+                ]);
+            }
+        });
     }
 }

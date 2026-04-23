@@ -8,16 +8,8 @@
 @import '../../../../vendor/saade/filament-fullcalendar/resources/css/filament-fullcalendar.css';
 @source '../../../../vendor/saade/filament-fullcalendar/resources/views/**/*.blade.php';
 
-/* Fix Saade Fullcalendar text in dark mode */
-.dark .fc .fc-col-header-cell-cushion, 
-.dark .fc .fc-daygrid-day-number,
-.dark .fc .fc-list-event-time,
-.dark .fc .fc-list-event-title,
-.dark .fc .fc-timegrid-slot-label-cushion {
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
 :root {
+    /* Core brand palette */
     --tcse-bordeaux: #6d0b4f;
     --tcse-bordeaux-soft: #8a1f67;
     --tcse-slate: #183149;
@@ -26,6 +18,34 @@
     --tcse-primary-rgb: 109, 11, 79;
     --tcse-surface-rgb: 248, 250, 252;
     --tcse-border-rgb: 15, 23, 42;
+
+    /* Unified dashboard dark palette */
+    --tcse-navy: #0d1b2e;
+    --tcse-navy-mid: #1a2a40;
+    --tcse-content-bg: #0f172a;
+    --tcse-surface-card: #1e293b;
+    --tcse-surface-card-hover: #243447;
+    --tcse-orange: #f59e0b;
+    --tcse-orange-soft: rgba(245, 158, 11, 0.15);
+    --tcse-orange-ring: rgba(245, 158, 11, 0.45);
+    --tcse-text-primary: rgba(255, 255, 255, 0.92);
+    --tcse-text-muted: #64748b;
+    --tcse-text-dim: rgba(255, 255, 255, 0.38);
+    --tcse-border-subtle: rgba(255, 255, 255, 0.07);
+    --tcse-bordeaux-glow: rgba(109, 11, 79, 0.14);
+}
+
+/* Fix Saade Fullcalendar text in both modes */
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number {
+    color: inherit;
+}
+.dark .fc .fc-col-header-cell-cushion, 
+.dark .fc .fc-daygrid-day-number,
+.dark .fc .fc-list-event-time,
+.dark .fc .fc-list-event-title,
+.dark .fc .fc-timegrid-slot-label-cushion {
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Login split-screen styles live in resources/views/filament/auth/login-left-panel.blade.php */
@@ -379,4 +399,296 @@ html:not(.dark) .fi-resource-aprobacions .fi-ta-header-toolbar {
 
 html:not(.dark) .fi-resource-aprobacions .fi-ta-row:hover td {
     background: rgba(245, 158, 11, 0.08) !important;
+}
+
+/* ======================================================================
+   REGIMEN LEGAL - Lectura para agente
+   ====================================================================== */
+
+.regimen-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1.25rem 1.4rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(45, 115, 255, 0.25);
+    background: linear-gradient(145deg, rgba(45, 115, 255, 0.15) 0%, rgba(15, 23, 42, 0.45) 70%);
+}
+
+.regimen-hero__icon-wrapper {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(45, 115, 255, 0.4);
+    background: rgba(45, 115, 255, 0.2);
+}
+
+.regimen-hero__icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    color: #9ec6ff;
+}
+
+.regimen-hero__content {
+    flex: 1;
+}
+
+.regimen-hero__eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ec6ff;
+    font-weight: 600;
+}
+
+.regimen-hero__title {
+    margin: 0.28rem 0 0;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+}
+
+.regimen-hero__description {
+    margin: 0.4rem 0 0;
+    color: rgba(255, 255, 255, 0.68);
+    max-width: 54rem;
+    font-size: 0.87rem;
+    line-height: 1.5;
+}
+
+.regimen-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.65rem;
+}
+
+.regimen-chip {
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.73rem;
+}
+
+.regimen-hero__link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    color: #d8e7ff;
+    font-size: 0.84rem;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.regimen-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.regimen-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.regimen-filter-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.58);
+}
+
+.regimen-filter-input {
+    border-radius: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: rgba(15, 23, 42, 0.65);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.55rem 0.72rem;
+    font-size: 0.87rem;
+}
+
+.regimen-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.regimen-card {
+    border-radius: 0.95rem;
+    padding: 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.regimen-card__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-bottom: 0.75rem;
+}
+
+.regimen-card__categoria {
+    margin: 0;
+    font-size: 0.71rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.regimen-card__title {
+    margin: 0.22rem 0 0;
+    font-size: 0.98rem;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.35;
+}
+
+.regimen-badge {
+    white-space: nowrap;
+    border-radius: 999px;
+    border: 1px solid rgba(45, 115, 255, 0.45);
+    background: rgba(45, 115, 255, 0.2);
+    padding: 0.2rem 0.5rem;
+    color: #cae1ff;
+    font-size: 0.72rem;
+    height: fit-content;
+}
+
+.regimen-list {
+    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.regimen-list__row {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 0.5rem;
+}
+
+.regimen-list__row dt {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.regimen-list__row dd {
+    margin: 0;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.regimen-card__footer {
+    margin-top: 0.72rem;
+}
+
+.regimen-applicability {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.71rem;
+    border: 1px solid transparent;
+}
+
+.regimen-applicability--ok {
+    color: #b8f7d0;
+    background: rgba(16, 185, 129, 0.17);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.regimen-applicability--off {
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.34);
+}
+
+.regimen-empty {
+    grid-column: 1 / -1;
+    border-radius: 0.95rem;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    padding: 1.3rem;
+    text-align: center;
+}
+
+.regimen-empty__icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin: 0 auto 0.45rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.regimen-empty__title {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.93rem;
+}
+
+.regimen-empty__description {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.8rem;
+}
+
+html:not(.dark) .regimen-hero {
+    background: linear-gradient(145deg, rgba(45, 115, 255, 0.1) 0%, rgba(240, 246, 255, 1) 70%);
+}
+
+html:not(.dark) .regimen-hero__title,
+html:not(.dark) .regimen-card__title,
+html:not(.dark) .regimen-list__row dd,
+html:not(.dark) .regimen-empty__title {
+    color: rgba(15, 23, 42, 0.9);
+}
+
+html:not(.dark) .regimen-hero__description,
+html:not(.dark) .regimen-card__categoria,
+html:not(.dark) .regimen-list__row dt,
+html:not(.dark) .regimen-empty__description,
+html:not(.dark) .regimen-filter-label {
+    color: rgba(15, 23, 42, 0.62);
+}
+
+html:not(.dark) .regimen-chip {
+    color: rgba(15, 23, 42, 0.8);
+    border-color: rgba(15, 23, 42, 0.2);
+}
+
+html:not(.dark) .regimen-filter-input {
+    color: rgba(15, 23, 42, 0.86);
+    background: #fff;
+    border-color: rgba(15, 23, 42, 0.14);
+}
+
+html:not(.dark) .regimen-card {
+    border-color: rgba(15, 23, 42, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 960px) {
+    .regimen-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .regimen-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .regimen-hero {
+        padding: 1rem;
+    }
+
+    .regimen-list__row {
+        grid-template-columns: 1fr;
+        gap: 0.15rem;
+    }
 }

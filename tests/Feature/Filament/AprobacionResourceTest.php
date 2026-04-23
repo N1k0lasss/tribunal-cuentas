@@ -2,21 +2,16 @@
 
 use App\Filament\Admin\Resources\Aprobacions\AprobacionResource;
 use App\Models\Aprobacion;
-use App\Models\User;
-use Illuminate\Contracts\Auth\Authenticatable;
 
-use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 beforeEach(function () {
-    /** @var Authenticatable $user */
-    $user = User::factory()->create();
-    actingAs($user);
+    loginAsRole('agente');
 });
 
-it('can render Aprobacions list page', function () {
+it('cannot render Aprobacions list page for agente role', function () {
     get(AprobacionResource::getUrl('index'))
-        ->assertSuccessful();
+        ->assertForbidden();
 });
 
 it('cannot access Aprobacions create page', function () {

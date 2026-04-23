@@ -16,11 +16,29 @@ class CumplimientoLegalService
     public function validarCreacion(Solicitud $solicitud): void
     {
         $solicitud->loadMissing('tipoSolicitud');
+        $this->validarContratoHabilitado($solicitud);
         $this->validarRangoFechas($solicitud);
         $this->validarDuracionMaxima($solicitud);
         $this->validarSaldoDisponible($solicitud);
         $this->validarProrroga($solicitud);
         $this->calcularVentanaJustificacion($solicitud);
+    }
+
+    public function validarContratoHabilitado(Solicitud $solicitud): void
+    {
+        $solicitud->loadMissing('agente', 'tipoSolicitud');
+
+        if ($solicitud->agente === null || $solicitud->tipoSolicitud === null) {
+            return;
+        }
+
+        $tipoContrato = (string) $solicitud->agente->tipo_contrato;
+
+        if ($tipoContrato === '' || ! $solicitud->tipoSolicitud->permiteContrato($tipoContrato)) {
+            throw ValidationException::withMessages([
+                'tipo_solicitud_id' => 'El régimen legal seleccionado no aplica al tipo de contratación del agente.',
+            ]);
+        }
     }
 
     public function validarRangoFechas(Solicitud $solicitud): void

@@ -102,6 +102,10 @@ class SolicitudPolicy
      */
     public function aprobar(User $user, Solicitud $solicitud): bool
     {
+        if ($solicitud->estado !== Solicitud::ESTADO_EN_REVISION) {
+            return false;
+        }
+
         return app(DelegacionService::class)->puedeActuarEnEtapa($user, $solicitud);
     }
 
