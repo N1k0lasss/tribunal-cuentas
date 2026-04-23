@@ -15,7 +15,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -26,11 +26,11 @@ class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
+    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
 
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static ?string $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 
@@ -41,10 +41,10 @@ class AprobacionResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return $schema
-            ->components([
+        return $form
+            ->schema([
                 Select::make('solicitud_id')
                     ->label('Solicitud')
                     ->relationship('solicitud', 'id')

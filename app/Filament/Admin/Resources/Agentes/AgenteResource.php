@@ -11,16 +11,17 @@ use App\Filament\Admin\Resources\Agentes\Schemas\AgenteInfolist;
 use App\Filament\Admin\Resources\Agentes\Tables\AgentesTable;
 use App\Models\Agente;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Form;
+use Filament\Infolists\Infolist;
 
 class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $recordTitleAttribute = 'apellido';
 
@@ -29,14 +30,14 @@ class AgenteResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return AgenteForm::configure($schema);
+    return AgenteForm::configure($form);
     }
 
-    public static function infolist(Schema $schema): Schema
+    public static function infolist(Infolist $infolist): Infolist
     {
-        return AgenteInfolist::configure($schema);
+        return AgenteInfolist::configure($infolist);
     }
 
     public static function table(Table $table): Table

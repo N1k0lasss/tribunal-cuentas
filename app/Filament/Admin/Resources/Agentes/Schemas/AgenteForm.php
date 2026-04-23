@@ -5,11 +5,11 @@ namespace App\Filament\Admin\Resources\Agentes\Schemas;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 
 class AgenteForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $schema): Form
     {
         return $schema
             ->components([

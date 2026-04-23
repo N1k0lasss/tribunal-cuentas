@@ -9,7 +9,7 @@ use App\Filament\Admin\Resources\Areas\Schemas\AreaForm;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +18,7 @@ class AreaResource extends Resource
 {
     protected static ?string $model = Area::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
@@ -27,9 +27,9 @@ class AreaResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return AreaForm::configure($schema);
+        return AreaForm::configure($form);
     }
 
     public static function table(Table $table): Table
