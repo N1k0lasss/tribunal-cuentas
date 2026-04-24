@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\AgenteFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * @property int|null $user_id 
- * @property-read User|null $user 
+ * @property int|null $user_id
+ * @property-read User|null $user
  * @property int $id
  * @property string $nombre
  * @property string $apellido
@@ -37,6 +38,30 @@ class Agente extends Model
 {
     /** @use HasFactory<AgenteFactory> */
     use HasFactory;
+
+    public const TIPO_CONTRATO_COMUN = 'comun';
+
+    public const TIPO_CONTRATO_SERVICIO = 'servicio';
+
+    public const TIPO_CONTRATO_PLANTA_PERMANENTE = 'planta_permanente';
+
+    /**
+     * @var list<string>
+     */
+    public const TIPOS_CONTRATO = [
+        self::TIPO_CONTRATO_COMUN,
+        self::TIPO_CONTRATO_SERVICIO,
+        self::TIPO_CONTRATO_PLANTA_PERMANENTE,
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const TIPO_CONTRATO_LABELS = [
+        self::TIPO_CONTRATO_COMUN => 'Común',
+        self::TIPO_CONTRATO_SERVICIO => 'Servicio',
+        self::TIPO_CONTRATO_PLANTA_PERMANENTE => 'Planta Permanente',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -64,6 +89,34 @@ class Agente extends Model
         return [
             'fecha_ingreso' => 'date',
         ];
+    }
+
+    public function getTipoContratoLabelAttribute(): string
+    {
+        return self::TIPO_CONTRATO_LABELS[$this->tipo_contrato] ?? (string) $this->tipo_contrato;
+    }
+
+    public static function normalizarTipoContrato(?string $tipoContrato): ?string
+    {
+        if ($tipoContrato === null) {
+            return null;
+        }
+
+        $normalizado = mb_strtolower(trim($tipoContrato));
+
+        return match ($normalizado) {
+            'comun', 'común', 'planta transitoria', 'transitoria' => self::TIPO_CONTRATO_COMUN,
+            'servicio', 'contrato de locación', 'contrato de locacion', 'locación', 'locacion' => self::TIPO_CONTRATO_SERVICIO,
+            'planta permanente', 'permanente' => self::TIPO_CONTRATO_PLANTA_PERMANENTE,
+            default => in_array($tipoContrato, self::TIPOS_CONTRATO, true) ? $tipoContrato : null,
+        };
+    }
+
+    protected function tipoContrato(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value): ?string => self::normalizarTipoContrato($value),
+        );
     }
 
     /**

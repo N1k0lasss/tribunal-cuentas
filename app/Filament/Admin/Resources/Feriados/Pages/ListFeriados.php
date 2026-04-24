@@ -3,7 +3,8 @@
 namespace App\Filament\Admin\Resources\Feriados\Pages;
 
 use App\Filament\Admin\Resources\Feriados\FeriadosResource;
-//use Filament\Actions\CreateAction;
+// use Filament\Actions\CreateAction;
+use App\Filament\Admin\Widgets\CalendarWidget;
 use Filament\Resources\Pages\ListRecords;
 
 class ListFeriados extends ListRecords
@@ -13,21 +14,19 @@ class ListFeriados extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            //CreateAction::make(),
+            // CreateAction::make(),
         ];
     }
+
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\CalendarWidget::class,
+            CalendarWidget::class,
         ];
     }
-    public function getHeaderWidgetsColumns(): int | array
+
+    public function getHeaderWidgetsColumns(): int|array
     {
         return 1;
     }
-
-
-
-
 }
