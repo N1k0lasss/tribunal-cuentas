@@ -1,7 +1,7 @@
 @php
     $nextHoliday = $this->getNextHoliday();
     if ($nextHoliday) {
-        $days = now()->startOfDay()->diffInDays($nextHoliday->computed_proxima_fecha);
+        $days = (int) now()->startOfDay()->diffInDays($nextHoliday->computed_proxima_fecha);
     }
 @endphp
 
