@@ -16,6 +16,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentColor;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -39,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->brandName('TCSE Licencias')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#1A365D'),
             ])
             ->renderHook(
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
