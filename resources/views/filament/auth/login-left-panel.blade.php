@@ -465,11 +465,118 @@
 /* ── Ocultar panel viejo ─────────────────────────── */
 .tcse-login-panel { display: none !important; }
 
+/* ════════════════════════════════════════════════════
+   PANEL DERECHO — Custom right panel
+   ════════════════════════════════════════════════════ */
+
+/* Ocultar logo/heading por defecto de Filament (los reemplazamos) */
+.fi-simple-main .fi-logo { display: none !important; }
+.fi-simple-main .fi-simple-page-heading { display: none !important; }
+.fi-simple-main .fi-simple-page-subheading { display: none !important; }
+
+/* Wrapper del logo + título custom */
+.tcse-rp-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: tcse-fadeup 0.6s ease 0.2s both;
+}
+
+/* Círculo del logo */
+.tcse-rp-logo-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: #1A365D;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 20px rgba(26,54,93,0.3), 0 0 0 4px rgba(26,54,93,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px;
+    margin-bottom: 1.1rem;
+    animation: tcse-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+}
+
+.tcse-rp-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+/* Título del panel derecho */
+.tcse-rp-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1A365D;
+    line-height: 1.25;
+    margin: 0 0 0.3rem;
+    letter-spacing: -0.02em;
+}
+
+/* Subtítulo */
+.tcse-rp-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Footer link */
+.tcse-rp-footer {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6b1c5e;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    cursor: pointer;
+}
+.tcse-rp-footer:hover { color: #1A365D; text-decoration: underline; }
+
+/* ── Botón submit — Bordeaux sólido ─────────────── */
+.fi-simple-main .fi-btn.fi-btn-color-primary {
+    background: #6b1c5e !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px -4px rgba(107,28,94,0.45);
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    border-radius: 0.65rem !important;
+    transition: all 0.2s ease;
+}
+.fi-simple-main .fi-btn.fi-btn-color-primary:hover {
+    background: #571550 !important;
+    box-shadow: 0 6px 20px -4px rgba(107,28,94,0.55);
+    transform: translateY(-1px);
+}
+.fi-simple-main .fi-btn.fi-btn-color-primary:active {
+    transform: translateY(0);
+}
+
+/* Focus ring inputs */
+.fi-simple-main .fi-input-field:focus-within {
+    box-shadow: 0 0 0 3px rgba(107,28,94,0.12);
+    border-color: #6b1c5e !important;
+}
+
+/* Links */
+.fi-simple-main .fi-link,
+.fi-simple-main .fi-ac-link {
+    color: #6b1c5e;
+    font-weight: 500;
+}
+.fi-simple-main .fi-link:hover,
+.fi-simple-main .fi-ac-link:hover { color: #1A365D; }
+
 /* ── Dark mode ───────────────────────────────────── */
 .dark .fi-simple-main        { background: #0f172a !important; }
 .dark .fi-simple-layout      { background: #0a1628 !important; }
 .dark .fi-simple-main .fi-section { border-color: rgba(255,255,255,0.07); }
-.dark .fi-simple-page .fi-simple-page-heading { color: #93c5fd; }
+.dark .tcse-rp-title         { color: #93c5fd; }
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 900px) {
