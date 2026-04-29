@@ -285,7 +285,7 @@ class SolicitudResource extends Resource
                         ->label('Fecha de Solicitud')
                         ->default(now())
                         ->native(false)
-                        ->displayFormat('d/m/Y')
+                        ->displayFormat('d/m/Y'),
 
                     // Toggle booleano (reemplaza Select 0/1 que era confuso)
                     Toggle::make('es_prorroga')
@@ -742,24 +742,8 @@ class SolicitudResource extends Resource
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
                     ->modalSubmitActionLabel('Confirmar Aprobación')
-                    ->modalCancelActionLabel('Cancelar')
-                });
-            })
-            ->when($user->hasRole('secretaria_general'), function (Builder $query) {
-                // Secretaría General ve solicitudes que ya pasaron por jefatura
-                return $query->where(function (Builder $q) {
-                    $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_APROBADO);
-                });
-            })
-            ->when($user->hasRole('presidencia'), function (Builder $query) {
-                // Presidencia ve solicitudes que ya pasaron por secretaría
-                return $query->where(function (Builder $q) {
-                    $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_APROBADO);
-                });
-            });
-        // Administrador: no se aplica filtro (ve todo)
+                    ->modalCancelActionLabel('Cancelar'),
+            ]);
     }
 
     // ── Relaciones y Páginas ───────────────────────────────────
