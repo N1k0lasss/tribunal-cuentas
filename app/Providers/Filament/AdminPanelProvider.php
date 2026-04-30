@@ -46,6 +46,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
                 fn () => view('filament.auth.login-left-panel'),
             )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.auth.login-logo'),
+            )
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([

@@ -462,7 +462,51 @@
     letter-spacing: 0.05em;
 }
 
-/* ── Ocultar panel viejo ─────────────────────────── */
+/* ── Logo circular header (panel derecho) ──────── */
+.tcse-rp-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.tcse-rp-logo-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: #1A365D;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 20px rgba(26,54,93,0.3), 0 0 0 4px rgba(26,54,93,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px;
+    animation: tcse-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+}
+
+.tcse-rp-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+/* Heading/subheading de Filament → estilo TCSE */
+.fi-simple-main .fi-simple-page-heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1A365D;
+    letter-spacing: -0.025em;
+    text-align: center;
+}
+
+.fi-simple-main .fi-simple-page-subheading {
+    font-size: 0.82rem;
+    color: #64748b;
+    text-align: center;
+}
+
 .tcse-login-panel { display: none !important; }
 
 /* ════════════════════════════════════════════════════
