@@ -575,26 +575,26 @@
 .tcse-rp-footer {
     text-align: center;
     font-size: 0.82rem;
-    color: #6b1c5e;
+    color: #1A365D;
     font-weight: 600;
     margin-top: 1.25rem;
     cursor: pointer;
 }
-.tcse-rp-footer:hover { color: #1A365D; text-decoration: underline; }
+.tcse-rp-footer:hover { color: #0d1b2e; text-decoration: underline; }
 
-/* ── Botón submit — Bordeaux sólido ─────────────── */
+/* ── Botón submit — Azul Marino sólido ─────────────── */
 .fi-simple-main .fi-btn.fi-btn-color-primary {
-    background: #6b1c5e !important;
+    background: #1A365D !important;
     border-color: transparent !important;
-    box-shadow: 0 4px 14px -4px rgba(107,28,94,0.45);
+    box-shadow: 0 4px 14px -4px rgba(26, 54, 93, 0.45);
     font-weight: 600;
     font-family: 'Inter', sans-serif;
     border-radius: 0.65rem !important;
     transition: all 0.2s ease;
 }
 .fi-simple-main .fi-btn.fi-btn-color-primary:hover {
-    background: #571550 !important;
-    box-shadow: 0 6px 20px -4px rgba(107,28,94,0.55);
+    background: #132743 !important;
+    box-shadow: 0 6px 20px -4px rgba(26, 54, 93, 0.55);
     transform: translateY(-1px);
 }
 .fi-simple-main .fi-btn.fi-btn-color-primary:active {
@@ -603,18 +603,18 @@
 
 /* Focus ring inputs */
 .fi-simple-main .fi-input-field:focus-within {
-    box-shadow: 0 0 0 3px rgba(107,28,94,0.12);
-    border-color: #6b1c5e !important;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+    border-color: #1A365D !important;
 }
 
 /* Links */
 .fi-simple-main .fi-link,
 .fi-simple-main .fi-ac-link {
-    color: #6b1c5e;
+    color: #1A365D;
     font-weight: 500;
 }
 .fi-simple-main .fi-link:hover,
-.fi-simple-main .fi-ac-link:hover { color: #1A365D; }
+.fi-simple-main .fi-ac-link:hover { color: #0d1b2e; }
 
 /* ── Dark mode ───────────────────────────────────── */
 .dark .fi-simple-main        { background: #0f172a !important; }
