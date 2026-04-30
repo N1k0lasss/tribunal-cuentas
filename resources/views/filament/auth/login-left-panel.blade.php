@@ -583,22 +583,23 @@
 .tcse-rp-footer:hover { color: #0d1b2e; text-decoration: underline; }
 
 /* ── Botón submit — Azul Marino sólido ─────────────── */
-.fi-simple-main .fi-btn.fi-btn-color-primary {
-    background: #1A365D !important;
+.fi-simple-main button[type="submit"] {
+    background-color: #1A365D !important;
     border-color: transparent !important;
-    box-shadow: 0 4px 14px -4px rgba(26, 54, 93, 0.45);
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    box-shadow: 0 4px 14px -4px rgba(26, 54, 93, 0.45) !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
     border-radius: 0.65rem !important;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease !important;
+    color: white !important;
 }
-.fi-simple-main .fi-btn.fi-btn-color-primary:hover {
-    background: #132743 !important;
-    box-shadow: 0 6px 20px -4px rgba(26, 54, 93, 0.55);
-    transform: translateY(-1px);
+.fi-simple-main button[type="submit"]:hover {
+    background-color: #132743 !important;
+    box-shadow: 0 6px 20px -4px rgba(26, 54, 93, 0.55) !important;
+    transform: translateY(-1px) !important;
 }
-.fi-simple-main .fi-btn.fi-btn-color-primary:active {
-    transform: translateY(0);
+.fi-simple-main button[type="submit"]:active {
+    transform: translateY(0) !important;
 }
 
 /* Focus ring inputs */

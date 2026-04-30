@@ -39,9 +39,20 @@ class AdminPanelProvider extends PanelProvider
             ->profile()
             ->passwordReset()
             ->brandName('TCSE Licencias')
+            ->brandLogo(fn () => view('filament.admin.logo'))
+            ->brandLogoHeight('3rem')
             ->colors([
-                'primary' => Color::hex('#1A365D'),
+                'primary' => Color::Hex('#1A365D'), // Navy
+                'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
+                'danger' => Color::Hex('#6B1C5E'), // Bordeaux para alertas
+                'info' => Color::Hex('#2B4C7E'), // Navy más claro
+                'success' => Color::Teal,
+                'warning' => Color::Amber,
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.admin.styles'),
+            )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
                 fn () => view('filament.auth.login-left-panel'),
