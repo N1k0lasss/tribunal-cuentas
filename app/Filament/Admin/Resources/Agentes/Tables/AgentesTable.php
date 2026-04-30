@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Agentes\Tables;
 
-use App\Models\Agente;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -31,7 +30,6 @@ class AgentesTable
                         if (! $state) {
                             return '—';
                         }
-
                         return number_format((int) $state, 0, '', '.');
                     })
                     ->searchable()
@@ -45,11 +43,10 @@ class AgentesTable
                 TextColumn::make('tipo_contrato')
                     ->label('Tipo de Contrato')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => Agente::TIPO_CONTRATO_LABELS[$state] ?? ($state ?? '—'))
                     ->colors([
-                        'info' => fn ($state) => $state === Agente::TIPO_CONTRATO_COMUN,
-                        'warning' => fn ($state) => $state === Agente::TIPO_CONTRATO_SERVICIO,
-                        'success' => fn ($state) => $state === Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                        'success' => fn ($state) => str_contains(strtolower($state ?? ''), 'permanente'),
+                        'warning' => fn ($state) => str_contains(strtolower($state ?? ''), 'transitoria'),
+                        'gray' => fn ($state) => str_contains(strtolower($state ?? ''), 'locación') || str_contains(strtolower($state ?? ''), 'locacion'),
                     ])
                     ->searchable(),
                 TextColumn::make('area.nombre')
@@ -79,7 +76,7 @@ class AgentesTable
                 SelectFilter::make('tipo_contrato')
                     ->label('Tipo de Contrato')
                     ->options(function () {
-                        return Agente::query()
+                        return \App\Models\Agente::query()
                             ->distinct()
                             ->whereNotNull('tipo_contrato')
                             ->pluck('tipo_contrato', 'tipo_contrato')

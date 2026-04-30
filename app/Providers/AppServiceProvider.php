@@ -2,10 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\TipoSolicitud;
-use App\Policies\TipoSolicitudPolicy;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -27,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-        Gate::policy(TipoSolicitud::class, TipoSolicitudPolicy::class);
     }
 
     /**
