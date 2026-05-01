@@ -24,7 +24,13 @@
                 <div class="tcse-logo-ring tcse-logo-ring--outer"></div>
                 <div class="tcse-logo-ring tcse-logo-ring--inner"></div>
                 <div class="tcse-logo-circle">
-                    <span class="tcse-logo-text">TC</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v18"></path>
+                        <path d="M3 7h18"></path>
+                        <path d="M6 7l-3 7s1 2 3 2 3-2 3-2l-3-7"></path>
+                        <path d="M18 7l-3 7s1 2 3 2 3-2 3-2l-3-7"></path>
+                        <path d="M9 21h6"></path>
+                    </svg>
                 </div>
             </div>
 

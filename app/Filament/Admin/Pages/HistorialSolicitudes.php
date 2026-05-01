@@ -281,7 +281,7 @@ class HistorialSolicitudes extends Page implements HasTable
             Action::make('exportar_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->color('info')
+                ->color('primary')
                 ->action(function () {
                     $user = Auth::user();
                     $esAgente = $user?->hasRole('agente');

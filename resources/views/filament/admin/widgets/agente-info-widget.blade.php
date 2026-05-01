@@ -7,13 +7,15 @@
             {{-- Fila Superior: Información del Agente --}}
             <div class="relative z-10 w-full flex flex-col items-center justify-center">
                 {{-- Nombre y Avatar en la misma línea --}}
-                <div class="flex items-center justify-center gap-4">
-                    <div class="flex-shrink-0">
-                        <div class="p-1 bg-white dark:bg-gray-800 rounded-full shadow-sm ring-2 ring-[#1A365D]/20">
-                            <x-filament::avatar
-                                size="w-16 h-16 md:w-20 md:h-20"
-                                src="{{ filament()->getUserAvatarUrl(auth()->user()) }}"
-                            />
+                <div class="flex items-center justify-center gap-4 pb-3">
+                    <div class="flex-shrink-0 -mt-2">
+                        <div class="p-1 bg-white dark:bg-gray-800 rounded-full shadow-sm ring-2 ring-[#1A365D]/20 flex items-center justify-center">
+                            <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-lg font-medium">
+                                <x-filament::avatar
+                                    class="w-full h-full"
+                                    src="{{ filament()->getUserAvatarUrl(auth()->user()) }}"
+                                />
+                            </div>
                         </div>
                     </div>
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-950 dark:text-white tracking-tight truncate">
@@ -22,7 +24,7 @@
                 </div>
                 
                 {{-- Badges --}}
-                <div class="mt-5 flex items-center justify-center gap-4 flex-wrap">
+                <div class="mt-4 flex items-center justify-center gap-4 flex-wrap">
                     <x-filament::badge color="info" size="lg" class="px-4 py-1.5 text-sm">
                         Nº de Legajo: {{ $this->agente->id ?? 'N/A' }}
                     </x-filament::badge>
@@ -43,12 +45,26 @@
 
             {{-- Fila Inferior: Botones Centrados --}}
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 w-full">
+                <style>
+                    #btn-nueva-solicitud {
+                        background-color: #1A365D !important;
+                        color: white !important;
+                        box-shadow: 0 4px 6px -1px rgba(26,54,93,0.3) !important;
+                        border: none !important;
+                    }
+                    #btn-nueva-solicitud * {
+                        color: white !important;
+                    }
+                    #btn-nueva-solicitud:hover {
+                        background-color: #132743 !important;
+                    }
+                </style>
                 <x-filament::button
+                    id="btn-nueva-solicitud"
                     tag="a"
                     href="{{ \App\Filament\Admin\Resources\Solicituds\SolicitudResource::getUrl('create') }}"
                     icon="heroicon-m-plus"
                     size="lg"
-                    style="background-color: #6B1C5E; color: white; border: none; box-shadow: 0 4px 6px -1px rgba(107, 28, 94, 0.3);"
                     class="w-full sm:w-auto min-w-[200px] justify-center"
                 >
                     Nueva Solicitud
