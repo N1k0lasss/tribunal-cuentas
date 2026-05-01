@@ -5,9 +5,9 @@
         border-bottom: none !important;
     }
     .fi-topbar > nav {
-        min-height: 5.5rem !important; /* Aumenta el tamaño del header */
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
+        min-height: 7rem !important; /* Aumenta el tamaño del header */
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
     }
     
     /* Asegurar que los íconos y texto del header sean blancos o legibles */
