@@ -35,7 +35,7 @@ class TestWorkflowSeeder extends Seeder
                     'apellido' => 'Admin',
                     'dni' => '99999999',
                     'cargo' => 'Administrador del Sistema',
-                    'tipo_contrato' => Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                    'tipo_contrato' => 'Planta Permanente',
                     'area_id' => $areaDireccion->id,
                     'fecha_ingreso' => '2015-01-01',
                 ],
@@ -50,7 +50,7 @@ class TestWorkflowSeeder extends Seeder
                     'apellido' => 'Pérez (Agente)',
                     'dni' => '11111111',
                     'cargo' => 'Administrativo',
-                    'tipo_contrato' => Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                    'tipo_contrato' => 'Planta Permanente',
                     'area_id' => $areaMesaEntrada->id,
                     'fecha_ingreso' => '2020-01-01',
                 ],
@@ -65,7 +65,7 @@ class TestWorkflowSeeder extends Seeder
                     'apellido' => 'Jefe de Área',
                     'dni' => '22222222',
                     'cargo' => 'Jefe de Departamento',
-                    'tipo_contrato' => Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                    'tipo_contrato' => 'Planta Permanente',
                     'area_id' => $areaMesaEntrada->id,
                     'fecha_ingreso' => '2018-06-15',
                 ],
@@ -80,7 +80,7 @@ class TestWorkflowSeeder extends Seeder
                     'apellido' => 'Secretario General',
                     'dni' => '33333333',
                     'cargo' => 'Secretario General',
-                    'tipo_contrato' => Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                    'tipo_contrato' => 'Planta Permanente',
                     'area_id' => $areaDireccion->id,
                     'fecha_ingreso' => '2016-03-01',
                 ],
@@ -95,7 +95,7 @@ class TestWorkflowSeeder extends Seeder
                     'apellido' => 'Presidenta',
                     'dni' => '44444444',
                     'cargo' => 'Presidenta del Tribunal',
-                    'tipo_contrato' => Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
+                    'tipo_contrato' => 'Planta Permanente',
                     'area_id' => $areaDireccion->id,
                     'fecha_ingreso' => '2010-01-01',
                 ],
@@ -105,7 +105,7 @@ class TestWorkflowSeeder extends Seeder
         foreach ($usuarios as $userData) {
             $roleName = $userData['role'];
             $agenteData = $userData['agente_data'];
-
+            
             unset($userData['role'], $userData['agente_data']);
 
             $user = User::firstOrCreate(
@@ -113,11 +113,11 @@ class TestWorkflowSeeder extends Seeder
                 $userData
             );
 
-            if (! $user->hasRole($roleName)) {
+            if (!$user->hasRole($roleName)) {
                 $user->assignRole($roleName);
             }
 
-            if (! $user->agente) {
+            if (!$user->agente) {
                 $agenteData['user_id'] = $user->id;
                 Agente::create($agenteData);
             } else {

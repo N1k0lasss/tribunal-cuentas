@@ -2,9 +2,10 @@
 
 use App\Filament\Admin\Resources\Resolucions\ResolucionResource;
 use App\Models\Resolucion;
+use App\Models\User;
 
 beforeEach(function () {
-    loginAsRole('administrador');
+    $this->actingAs(User::factory()->create());
 });
 
 it('can render Resolucions list page', function () {

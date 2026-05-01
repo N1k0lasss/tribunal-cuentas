@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->dateTime('fecha_inicio');
             $table->dateTime('fecha_fin');
-            $table->boolean('todo_el_dia')->default(true);
+            $table->boolean('todo_el_dia')->default (true);
             $table->string('tipo');
             $table->boolean('trasladable')->default(false);
             $table->boolean('recurrente')->default(false);

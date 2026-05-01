@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\InteractsWithWorkflowRules;
 use Database\Factories\SolicitudFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,19 +15,12 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $agente_id
  * @property int $tipo_solicitud_id
- * @property int|null $solicitud_origen_id
  * @property Carbon $fecha_solicitud
  * @property Carbon $fecha_inicio
  * @property Carbon $fecha_fin
  * @property int $dias_solicitados
  * @property string|null $motivo
  * @property string $estado
- * @property bool $es_prorroga
- * @property Carbon|null $justificacion_vence_en
- * @property Carbon|null $justificacion_presentada_en
- * @property Carbon|null $justificacion_vencimiento_notificado_en
- * @property Carbon|null $prorroga_vence_en
- * @property Carbon|null $prorroga_vencimiento_notificado_en
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Agente $agente
@@ -38,32 +30,22 @@ use Illuminate\Support\Carbon;
  * @property-read Resolucion|null $resolucion
  * @property-read Collection<int, Documento> $documentos
  * @property-read int|null $documentos_count
- * @property-read Solicitud|null $solicitudOrigen
- * @property-read Collection<int, Solicitud> $prorrogas
- * @property-read int|null $prorrogas_count
- * @property-read Collection<int, WorkflowEvento> $workflowEventos
- * @property-read int|null $workflow_eventos_count
  */
 class Solicitud extends Model
 {
     /** @use HasFactory<SolicitudFactory> */
-    use HasFactory, InteractsWithWorkflowRules;
+    use HasFactory;
 
     // ── Estados del workflow ────────────────────────────────────
     public const ESTADO_PENDIENTE = 'pendiente';
-
     public const ESTADO_EN_REVISION = 'en_revision';
-
     public const ESTADO_APROBADO = 'aprobado';
-
     public const ESTADO_RECHAZADO = 'rechazado';
 
     // ── Etapas de aprobación (valores del enum en la DB) ───────
     // Nota: 'direccion' en la DB representa "Presidencia" en el negocio.
     public const ETAPA_JEFATURA = 'jefatura';
-
     public const ETAPA_SECRETARIA = 'secretaria';
-
     public const ETAPA_DIRECCION = 'direccion'; // = Presidencia
 
     /**
@@ -149,7 +131,6 @@ class Solicitud extends Model
     protected $fillable = [
         'agente_id',
         'tipo_solicitud_id',
-        'solicitud_origen_id',
         'fecha_solicitud',
         'fecha_inicio',
         'fecha_fin',
@@ -159,12 +140,6 @@ class Solicitud extends Model
         'horas_solicitadas',
         'motivo',
         'estado',
-        'es_prorroga',
-        'justificacion_vence_en',
-        'justificacion_presentada_en',
-        'justificacion_vencimiento_notificado_en',
-        'prorroga_vence_en',
-        'prorroga_vencimiento_notificado_en',
     ];
 
     /**
@@ -179,12 +154,6 @@ class Solicitud extends Model
             'fecha_inicio' => 'date',
             'fecha_fin' => 'date',
             'dias_solicitados' => 'integer',
-            'es_prorroga' => 'boolean',
-            'justificacion_vence_en' => 'datetime',
-            'justificacion_presentada_en' => 'datetime',
-            'justificacion_vencimiento_notificado_en' => 'datetime',
-            'prorroga_vence_en' => 'datetime',
-            'prorroga_vencimiento_notificado_en' => 'datetime',
         ];
     }
 
@@ -206,14 +175,6 @@ class Solicitud extends Model
     public function tipoSolicitud(): BelongsTo
     {
         return $this->belongsTo(TipoSolicitud::class);
-    }
-
-    /**
-     * @return BelongsTo<Solicitud, $this>
-     */
-    public function solicitudOrigen(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'solicitud_origen_id');
     }
 
     /**
@@ -244,80 +205,5 @@ class Solicitud extends Model
     public function documentos(): HasMany
     {
         return $this->hasMany(Documento::class);
-    }
-
-    /**
-     * @return HasMany<Solicitud, $this>
-     */
-    public function prorrogas(): HasMany
-    {
-        return $this->hasMany(self::class, 'solicitud_origen_id');
-    }
-
-    /**
-     * @return HasMany<WorkflowEvento, $this>
-     */
-    public function workflowEventos(): HasMany
-    {
-        return $this->hasMany(WorkflowEvento::class);
-    }
-
-    /**
-     * Get the firmas digitales for the solicitud.
-     *
-     * @return HasMany<FirmaDigital, $this>
-     */
-    public function firmasDigitales(): HasMany
-    {
-        return $this->hasMany(FirmaDigital::class);
-    }
-
-    /**
-     * Verifica si la solicitud tiene todas las firmas requeridas.
-     */
-    public function tieneFirmasCompletas(): bool
-    {
-        return $this->firmasDigitales()->count() === count(self::FLUJO_ETAPAS);
-    }
-
-    /**
-     * Obtiene la firma de una etapa específica.
-     */
-    public function getFirmaEtapa(string $etapa): ?FirmaDigital
-    {
-        return $this->firmasDigitales()->where('etapa', $etapa)->first();
-    }
-
-    public function requiereJustificacionMedica(): bool
-    {
-        return (bool) $this->tipoSolicitud?->requiere_intervencion_medica;
-    }
-
-    public function justificacionEstaVencida(): bool
-    {
-        if ($this->justificacion_vence_en === null || $this->justificacion_presentada_en !== null) {
-            return false;
-        }
-
-        return now()->greaterThan($this->justificacion_vence_en);
-    }
-
-    public function prorrogaEstaVencida(): bool
-    {
-        if ($this->prorroga_vence_en === null) {
-            return false;
-        }
-
-        return now()->greaterThan($this->prorroga_vence_en);
-    }
-
-    public function requiereNotificacionVencimientoJustificacion(): bool
-    {
-        return $this->justificacionEstaVencida() && $this->justificacion_vencimiento_notificado_en === null;
-    }
-
-    public function requiereNotificacionVencimientoProrroga(): bool
-    {
-        return $this->prorrogaEstaVencida() && $this->prorroga_vencimiento_notificado_en === null;
     }
 }
