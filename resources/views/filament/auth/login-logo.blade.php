@@ -1,6 +1,6 @@
 {{-- Logo circular inyectado encima del formulario (hook AUTH_LOGIN_FORM_BEFORE) --}}
 <div class="tcse-rp-header">
-    <div class="tcse-rp-logo-circle">
-        <span class="tcse-logo-text" style="font-family: 'Playfair Display', Georgia, serif; font-size: 2rem; font-weight: 800; color: #ffffff; letter-spacing: -0.04em; line-height: 1; background: linear-gradient(135deg, #ffffff 0%, #f0c0e8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">TC</span>
+    <div class="tcse-rp-logo-circle" style="width: 130px; height: 130px; background-color: transparent; padding: 0; border: none; box-shadow: 0 8px 24px rgba(26,54,93,0.2);">
+        <img src="{{ asset('images/1.png') }}" alt="Logo TC" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
     </div>
 </div>

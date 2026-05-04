@@ -239,7 +239,7 @@
 .tcse-split-left__bg {
     position: absolute;
     inset: 0;
-    background-image: url('/images/login-bg.jpg');
+    background-image: url('/images/torres%20juan%20felipe%20ibarra.jpg');
     background-size: cover;
     background-position: center top;
     transform: scale(1.06);
@@ -249,25 +249,16 @@
     transform: scale(1.0);
 }
 
-/* Overlay: navy + bordeaux */
+/* Overlay: navy suave para que se vea la imagen pero el texto blanco sea legible */
 .tcse-split-left__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        145deg,
-        rgba(10, 22, 48, 0.93) 0%,
-        rgba(26, 54, 93, 0.82) 35%,
-        rgba(80, 14, 67, 0.78) 70%,
-        rgba(107, 28, 94, 0.90) 100%
-    );
+    background: rgba(10, 22, 48, 0.65);
 }
 
-/* Orbs decorativos */
+/* Orbs decorativos (ocultos por solicitud) */
 .tcse-orb {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    animation: tcse-orb-drift ease-in-out infinite;
+    display: none;
 }
 .tcse-orb--1 {
     width: 350px; height: 350px;
