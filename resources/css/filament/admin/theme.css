@@ -260,3 +260,19 @@ html:not(.dark) .historial-table-wrapper .fi-ta {
 html:not(.dark) .historial-table-wrapper .fi-ta-row:hover td {
     background: rgba(6, 182, 212, 0.03) !important;
 }
+
+/* ---------- Custom Colored Section Header ---------- */
+.custom-section-header>header {
+    background-color: #1A365D !important;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+}
+
+.custom-section-header>header .fi-section-header-heading,
+.custom-section-header>header svg {
+    color: #ffffff !important;
+}
+
+.custom-section-header>header .fi-section-header-description {
+    color: #e2e8f0 !important;
+}

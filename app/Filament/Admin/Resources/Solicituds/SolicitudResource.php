@@ -57,13 +57,16 @@ class SolicitudResource extends Resource
         $user     = Auth::user();
         $esAgente = $user?->hasRole('agente');
 
-        return $schema->components([
+        return $schema
+            ->columns(1)
+            ->components([
 
             // ═══════════════════════════════════════════════════════════
             // SECCIÓN 1 — Identificación de la Solicitud
             // Los campos que definen QUÉ se solicita. Van primero.
             // ═══════════════════════════════════════════════════════════
             Section::make('Identificación')
+                ->extraAttributes(['class' => 'custom-section-header'])
                 ->description('Seleccioná el agente y el tipo de licencia que se tramitará.')
                 ->icon('heroicon-o-identification')
                 ->columns(3)
@@ -147,6 +150,7 @@ class SolicitudResource extends Resource
             // Layout de 2 columnas para pares lógicos de campos.
             // ═══════════════════════════════════════════════════════════
             Section::make('Período Solicitado')
+                ->extraAttributes(['class' => 'custom-section-header'])
                 ->description('Ingresá las fechas y/o horas del período de licencia.')
                 ->icon('heroicon-o-calendar-days')
                 ->columns(2)
@@ -225,6 +229,7 @@ class SolicitudResource extends Resource
             // Estado, prórroga y observaciones. Sección de menor urgencia.
             // ═══════════════════════════════════════════════════════════
             Section::make('Datos Administrativos')
+                ->extraAttributes(['class' => 'custom-section-header'])
                 ->description('Estado del trámite, prórroga y observaciones.')
                 ->icon('heroicon-o-clipboard-document-list')
                 ->columns(2)
