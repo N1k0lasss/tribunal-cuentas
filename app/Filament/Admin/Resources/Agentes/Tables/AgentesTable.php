@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Agentes\Tables;
 
+use App\Models\Agente;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -29,6 +31,7 @@ class AgentesTable
                         if (! $state) {
                             return '—';
                         }
+
                         return number_format((int) $state, 0, '', '.');
                     })
                     ->searchable()
@@ -42,10 +45,11 @@ class AgentesTable
                 TextColumn::make('tipo_contrato')
                     ->label('Tipo de Contrato')
                     ->badge()
+                    ->formatStateUsing(fn (?string $state): string => Agente::TIPO_CONTRATO_LABELS[$state] ?? ($state ?? '—'))
                     ->colors([
-                        'success' => fn($state) => str_contains(strtolower($state ?? ''), 'permanente'),
-                        'warning' => fn($state) => str_contains(strtolower($state ?? ''), 'transitoria'),
-                        'gray' => fn($state) => str_contains(strtolower($state ?? ''), 'locación') || str_contains(strtolower($state ?? ''), 'locacion'),
+                        'info' => fn ($state) => $state === Agente::TIPO_CONTRATO_COMUN,
+                        'warning' => fn ($state) => $state === Agente::TIPO_CONTRATO_SERVICIO,
+                        'success' => fn ($state) => $state === Agente::TIPO_CONTRATO_PLANTA_PERMANENTE,
                     ])
                     ->searchable(),
                 TextColumn::make('area.nombre')
@@ -75,7 +79,7 @@ class AgentesTable
                 SelectFilter::make('tipo_contrato')
                     ->label('Tipo de Contrato')
                     ->options(function () {
-                        return \App\Models\Agente::query()
+                        return Agente::query()
                             ->distinct()
                             /** @phpstan-ignore-next-line */
                             ->whereNotNull('tipo_contrato')

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
@@ -38,7 +39,13 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $this->hasAnyRole([
+            'administrador',
+            'agente',
+            'jefatura',
+            'secretaria_general',
+            'presidencia',
+        ]);
     }
 
     /**
@@ -97,5 +104,21 @@ class User extends Authenticatable implements FilamentUser
     public function agente(): HasOne
     {
         return $this->hasOne(Agente::class);
+    }
+
+    /**
+     * @return HasMany<Delegacion, $this>
+     */
+    public function delegacionesComoTitular(): HasMany
+    {
+        return $this->hasMany(Delegacion::class, 'titular_user_id');
+    }
+
+    /**
+     * @return HasMany<Delegacion, $this>
+     */
+    public function delegacionesComoDelegado(): HasMany
+    {
+        return $this->hasMany(Delegacion::class, 'delegado_user_id');
     }
 }

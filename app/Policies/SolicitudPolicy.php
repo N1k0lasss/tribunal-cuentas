@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Solicitud;
 use App\Models\User;
+use App\Services\DelegacionService;
 
 class SolicitudPolicy
 {
@@ -100,15 +101,11 @@ public function create(User $user): bool
      */
     public function aprobar(User $user, Solicitud $solicitud): bool
     {
-        $etapa = $solicitud->etapaActual();
-
-        if ($etapa === null) {
+        if ($solicitud->estado !== Solicitud::ESTADO_EN_REVISION) {
             return false;
         }
 
-        $rolRequerido = Solicitud::ETAPA_ROL_MAP[$etapa] ?? null;
-
-        return $rolRequerido !== null && $user->hasRole($rolRequerido);
+        return app(DelegacionService::class)->puedeActuarEnEtapa($user, $solicitud);
     }
 
     /**

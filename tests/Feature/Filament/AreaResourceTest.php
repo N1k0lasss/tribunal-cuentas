@@ -2,10 +2,9 @@
 
 use App\Filament\Admin\Resources\Areas\AreaResource;
 use App\Models\Area;
-use App\Models\User;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    loginAsRole('administrador');
 });
 
 it('can render Areas list page', function () {

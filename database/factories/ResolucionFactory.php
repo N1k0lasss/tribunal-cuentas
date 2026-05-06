@@ -20,6 +20,8 @@ class ResolucionFactory extends Factory
     {
         return [
             'numero' => $this->faker->unique()->bothify('RES-####-202?'),
+            'gde_expediente' => 'EX-'.$this->faker->numberBetween(2024, 2026).'-'.$this->faker->numerify('########').'-GDESDE-TCSE',
+            'gde_documento' => 'IF-'.$this->faker->numberBetween(2024, 2026).'-'.$this->faker->numerify('########').'-GDESDE-TCSE',
             'fecha_emision' => $this->faker->dateTimeBetween('-1 month', 'now')->format('Y-m-d'),
             'detalle' => $this->faker->optional()->paragraph(),
             'solicitud_id' => Solicitud::factory(),

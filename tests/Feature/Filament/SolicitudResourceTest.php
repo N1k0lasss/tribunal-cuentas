@@ -4,6 +4,7 @@ use App\Filament\Admin\Resources\Solicituds\SolicitudResource;
 use App\Models\Agente;
 use App\Models\Solicitud;
 use App\Models\User;
+use App\Services\WorkflowSolicitudesService;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -14,6 +15,7 @@ beforeEach(function () {
 });
 
 it('can render Solicituds list page', function () {
+    /** @var User $user */
     $user = User::factory()->create();
     $user->assignRole('agente');
 
@@ -23,6 +25,7 @@ it('can render Solicituds list page', function () {
 });
 
 it('can render Solicituds create page', function () {
+    /** @var User $user */
     $user = User::factory()->create();
     $user->assignRole('agente');
 
@@ -32,6 +35,7 @@ it('can render Solicituds create page', function () {
 });
 
 it('can render Solicituds edit page', function () {
+    /** @var User $user */
     $user = User::factory()->create();
     $user->assignRole('agente');
 
@@ -49,7 +53,25 @@ it('can render Solicituds edit page', function () {
         ->assertSuccessful();
 });
 
+it('agent can send pending solicitud to revision', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+    $user->assignRole('agente');
+
+    $agente = Agente::factory()->create(['user_id' => $user->id]);
+
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agente->id,
+        'estado' => Solicitud::ESTADO_PENDIENTE,
+    ]);
+
+    app(WorkflowSolicitudesService::class)->enviarParaRevision($solicitud, $user);
+
+    expect($solicitud->fresh()->estado)->toBe(Solicitud::ESTADO_EN_REVISION);
+});
+
 it('blocks edit page for solicitud en flujo', function () {
+    /** @var User $user */
     $user = User::factory()->create();
     $user->assignRole('agente');
 
@@ -66,6 +88,7 @@ it('blocks edit page for solicitud en flujo', function () {
 });
 
 it('blocks create page for non-agente role', function () {
+    /** @var User $user */
     $user = User::factory()->create();
     $user->assignRole('jefatura');
 

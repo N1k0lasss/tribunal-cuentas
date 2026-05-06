@@ -2,19 +2,25 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\Login;
+use App\Filament\Admin\Widgets\AgenteInfoWidget;
+use App\Filament\Admin\Widgets\LicenseStatsWidget;
+use App\Filament\Admin\Widgets\MisSaldosStatsWidget;
+use App\Filament\Auth\Pages\Login;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+// use Filament\Widgets\AccountWidget;
+// use Filament\Widgets\FilamentInfoWidget;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Widgets\AccountWidget;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\Widget;
-//use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Filament\Support\Facades\FilamentColor;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -33,14 +39,32 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
-
-            ->brandName('Tribunal de Cuentas')
-            ->brandLogo(asset('images/tcse_logo.png'))
-            ->brandLogoHeight('4rem')
+            ->login(Login::class)
+            ->profile()
+            ->passwordReset()
+            ->brandName('TCSE Licencias')
+            ->brandLogo(fn () => view('filament.admin.logo'))
+            ->brandLogoHeight('3rem')
             ->colors([
-                'primary' => \Filament\Support\Colors\Color::hex('#1e3a8a'),
+                'primary' => Color::Hex('#1A365D'), // Navy
+                'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
+                'danger' => Color::Hex('#6B1C5E'), // Bordeaux para alertas
+                'info' => Color::Hex('#2B4C7E'), // Navy más claro
+                'success' => Color::Teal,
+                'warning' => Color::Amber,
             ])
-
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.admin.styles'),
+            )
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_LAYOUT_START,
+                fn () => view('filament.auth.login-left-panel'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.auth.login-logo'),
+            )
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
@@ -49,12 +73,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
-                \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                \App\Filament\Admin\Widgets\MiniCalendarWidget::class,
-                \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
-                //AccountWidget::class,
-                //FilamentInfoWidget::class,
+                AgenteInfoWidget::class,
+                MisSaldosStatsWidget::class,
+                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
+                LicenseStatsWidget::class,
+                // AccountWidget::class,
+                // FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

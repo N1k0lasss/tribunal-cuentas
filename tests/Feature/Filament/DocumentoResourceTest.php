@@ -2,10 +2,9 @@
 
 use App\Filament\Admin\Resources\Documentos\DocumentoResource;
 use App\Models\Documento;
-use App\Models\User;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    loginAsRole('administrador');
 });
 
 it('can render Documentos list page', function () {

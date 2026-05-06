@@ -54,8 +54,8 @@ class MisSaldosStatsWidget extends BaseWidget
         $chartPendientes = $this->getMonthlyChart($agenteId, ['pendiente', 'en_revision']);
 
         return [
-            Stat::make('Días Disponibles', max(0, $diasDisponibles) . ' días')
-                ->description('Saldo para el año ' . $anioActual)
+            Stat::make('Días Disponibles', max(0, $diasDisponibles).' días')
+                ->description('Saldo para el año '.$anioActual)
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('success')
                 ->chart([max(0, $diasDisponibles), max(0, $diasDisponibles)])
@@ -64,7 +64,7 @@ class MisSaldosStatsWidget extends BaseWidget
                 ]),
 
             Stat::make('Solicitudes Aprobadas', $solicitudesAprobadas)
-                ->description('Licencias finalizadas ' . $anioActual)
+                ->description('Licencias finalizadas '.$anioActual)
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('info')
                 ->chart($chartAprobadas)

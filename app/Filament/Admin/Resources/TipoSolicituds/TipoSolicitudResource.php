@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\TipoSolicituds;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\CreateTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\EditTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
+use App\Models\Agente;
 use App\Models\TipoSolicitud;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -14,6 +15,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -55,6 +57,12 @@ class TipoSolicitudResource extends Resource
                 TextInput::make('categoria')
                     ->label('Categoría')
                     ->maxLength(255),
+                CheckboxList::make('contratos_habilitados')
+                    ->label('Tipos de contratación habilitados')
+                    ->options(Agente::TIPO_CONTRATO_LABELS)
+                    ->columns(3)
+                    ->default(Agente::TIPOS_CONTRATO)
+                    ->required(),
                 TextInput::make('articulo_legal')
                     ->label('Artículo Legal')
                     ->maxLength(255),
@@ -77,6 +85,18 @@ class TipoSolicitudResource extends Resource
                 TextColumn::make('categoria')
                     ->label('Categoría')
                     ->sortable(),
+                TextColumn::make('contratos_habilitados')
+                    ->label('Contratos')
+                    ->formatStateUsing(function ($state): string {
+                        if (! is_array($state) || $state === []) {
+                            return 'Todos';
+                        }
+
+                        return collect($state)
+                            ->map(fn ($item): string => Agente::TIPO_CONTRATO_LABELS[$item] ?? $item)
+                            ->implode(', ');
+                    })
+                    ->wrap(),
                 TextColumn::make('articulo_legal')
                     ->label('Artículo Legal'),
                 TextColumn::make('duracion_maxima_dias')
