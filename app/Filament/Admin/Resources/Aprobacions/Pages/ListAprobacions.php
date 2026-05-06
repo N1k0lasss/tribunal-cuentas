@@ -11,10 +11,6 @@ class ListAprobacions extends ListRecords
 {
     protected static string $resource = AprobacionResource::class;
 
-    protected ?string $heading = 'Aprobaciones';
-
-    protected ?string $subheading = 'Gestioná el circuito de revisión por etapa, estado y responsable.';
-
     protected function getHeaderActions(): array
     {
         return [

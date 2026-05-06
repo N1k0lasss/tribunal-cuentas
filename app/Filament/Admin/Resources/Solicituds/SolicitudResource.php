@@ -5,10 +5,8 @@ namespace App\Filament\Admin\Resources\Solicituds;
 use App\Filament\Admin\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\EditSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
-use App\Models\Agente;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
-use App\Services\SaldoLicenciaService;
 use App\Services\WorkflowSolicitudesService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -17,16 +15,13 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Infolists\Components\IconEntry;
+use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -40,28 +35,20 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use UnitEnum;
-use BackedEnum;
-use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\HtmlString;
-use Illuminate\Validation\ValidationException;
 
 class SolicitudResource extends Resource
 {
     protected static ?string $model = Solicitud::class;
 
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationLabel = 'Solicitudes';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Solicitudes';
 
     protected static ?string $modelLabel = 'Solicitud';
-
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
-    {
-        return 'heroicon-o-document-text';
-    }
 
     // ── Formulario ─────────────────────────────────────────────
 
@@ -99,12 +86,12 @@ class SolicitudResource extends Resource
                     Select::make('categoria')
                         ->label('Categoría')
                         ->options([
-                            'Receso' => 'Receso',
+                            'Receso'             => 'Receso',
                             'Salud y Maternidad' => 'Salud y Maternidad',
-                            'Extraordinaria' => 'Licencia Extraordinaria',
-                            'Justificación' => 'Justificación',
-                            'Franquicia' => 'Franquicia',
-                            'Falta/Tardanza' => 'Falta/Tardanza',
+                            'Extraordinaria'     => 'Licencia Extraordinaria',
+                            'Justificación'      => 'Justificación',
+                            'Franquicia'         => 'Franquicia',
+                            'Falta/Tardanza'     => 'Falta/Tardanza',
                         ])
                         ->live()
                         ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
@@ -115,25 +102,10 @@ class SolicitudResource extends Resource
                     Select::make('tipo_solicitud_id')
                         ->label('Tipo de Licencia')
                         ->helperText('El régimen legal determina el cálculo de días y los requisitos.')
-                        ->options(function ($get) {
-                            $agenteId = $get('agente_id');
-                            $agente = $agenteId ? Agente::find($agenteId) : null;
-
-                            // Si el admin no eligió agente aún, fallback al propio por defecto
-                            $tipoContrato = $agente ? $agente->tipo_contrato : Auth::user()?->agente?->tipo_contrato;
-
-                            return TipoSolicitud::query()
-                                ->where('categoria', $get('categoria'))
-                                ->get()
-                                ->filter(function (TipoSolicitud $tipoSolicitud) use ($tipoContrato): bool {
-                                    if ($tipoContrato === null) {
-                                        return true;
-                                    }
-
-                                    return $tipoSolicitud->permiteContrato($tipoContrato);
-                                })
-                                ->pluck('nombre', 'id');
-                        })
+                        ->options(
+                            fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))
+                                ->pluck('nombre', 'id')
+                        )
                         ->live()
                         ->required()
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
@@ -155,7 +127,7 @@ class SolicitudResource extends Resource
                         ->content(
                             new HtmlString(
                                 '<div class="flex items-start gap-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:border-amber-500 dark:bg-amber-950">
-                                    <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.25rem; height: 1.25rem; margin-top: 0.125rem; flex-shrink: 0;" class="text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                                     </svg>
                                     <div>
@@ -168,33 +140,6 @@ class SolicitudResource extends Resource
                                 </div>'
                             )
                         ),
-
-                    Repeater::make('documentos')
-                        ->relationship('documentos')
-                        ->label('Documentos Adjuntos')
-                        ->schema([
-                            TextInput::make('nombre_archivo')
-                                ->label('Nombre del Documento')
-                                ->required(),
-                            Select::make('tipo_documento')
-                                ->label('Tipo de Documento')
-                                ->options([
-                                    'certificado_medico' => 'Certificado Médico',
-                                    'constancia' => 'Constancia / Recibo',
-                                    'historia_clinica' => 'Historia Clínica',
-                                    'otro' => 'Otro',
-                                ])
-                                ->required(),
-                            FileUpload::make('ruta')
-                                ->label('Archivo (PDF o Imagen)')
-                                ->directory('documentos')
-                                ->acceptedFileTypes(['application/pdf', 'image/*'])
-                                ->required()
-                                ->columnSpanFull(),
-                        ])
-                        ->columns(2)
-                        ->defaultItems(1)
-                        ->addActionLabel('Añadir Otro Documento'),
                 ]),
 
             // ═══════════════════════════════════════════════════════════
@@ -213,8 +158,6 @@ class SolicitudResource extends Resource
                                 ? 'Fecha de la Franquicia'
                                 : 'Fecha de Inicio'
                         )
-                        ->native(false)
-                        ->displayFormat('d/m/Y')
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($set, $get, $state) {
@@ -233,8 +176,6 @@ class SolicitudResource extends Resource
                             fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
                                 || ! TipoSolicitud::find($get('tipo_solicitud_id'))
                         )
-                        ->native(false)
-                        ->displayFormat('d/m/Y')
                         ->minDate(fn ($get) => $get('fecha_inicio')) // Poka-Yoke: impide fecha_fin < fecha_inicio
                         ->live()
                         ->afterStateUpdated(function ($set, $get, $state) {
@@ -293,7 +234,24 @@ class SolicitudResource extends Resource
                         ->label('Fecha de Solicitud')
                         ->default(now())
                         ->native(false)
-                        ->displayFormat('d/m/Y'),
+                        ->displayFormat('d/m/Y')
+                        ->required()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+
+                    // El estado se oculta para agentes; siempre pendiente al crear
+                    Select::make('estado')
+                        ->label('Estado')
+                        ->options([
+                            'pendiente'   => 'Pendiente',
+                            'en_revision' => 'En Revisión',
+                            'aprobado'    => 'Aprobado',
+                            'rechazado'   => 'Rechazado',
+                        ])
+                        ->default('pendiente')
+                        ->required()
+                        ->visible(fn () => ! $esAgente)
+                        // Poka-Yoke: bloquear cambio manual si el flujo ya comenzó
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
                     // Toggle booleano (reemplaza Select 0/1 que era confuso)
                     Toggle::make('es_prorroga')
@@ -312,7 +270,7 @@ class SolicitudResource extends Resource
                             fn (Solicitud $record) => "#{$record->id} — {$record->fecha_inicio?->format('d/m/Y')} al {$record->fecha_fin?->format('d/m/Y')}"
                         )
                         ->required(fn ($get) => (bool) $get('es_prorroga'))
-                        ->visible(fn ($get) => (bool) $get('es_prorroga'))
+                        ->visible(fn ($get)  => (bool) $get('es_prorroga'))
                         ->searchable()
                         ->preload()
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
@@ -337,7 +295,7 @@ class SolicitudResource extends Resource
             return null;
         }
 
-        $tipo = TipoSolicitud::find($tipoId, ['*']);
+        $tipo = TipoSolicitud::find($tipoId);
 
         if (! $tipo || $tipo->unidad_medida !== 'dias') {
             return null;
@@ -590,7 +548,7 @@ class SolicitudResource extends Resource
             ->columns([
                 TextColumn::make('agente.apellido')
                     ->label('Agente')
-                    ->formatStateUsing(fn ($record) => $record->agente ? "{$record->agente->apellido}, {$record->agente->nombre}" : '-')
+                    ->formatStateUsing(fn ($record) => "{$record->agente->apellido}, {$record->agente->nombre}")
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
@@ -635,7 +593,6 @@ class SolicitudResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->tooltip(fn ($record) => $record->motivo),
                 TextColumn::make('estado')
-                    ->label('Estado')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pendiente' => 'Pendiente',
@@ -702,9 +659,6 @@ class SolicitudResource extends Resource
                         return $indicators;
                     }),
             ])
-            ->actions([
-                ViewAction::make(),
-            ])
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
@@ -716,40 +670,38 @@ class SolicitudResource extends Resource
                     ->tooltip('Editar Solicitud')
                     ->visible(fn (Solicitud $record) => $record->puedeSerEditada()),
 
-                Action::make('enviar_revision')
-                    ->label('Enviar')
-                    ->icon('heroicon-m-paper-airplane')
-                    ->color('info')
-                    ->button()
-                    ->requiresConfirmation()
-                    ->modalHeading('Enviar solicitud a revisión')
-                    ->modalDescription('La solicitud saldrá del estado borrador y comenzará el circuito formal de aprobación.')
-                    ->action(function (Solicitud $record): void {
-                        $user = Auth::user();
-
-                        if ($user === null) {
-                            return;
-                        }
-
-                        app(WorkflowSolicitudesService::class)->enviarParaRevision($record, $user);
-                        $record->refresh();
-
-                        Notification::make()
-                            ->success()
-                            ->title('Solicitud enviada')
-                            ->body('La solicitud fue enviada correctamente al circuito de aprobación.')
-                            ->send();
-                    })
-                    ->visible(fn (Solicitud $record): bool => Auth::user()?->hasRole('agente') === true
-                        && Auth::user()?->agente?->id === $record->agente_id
-                        && $record->estado === Solicitud::ESTADO_PENDIENTE
-                    ),
-
                 // ── Action: Aprobar ────────────────────────────────
                 Action::make('aprobar')
                     ->label('Aprobar')
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
+                    ->button()
+                    ->requiresConfirmation()
+                    ->modalHeading('Aprobar Solicitud')
+                    ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
+                    ->modalSubmitActionLabel('Confirmar Aprobación')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->form([
+                        Textarea::make('observacion')
+                            ->label('Observación (opcional)')
+                            ->maxLength(500),
+                    ])
+                    ->action(function (Solicitud $record, array $data) {
+                        static::procesarAprobacion($record, 'aprobado', $data['observacion'] ?? null);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Solicitud aprobada')
+                            ->body('La solicitud fue aprobada correctamente en esta etapa.')
+                            ->send();
+                    })
+                    ->visible(fn (Solicitud $record) => Auth::user()?->can('aprobar', $record)),
+
+                // ── Action: Rechazar ───────────────────────────────
+                Action::make('rechazar')
+                    ->label('Rechazar')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
                     ->button()
                     ->outlined()
                     ->requiresConfirmation()
@@ -772,7 +724,7 @@ class SolicitudResource extends Resource
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('rechazar', $record)),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
@@ -783,38 +735,15 @@ class SolicitudResource extends Resource
 
     protected static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion): void
     {
-        $etapa = $record->etapaActual();
         $user = Auth::user();
 
-        // Crear registro de aprobación
-        Aprobacion::create([
-            'solicitud_id' => $record->id,
-            'aprobado_por' => $user->agente?->id ?? $user->id,
-            'etapa' => $etapa,
-            'estado' => $estado,
-            'observacion' => $observacion,
-            'fecha' => now(),
-        ]);
-
-        if ($estado === 'rechazado') {
-            // Rechazar cierra el flujo completamente
-            $record->update(['estado' => Solicitud::ESTADO_RECHAZADO]);
-
+        if ($user === null) {
             return;
         }
 
-        // Si aprobado, verificar si es la última etapa
-        $siguienteEtapa = $record->siguienteEtapa();
-
-        if ($siguienteEtapa === null) {
-            // Última etapa aprobada → solicitud aprobada
-            $record->update(['estado' => Solicitud::ESTADO_APROBADO]);
-        } else {
-            // Aún quedan etapas → mantener en revisión
-            $record->update(['estado' => Solicitud::ESTADO_EN_REVISION]);
-        }
-
-        // Refrescar relaciones para que la vista refleje el cambio
+        /** @var WorkflowSolicitudesService $workflow */
+        $workflow = app(WorkflowSolicitudesService::class);
+        $workflow->resolver($record, $user, $estado, $observacion);
         $record->load('aprobaciones');
     }
 

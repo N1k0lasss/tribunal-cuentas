@@ -36,8 +36,6 @@ class Resolucion extends Model
      */
     protected $fillable = [
         'numero',
-        'gde_expediente',
-        'gde_documento',
         'fecha_emision',
         'detalle',
         'solicitud_id',

@@ -5,41 +5,32 @@ namespace App\Filament\Admin\Resources\TipoSolicituds;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\CreateTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\EditTipoSolicitud;
 use App\Filament\Admin\Resources\TipoSolicituds\Pages\ListTipoSolicituds;
-use App\Models\Agente;
 use App\Models\TipoSolicitud;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use UnitEnum;
-use BackedEnum;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
 class TipoSolicitudResource extends Resource
 {
     protected static ?string $model = TipoSolicitud::class;
 
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'Régimen Legal';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
 
     protected static ?string $pluralModelLabel = 'Régimenes Legales';
 
     protected static ?string $modelLabel = 'Régimen Legal';
-
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
-    {
-        return 'heroicon-o-clipboard-document-list';
-    }
 
     public static function canAccess(): bool
     {
@@ -49,20 +40,13 @@ class TipoSolicitudResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->schema([
+            ->components([
                 TextInput::make('nombre')
-                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('categoria')
                     ->label('Categoría')
                     ->maxLength(255),
-                CheckboxList::make('contratos_habilitados')
-                    ->label('Tipos de contratación habilitados')
-                    ->options(Agente::TIPO_CONTRATO_LABELS)
-                    ->columns(3)
-                    ->default(Agente::TIPOS_CONTRATO)
-                    ->required(),
                 TextInput::make('articulo_legal')
                     ->label('Artículo Legal')
                     ->maxLength(255),
@@ -79,24 +63,11 @@ class TipoSolicitudResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('nombre')
-                    ->label('Nombre')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('categoria')
                     ->label('Categoría')
                     ->sortable(),
-                TextColumn::make('contratos_habilitados')
-                    ->label('Contratos')
-                    ->formatStateUsing(function ($state): string {
-                        if (! is_array($state) || $state === []) {
-                            return 'Todos';
-                        }
-
-                        return collect($state)
-                            ->map(fn ($item): string => Agente::TIPO_CONTRATO_LABELS[$item] ?? $item)
-                            ->implode(', ');
-                    })
-                    ->wrap(),
                 TextColumn::make('articulo_legal')
                     ->label('Artículo Legal'),
                 TextColumn::make('duracion_maxima_dias')
@@ -109,11 +80,10 @@ class TipoSolicitudResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                ViewAction::make(),
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

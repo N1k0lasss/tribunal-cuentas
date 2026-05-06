@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TipoSolicitudSeeder extends Seeder
 {
@@ -14,7 +14,7 @@ class TipoSolicitudSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
-
+        
         $tipos = [
             // CAPÍTULO I - Recesos
             [
@@ -41,7 +41,7 @@ class TipoSolicitudSeeder extends Seeder
                 'limite_mensual_dias_horas' => null,
                 'requiere_adjunto' => false,
             ],
-
+            
             // CAPÍTULO II - SALUD Y MATERNIDAD
             [
                 'nombre' => 'Enfermedad Común (Etapa 1 - 100%)',
@@ -347,7 +347,7 @@ class TipoSolicitudSeeder extends Seeder
                 'limite_mensual_dias_horas' => 5, // 5 horas mensuales max (limite 2 horas dia)
                 'requiere_adjunto' => false,
             ],
-
+            
             // CAPÍULO V - TARDANZAS / INASISTENCIAS (Opcionales para uso de RRHH internamente)
             [
                 'nombre' => 'Tardanza (hasta 30 min)',

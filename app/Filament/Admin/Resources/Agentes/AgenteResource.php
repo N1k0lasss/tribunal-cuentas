@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Infolists\Infolist;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Support\Htmlable;

@@ -24,7 +24,13 @@
                 <div class="tcse-logo-ring tcse-logo-ring--outer"></div>
                 <div class="tcse-logo-ring tcse-logo-ring--inner"></div>
                 <div class="tcse-logo-circle">
-                    <span class="tcse-logo-text">TC</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v18"></path>
+                        <path d="M3 7h18"></path>
+                        <path d="M6 7l-3 7s1 2 3 2 3-2 3-2l-3-7"></path>
+                        <path d="M18 7l-3 7s1 2 3 2 3-2 3-2l-3-7"></path>
+                        <path d="M9 21h6"></path>
+                    </svg>
                 </div>
             </div>
 
@@ -233,7 +239,7 @@
 .tcse-split-left__bg {
     position: absolute;
     inset: 0;
-    background-image: url('/images/login-bg.jpg');
+    background-image: url('/images/torres%20juan%20felipe%20ibarra.jpg');
     background-size: cover;
     background-position: center top;
     transform: scale(1.06);
@@ -243,25 +249,16 @@
     transform: scale(1.0);
 }
 
-/* Overlay: navy + bordeaux */
+/* Overlay: navy suave para que se vea la imagen pero el texto blanco sea legible */
 .tcse-split-left__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        145deg,
-        rgba(10, 22, 48, 0.93) 0%,
-        rgba(26, 54, 93, 0.82) 35%,
-        rgba(80, 14, 67, 0.78) 70%,
-        rgba(107, 28, 94, 0.90) 100%
-    );
+    background: rgba(10, 22, 48, 0.65);
 }
 
-/* Orbs decorativos */
+/* Orbs decorativos (ocultos por solicitud) */
 .tcse-orb {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    animation: tcse-orb-drift ease-in-out infinite;
+    display: none;
 }
 .tcse-orb--1 {
     width: 350px; height: 350px;

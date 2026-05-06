@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Agentes\Schemas;
 
-use App\Models\Agente;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -21,9 +20,7 @@ class AgenteForm
                 TextInput::make('dni')
                     ->required(),
                 TextInput::make('cargo'),
-                Select::make('tipo_contrato')
-                    ->options(Agente::TIPO_CONTRATO_LABELS)
-                    ->required(),
+                TextInput::make('tipo_contrato'),
                 Select::make('area_id')
                     ->relationship('area', 'nombre')
                     ->searchable()

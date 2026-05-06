@@ -2,30 +2,31 @@
 
 namespace App\Filament\Admin\Resources\Feriados;
 
-// use App\Filament\Admin\Resources\Feriados\Pages\CreateFeriados;
-// use App\Filament\Admin\Resources\Feriados\Pages\EditFeriados;
+//use App\Filament\Admin\Resources\Feriados\Pages\CreateFeriados;
+//use App\Filament\Admin\Resources\Feriados\Pages\EditFeriados;
 use App\Filament\Admin\Resources\Feriados\Pages\ListFeriados;
 use App\Filament\Admin\Resources\Feriados\Schemas\FeriadosForm;
-// use App\Filament\Admin\Resources\Feriados\Tables\FeriadosTable;
+//use App\Filament\Admin\Resources\Feriados\Tables\FeriadosTable;
 use App\Models\Feriados;
 use BackedEnum;
+use Illuminate\Support\Facades\Log;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Actions\CreateAction;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Log;
+//use Filament\Support\Icons\Heroicon;
 
-// use Filament\Support\Icons\Heroicon;
 
 class FeriadosResource extends Resource
 {
     protected static ?string $model = Feriados::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $navigationLabel = 'Calendario';
 
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
@@ -48,7 +49,7 @@ class FeriadosResource extends Resource
                     ->weight('bold')
                     ->color('primary')
                     ->icon('heroicon-m-calendar-days')
-                    ->description(fn ($record): string => 'Fin: '.$record->fecha_fin->format('d/M/Y - H:i')),
+                    ->description(fn ($record): string => 'Fin: ' . $record->fecha_fin->format('d/M/Y - H:i')),
                 TextColumn::make('nombre')
                     ->label('Nombre del Feriado')
                     ->size('lg')
@@ -79,12 +80,13 @@ class FeriadosResource extends Resource
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Inamovible' : 'Trasladable')
                     ->color(fn (bool $state): string => $state ? 'gray' : 'warning')
                     // icono de si es trasladable o no
-                    ->icon(fn (bool $state): string => $state ? 'heroicon-m-lock-closed' : 'heroicon-m-arrows-right-left'),
+                    ->icon(fn (bool $state): string => $state ? 'heroicon-m-lock-closed' : 'heroicon-m-arrows-right-left')
+                    ,
             ])
             ->headerActions([
                 CreateAction::make()
                     ->label('Nuevo Feriado')
-                    ->icon('heroicon-o-plus')
+                    ->icon('heroicon-o-plus') 
                     ->button()
                     ->after(function ($livewire, $record = null) {
                         // Refrescar calendario
@@ -97,40 +99,43 @@ class FeriadosResource extends Resource
                             $livewire->js("window.dispatchEvent(new CustomEvent('filament-fullcalendar--goto', { detail: { date: '$date' } }))");
                             Log::info("FeriadosResource: requested calendar goto {$date} (CreateAction)");
                         }
-                    }),
-            ])
+                    })
+                    ])
             ->recordActions([
-                EditAction::make()
+                 EditAction::make()
                     ->iconButton()
-                    ->after(function ($livewire, $record = null) {
+                     ->after(function ($livewire, $record = null) {
                         // Emitir refresh y navegar a la fecha del registro editado
-                        $livewire->dispatch('calendar--refresh');
-                        if ($record && isset($record->fecha_inicio)) {
-                            $date = $record->fecha_inicio->format('Y-m-d');
-                            $livewire->js("window.dispatchEvent(new CustomEvent('filament-fullcalendar--goto', { detail: { date: '$date' } }))");
-                            Log::info("FeriadosResource: requested calendar goto {$date} (EditAction)");
-                        }
-                        Log::info('FeriadosResource: dispatched calendar--refresh (EditAction)');
-                    }),
+                            $livewire->dispatch('calendar--refresh');
+                            if ($record && isset($record->fecha_inicio)) {
+                                $date = $record->fecha_inicio->format('Y-m-d');
+                                $livewire->js("window.dispatchEvent(new CustomEvent('filament-fullcalendar--goto', { detail: { date: '$date' } }))");
+                                Log::info("FeriadosResource: requested calendar goto {$date} (EditAction)");
+                            }
+                            Log::info('FeriadosResource: dispatched calendar--refresh (EditAction)');
+                        })
+                       ,
                 DeleteAction::make()
                     ->iconButton()
                     ->after(function ($livewire, $record = null) {
                         // Refrescar calendario
-                        $livewire->dispatch('calendar--refresh');
-                        Log::info('FeriadosResource: dispatched calendar--refresh (DeleteAction)');
+                       $livewire->dispatch('calendar--refresh');
+                       Log::info('FeriadosResource: dispatched calendar--refresh (DeleteAction)');
 
-                        // Si se eliminó un registro, navegar al inicio del registro eliminado (si tiene fecha)
-                        if ($record && isset($record->fecha_inicio)) {
+                       // Si se eliminó un registro, navegar al inicio del registro eliminado (si tiene fecha)
+                       if ($record && isset($record->fecha_inicio)) {
                             $date = $record->fecha_inicio->format('Y-m-d');
                             $livewire->js("window.dispatchEvent(new CustomEvent('filament-fullcalendar--goto', { detail: { date: '$date' } }))");
                             Log::info("FeriadosResource: requested calendar goto {$date} (DeleteAction)");
-                        }
-                    }),
-            ])
-            ->actionsColumnLabel('Acciones');
-        // ->paginated(false);
-        // FeriadosTable::configure($table);
+                       }
+                    })
+            ])        
+            
+                ->actionsColumnLabel('Acciones');
+            //->paginated(false);
+        //FeriadosTable::configure($table);
     }
+
 
     public static function getRelations(): array
     {
@@ -143,8 +148,8 @@ class FeriadosResource extends Resource
     {
         return [
             'index' => ListFeriados::route('/'),
-            // 'create' => CreateFeriados::route('/create'),
-            // 'edit' => EditFeriados::route('/{record}/edit'),
+            //'create' => CreateFeriados::route('/create'),
+            //'edit' => EditFeriados::route('/{record}/edit'),
         ];
     }
 }

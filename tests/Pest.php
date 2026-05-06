@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /*
@@ -49,19 +47,4 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
-}
-
-function loginAsRole(string $role = 'administrador'): User
-{
-    foreach (['administrador', 'agente', 'jefatura', 'secretaria_general', 'presidencia'] as $roleName) {
-        Role::findOrCreate($roleName, 'web');
-    }
-
-    /** @var User $user */
-    $user = User::factory()->create();
-    $user->assignRole($role);
-
-    \Pest\Laravel\actingAs($user);
-
-    return $user;
 }

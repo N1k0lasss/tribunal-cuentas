@@ -5,12 +5,7 @@ namespace App\Filament\Admin\Pages;
 use App\Models\Agente;
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Filament\Actions\Action;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -19,7 +14,11 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-
+use Filament\Actions\Action;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 
 class HistorialSolicitudes extends Page implements HasTable
 {
@@ -282,7 +281,7 @@ class HistorialSolicitudes extends Page implements HasTable
             Action::make('exportar_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->color('info')
+                ->color('primary')
                 ->action(function () {
                     $user = Auth::user();
                     $esAgente = $user?->hasRole('agente');
@@ -326,14 +325,14 @@ class HistorialSolicitudes extends Page implements HasTable
                         'estadoFiltro' => $filterState['estado']['value'] ?? null,
                     ]);
 
-                    $nombreArchivo = 'historial_solicitudes_'.$anioFiltro;
+                    $nombreArchivo = 'historial_solicitudes_' . $anioFiltro;
                     if ($agenteFiltro) {
-                        $nombreArchivo .= '_'.str_replace(' ', '_', $agenteFiltro->apellido);
+                        $nombreArchivo .= '_' . str_replace(' ', '_', $agenteFiltro->apellido);
                     }
                     $nombreArchivo .= '.pdf';
 
                     return response()->streamDownload(
-                        fn () => print ($pdf->output()),
+                        fn () => print($pdf->output()),
                         $nombreArchivo
                     );
                 }),
