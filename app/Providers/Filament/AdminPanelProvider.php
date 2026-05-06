@@ -30,13 +30,13 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->login(\App\Filament\Pages\Auth\Login::class)
-            ->path('')
-            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
+            ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
+
             ->brandName('Tribunal de Cuentas')
             ->brandLogo(asset('images/tcse_logo.png'))
-            ->brandLogoHeight('15rem')
+            ->brandLogoHeight('4rem')
             ->colors([
                 'primary' => \Filament\Support\Colors\Color::hex('#1e3a8a'),
             ])
@@ -68,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                \Filament\Http\Middleware\Authenticate::class,
             ])
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
