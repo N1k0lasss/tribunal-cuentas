@@ -50,9 +50,9 @@
         border-bottom: none !important;
     }
     .fi-topbar > nav {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        height: auto !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        min-height: 6rem !important;
     }
     
     /* Asegurar que los íconos y texto del header sean blancos o legibles */
