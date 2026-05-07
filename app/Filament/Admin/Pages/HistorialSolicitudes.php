@@ -272,7 +272,10 @@ class HistorialSolicitudes extends Page implements HasTable
                     ]),
             ])
             ->striped()
-            ->paginated([10, 25, 50]);
+            ->paginated([10, 25, 50])
+            ->emptyStateHeading('Sin solicitudes registradas')
+            ->emptyStateDescription('Tu historial de licencias está vacío o no hay registros que coincidan con los filtros de búsqueda actuales.')
+            ->emptyStateIcon('heroicon-o-folder-open');
     }
 
     protected function getHeaderActions(): array
