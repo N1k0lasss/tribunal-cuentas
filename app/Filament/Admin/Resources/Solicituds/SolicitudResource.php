@@ -21,6 +21,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -127,7 +129,7 @@ class SolicitudResource extends Resource
                         ->content(
                             new HtmlString(
                                 '<div class="flex items-start gap-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:border-amber-500 dark:bg-amber-950">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.25rem; height: 1.25rem; margin-top: 0.125rem; flex-shrink: 0;" class="text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                                     </svg>
                                     <div>
@@ -140,6 +142,33 @@ class SolicitudResource extends Resource
                                 </div>'
                             )
                         ),
+
+                    Repeater::make('documentos')
+                        ->relationship('documentos')
+                        ->label('Documentos Adjuntos')
+                        ->schema([
+                            TextInput::make('nombre_archivo')
+                                ->label('Nombre del Documento')
+                                ->required(),
+                            Select::make('tipo_documento')
+                                ->label('Tipo de Documento')
+                                ->options([
+                                    'certificado_medico' => 'Certificado Médico',
+                                    'constancia' => 'Constancia / Recibo',
+                                    'historia_clinica' => 'Historia Clínica',
+                                    'otro' => 'Otro',
+                                ])
+                                ->required(),
+                            FileUpload::make('ruta')
+                                ->label('Archivo (PDF o Imagen)')
+                                ->directory('documentos')
+                                ->acceptedFileTypes(['application/pdf', 'image/*'])
+                                ->required()
+                                ->columnSpanFull(),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(1)
+                        ->addActionLabel('Añadir Otro Documento'),
                 ]),
 
             // ═══════════════════════════════════════════════════════════
@@ -158,6 +187,8 @@ class SolicitudResource extends Resource
                                 ? 'Fecha de la Franquicia'
                                 : 'Fecha de Inicio'
                         )
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($set, $get, $state) {
@@ -176,6 +207,8 @@ class SolicitudResource extends Resource
                             fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
                                 || ! TipoSolicitud::find($get('tipo_solicitud_id'))
                         )
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
                         ->minDate(fn ($get) => $get('fecha_inicio')) // Poka-Yoke: impide fecha_fin < fecha_inicio
                         ->live()
                         ->afterStateUpdated(function ($set, $get, $state) {
@@ -233,6 +266,8 @@ class SolicitudResource extends Resource
                     DatePicker::make('fecha_solicitud')
                         ->label('Fecha de Solicitud')
                         ->default(now())
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
                         ->required()
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 

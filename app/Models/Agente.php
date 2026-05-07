@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * @property int|null $user_id 
- * @property-read User|null $user 
+ * @property int|null $user_id
+ * @property-read User|null $user
  * @property int $id
  * @property string $nombre
  * @property string $apellido

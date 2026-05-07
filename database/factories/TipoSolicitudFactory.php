@@ -28,7 +28,12 @@ class TipoSolicitudFactory extends Factory
             ]),
             'categoria' => $this->faker->randomElement(['Ordinaria', 'Extraordinaria', 'Especial']),
             'articulo_legal' => 'Art. '.$this->faker->numberBetween(1, 100).' Inc. '.$this->faker->randomLetter(),
-            'duracion_maxima_dias' => $this->faker->randomElement([5, 10, 15, 30, 90, 180]),
+            'duracion_maxima_dias' => $this->faker->randomElement([30, 60, 90, 180]),
+            'unidad_medida' => 'dias',
+            'tipo_dias' => 'corridos',
+            'goce_sueldo_porcentaje' => 100,
+            'requiere_intervencion_medica' => false,
+            'limite_mensual_dias_horas' => null,
             'requiere_adjunto' => $this->faker->boolean(40),
         ];
     }

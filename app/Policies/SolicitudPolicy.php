@@ -4,14 +4,14 @@ namespace App\Policies;
 
 use App\Models\Solicitud;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Services\DelegacionService;
 
 class SolicitudPolicy
 {
     /**
      * Administradores tienen acceso total al recurso.
      */
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->hasRole('administrador')) {
             return true;
@@ -102,15 +102,7 @@ class SolicitudPolicy
      */
     public function aprobar(User $user, Solicitud $solicitud): bool
     {
-        $etapa = $solicitud->etapaActual();
-
-        if ($etapa === null) {
-            return false;
-        }
-
-        $rolRequerido = Solicitud::ETAPA_ROL_MAP[$etapa] ?? null;
-
-        return $rolRequerido !== null && $user->hasRole($rolRequerido);
+        return app(DelegacionService::class)->puedeActuarEnEtapa($user, $solicitud);
     }
 
     /**

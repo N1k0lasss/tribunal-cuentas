@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Agentes\Tables;
 
+use App\Models\Agente;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -30,6 +31,7 @@ class AgentesTable
                         if (! $state) {
                             return '—';
                         }
+
                         return number_format((int) $state, 0, '', '.');
                     })
                     ->searchable()
@@ -76,7 +78,7 @@ class AgentesTable
                 SelectFilter::make('tipo_contrato')
                     ->label('Tipo de Contrato')
                     ->options(function () {
-                        return \App\Models\Agente::query()
+                        return Agente::query()
                             ->distinct()
                             ->whereNotNull('tipo_contrato')
                             ->pluck('tipo_contrato', 'tipo_contrato')
