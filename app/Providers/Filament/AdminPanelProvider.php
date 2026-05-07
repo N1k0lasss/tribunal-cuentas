@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->brandName('TCSE Licencias')
             ->brandLogo(fn () => view('filament.admin.logo'))
-            ->brandLogoHeight('5rem')
+            ->brandLogoHeight('6rem')
             ->colors([
                 'primary' => Color::Hex('#1A365D'), // Navy
                 'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
@@ -71,8 +71,10 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
                 \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
                 \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
+                \App\Filament\Admin\Widgets\SolicitudesPendientesWidget::class,
+                \App\Filament\Admin\Widgets\UsoLicenciasChartWidget::class,
+                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
                 //AccountWidget::class,
                 //FilamentInfoWidget::class,
             ])

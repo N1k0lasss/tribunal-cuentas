@@ -50,9 +50,9 @@
         border-bottom: none !important;
     }
     .fi-topbar > nav {
-        min-height: 10rem !important; /* Aumenta el tamaño del header */
-        padding-top: 1.5rem !important;
-        padding-bottom: 1.5rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: auto !important;
     }
     
     /* Asegurar que los íconos y texto del header sean blancos o legibles */
@@ -66,5 +66,11 @@
     .fi-topbar button:hover, 
     .fi-topbar a:hover {
         color: white !important;
+    }
+
+    /* Agrandar el avatar/círculo de perfil del usuario en el header */
+    .fi-topbar .fi-avatar {
+        width: 3.5rem !important;
+        height: 3.5rem !important;
     }
 </style>

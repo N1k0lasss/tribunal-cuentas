@@ -738,7 +738,7 @@ class SolicitudResource extends Resource
 
     // ── Lógica de Aprobación / Rechazo ─────────────────────────
 
-    protected static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion): void
+    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion): void
     {
         $user = Auth::user();
 

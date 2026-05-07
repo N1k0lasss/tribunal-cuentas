@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ProximaFechaWidget extends Widget
 {
+    protected static ?int $sort = 1;
+
     protected string $view = 'filament.admin.widgets.proxima-fecha-widget';
 
     protected int | string | array $columnSpan = 'full';

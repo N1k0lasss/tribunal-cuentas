@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class MisSaldosStatsWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = -1;
 
     public static function canView(): bool
     {

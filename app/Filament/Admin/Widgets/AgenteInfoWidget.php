@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AgenteInfoWidget extends Widget
 {
+    protected static ?int $sort = -2;
+
     protected string $view = 'filament.admin.widgets.agente-info-widget';
 
     protected int | string | array $columnSpan = 'full';

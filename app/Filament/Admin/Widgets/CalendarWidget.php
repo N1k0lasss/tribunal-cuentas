@@ -15,12 +15,15 @@ use Illuminate\Support\Facades\Log;
 
 class CalendarWidget extends FullCalendarWidget
 {   
-    #[On('calendar--refresh')]
-    public function refreshCalendar(): void
+    protected static ?int $sort = 1;
+    /**
+     * Show only on the calendar (Feriados) pages.
+     */
+    public static function canView(): bool
     {
-        // Usar el helper del paquete para forzar la recarga de registros
-        Log::info('CalendarWidget: recibido evento calendar--refresh, refrescando registros');
-        $this->refreshRecords();
+        // Adjust the path according to your Filament admin URL structure.
+        // This will hide the widget from the main dashboard.
+        return request()->is('admin/feriados*');
     }
     // Indicamos el modelo con el que trabaja el calendario
     public Model|string|null $model = Feriados::class;

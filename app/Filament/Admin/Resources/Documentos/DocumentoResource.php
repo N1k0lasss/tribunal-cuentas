@@ -9,6 +9,9 @@ use App\Models\Documento;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Actions\BulkActionGroup;
@@ -42,9 +45,14 @@ class DocumentoResource extends Resource
                     ->label('Nombre del Archivo')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('ruta')
-                    ->label('Ruta')
-                    ->maxLength(255),
+                FileUpload::make('ruta')
+                    ->label('Archivo')
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
+                    ->directory('documentos')
+                    ->maxSize(10240) // 10MB
+                    ->downloadable()
+                    ->openable()
+                    ->required(),
                 TextInput::make('tipo_documento')
                     ->label('Tipo de Documento')
                     ->maxLength(255),
@@ -57,17 +65,11 @@ class DocumentoResource extends Resource
                     ->relationship('solicitud', 'id')
                     ->searchable()
                     ->preload(),
-                Select::make('resolucion_id')
-                    ->label('Resolución')
-                    ->relationship('resolucion', 'numero')
-                    ->searchable()
-                    ->preload(),
-                Select::make('agente_id')
+                Hidden::make('agente_id')
+                    ->default(auth()->user()->agente?->id),
+                Placeholder::make('agente_nombre')
                     ->label('Agente')
-                    ->relationship('agente', 'apellido')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido}, {$record->nombre}")
-                    ->searchable()
-                    ->preload(),
+                    ->content(auth()->user()->agente ? auth()->user()->agente->nombre . ' ' . auth()->user()->agente->apellido : 'No asignado'),
             ]);
     }
 
@@ -88,6 +90,13 @@ class DocumentoResource extends Resource
                     ->sortable(),
                 TextColumn::make('solicitud_id')
                     ->label('Solicitud #')
+                    ->sortable(),
+                TextColumn::make('solicitud.fecha_solicitud')
+                    ->label('Fecha de Solicitud')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                TextColumn::make('solicitud.tipoSolicitud.nombre')
+                    ->label('Tipo de Licencia')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Creado')
