@@ -67,4 +67,11 @@
     .fi-topbar a:hover {
         color: white !important;
     }
+    /* Menú lateral (Sidebar) - Hover en tono azul */
+    .fi-sidebar-item-button:hover {
+        background-color: rgba(26, 54, 93, 0.08) !important; /* Tono Navy claro */
+    }
+    .dark .fi-sidebar-item-button:hover {
+        background-color: rgba(26, 54, 93, 0.3) !important; /* Tono Navy para modo oscuro */
+    }
 </style>
