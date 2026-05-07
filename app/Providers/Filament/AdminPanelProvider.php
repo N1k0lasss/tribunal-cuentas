@@ -9,7 +9,10 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Widgets\AccountWidget;
 use Filament\Support\Colors\Color;
+use Filament\Widgets\Widget;
+use Filament\Widgets\FilamentInfoWidget;
 use Filament\Support\Facades\FilamentColor;
 use Filament\View\PanelsRenderHook;
 //use Filament\Widgets\AccountWidget;
@@ -29,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->login()
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
@@ -36,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->brandName('TCSE Licencias')
             ->brandLogo(fn () => view('filament.admin.logo'))
-            ->brandLogoHeight('5rem')
+            ->brandLogoHeight('6rem')
             ->colors([
                 'primary' => Color::Hex('#1A365D'), // Navy
                 'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
@@ -61,13 +65,16 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
                 Dashboard::class,
+
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
                 \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
                 \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
+                \App\Filament\Admin\Widgets\SolicitudesPendientesWidget::class,
+                \App\Filament\Admin\Widgets\UsoLicenciasChartWidget::class,
+                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
                 //AccountWidget::class,
                 //FilamentInfoWidget::class,
             ])
@@ -83,7 +90,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                \Filament\Http\Middleware\Authenticate::class,
             ])
             ->plugins([
                 FilamentFullCalendarPlugin::make(),

@@ -10,7 +10,7 @@ class AgenteInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->components([
+            ->schema([
                 TextEntry::make('nombre'),
                 TextEntry::make('apellido'),
                 TextEntry::make('dni'),

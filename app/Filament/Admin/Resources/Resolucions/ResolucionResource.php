@@ -19,16 +19,17 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use BackedEnum;
+use UnitEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ResolucionResource extends Resource
 {
     protected static ?string $model = Resolucion::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
-
     protected static ?string $navigationLabel = 'Resoluciones';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Resoluciones';
 
@@ -37,6 +38,11 @@ class ResolucionResource extends Resource
     public static function canAccess(): bool
     {
         return ! Auth::user()?->hasRole('agente');
+    }
+
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    {
+        return 'heroicon-o-document-check';
     }
 
     public static function form(Schema $schema): Schema
@@ -75,6 +81,7 @@ class ResolucionResource extends Resource
                     ->date('d/m/Y')
                     ->sortable(),
                 TextColumn::make('detalle')
+                    ->label('Detalle')
                     ->limit(50),
                 TextColumn::make('solicitud_id')
                     ->label('Solicitud #')
@@ -83,11 +90,11 @@ class ResolucionResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

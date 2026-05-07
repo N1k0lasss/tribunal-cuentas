@@ -12,7 +12,7 @@ class AgenteForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->components([
+            ->schema([
                 TextInput::make('nombre')
                     ->required(),
                 TextInput::make('apellido')

@@ -64,10 +64,10 @@
                     tag="a"
                     href="{{ \App\Filament\Admin\Resources\Solicituds\SolicitudResource::getUrl('create') }}"
                     icon="heroicon-m-plus"
-                    size="lg"
-                    class="w-full sm:w-auto min-w-[200px] justify-center"
+                    size="xl"
+                    class="w-full sm:w-auto min-w-[220px] justify-center"
                 >
-                    Nueva Solicitud
+                    <span class="text-lg md:text-xl font-bold">Nueva Solicitud</span>
                 </x-filament::button>
 
                 <x-filament::button
@@ -75,10 +75,10 @@
                     href="#"
                     icon="heroicon-m-user-circle"
                     color="gray"
-                    size="lg"
-                    class="w-full sm:w-auto min-w-[200px] justify-center"
+                    size="xl"
+                    class="w-full sm:w-auto min-w-[220px] justify-center"
                 >
-                    Mi Legajo
+                    <span class="text-lg md:text-xl font-bold">Mi Legajo</span>
                 </x-filament::button>
             </div>
         </div>

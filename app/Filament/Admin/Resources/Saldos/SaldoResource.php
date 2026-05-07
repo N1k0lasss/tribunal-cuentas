@@ -15,22 +15,24 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+
 
 class SaldoResource extends Resource
 {
     protected static ?string $model = Saldo::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calculator';
-
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de Personal';
+    protected static UnitEnum|string|null $navigationGroup = 'Gestión de Personal';
 
-    public static function canAccess(): bool
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return ! Auth::user()?->hasRole('agente');
+        return 'heroicon-o-calculator';
     }
 
     public static function form(Schema $schema): Schema
@@ -89,10 +91,10 @@ class SaldoResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

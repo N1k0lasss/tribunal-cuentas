@@ -19,7 +19,7 @@ class AgentesTable
             ->columns([
                 TextColumn::make('apellido')
                     ->label('Agente')
-                    ->formatStateUsing(fn ($record) => "{$record->nombre} {$record->apellido}")
+                    ->formatStateUsing(fn($record) => "{$record->nombre} {$record->apellido}")
                     ->searchable(['apellido', 'nombre'])
                     ->sortable()
                     ->weight(FontWeight::SemiBold)
@@ -59,7 +59,7 @@ class AgentesTable
                     ->label('Fecha de Ingreso')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->description(fn ($record) => $record->fecha_ingreso?->diffForHumans() ?? null)
+                    ->description(fn($record) => $record->fecha_ingreso?->diffForHumans() ?? null)
                     ->color('gray'),
                 TextColumn::make('created_at')
                     ->label('Creado')
@@ -78,6 +78,7 @@ class AgentesTable
                     ->options(function () {
                         return \App\Models\Agente::query()
                             ->distinct()
+                            /** @phpstan-ignore-next-line */
                             ->whereNotNull('tipo_contrato')
                             ->pluck('tipo_contrato', 'tipo_contrato')
                             ->toArray();
@@ -97,10 +98,8 @@ class AgentesTable
                     ->label('')
                     ->tooltip('Editar agente'),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+            ->groupedBulkActions([
+                DeleteBulkAction::make(),
             ])
             ->striped()
             ->paginated([10, 25, 50]);

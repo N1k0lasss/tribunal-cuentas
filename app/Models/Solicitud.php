@@ -162,6 +162,11 @@ class Solicitud extends Model
      *
      * @return BelongsTo<Agente, $this>
      */
+    public function solicitudOrigen(): BelongsTo
+    {
+        return $this->belongsTo(Solicitud::class, 'solicitud_origen_id');
+    }
+
     public function agente(): BelongsTo
     {
         return $this->belongsTo(Agente::class);

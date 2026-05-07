@@ -50,7 +50,6 @@ class SolicitudPolicy
     {
         return $user->hasRole('agente');
     }
-
     /**
      * Un agente solo puede editar su solicitud si todavía está en estado "pendiente".
      * Una vez que entra al flujo de aprobación, nadie puede editar la solicitud.

@@ -6,45 +6,53 @@ use App\Filament\Admin\Resources\Documentos\Pages\CreateDocumento;
 use App\Filament\Admin\Resources\Documentos\Pages\EditDocumento;
 use App\Filament\Admin\Resources\Documentos\Pages\ListDocumentos;
 use App\Models\Documento;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Schema;
+use Filament\Resources\Resource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use UnitEnum;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class DocumentoResource extends Resource
 {
     protected static ?string $model = Documento::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-paper-clip';
-
     protected static ?string $navigationLabel = 'Documentos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
-    public static function canAccess(): bool
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return ! Auth::user()?->hasRole('agente');
+        return 'heroicon-o-paper-clip';
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->components([
+            ->schema([
                 TextInput::make('nombre_archivo')
                     ->label('Nombre del Archivo')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('ruta')
-                    ->label('Ruta')
-                    ->maxLength(255),
+                FileUpload::make('ruta')
+                    ->label('Archivo')
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
+                    ->directory('documentos')
+                    ->maxSize(10240) // 10MB
+                    ->downloadable()
+                    ->openable()
+                    ->required(),
                 TextInput::make('tipo_documento')
                     ->label('Tipo de Documento')
                     ->maxLength(255),
@@ -57,17 +65,11 @@ class DocumentoResource extends Resource
                     ->relationship('solicitud', 'id')
                     ->searchable()
                     ->preload(),
-                Select::make('resolucion_id')
-                    ->label('Resolución')
-                    ->relationship('resolucion', 'numero')
-                    ->searchable()
-                    ->preload(),
-                Select::make('agente_id')
+                Hidden::make('agente_id')
+                    ->default(auth()->user()->agente?->id),
+                Placeholder::make('agente_nombre')
                     ->label('Agente')
-                    ->relationship('agente', 'apellido')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido}, {$record->nombre}")
-                    ->searchable()
-                    ->preload(),
+                    ->content(auth()->user()->agente ? auth()->user()->agente->nombre . ' ' . auth()->user()->agente->apellido : 'No asignado'),
             ]);
     }
 
@@ -84,11 +86,20 @@ class DocumentoResource extends Resource
                     ->sortable(),
                 TextColumn::make('agente.apellido')
                     ->label('Agente')
+                    ->formatStateUsing(fn ($record) => $record->agente ? "{$record->agente->apellido}, {$record->agente->nombre}" : '-')
                     ->sortable(),
                 TextColumn::make('solicitud_id')
                     ->label('Solicitud #')
                     ->sortable(),
+                TextColumn::make('solicitud.fecha_solicitud')
+                    ->label('Fecha de Solicitud')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                TextColumn::make('solicitud.tipoSolicitud.nombre')
+                    ->label('Tipo de Licencia')
+                    ->sortable(),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -96,11 +107,11 @@ class DocumentoResource extends Resource
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->actions([
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

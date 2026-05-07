@@ -11,36 +11,38 @@ class LicenseStatsWidget extends BaseWidget
 {
     public static function canView(): bool
     {
-        return Auth::user()?->hasRole('administrador') ?? false;
+        return Auth::user()?->hasAnyRole(['administrador', 'jefatura']) ?? false;
     }
 
     protected function getStats(): array
     {
-        $total = Solicitud::count();
         $pendientes = Solicitud::whereIn('estado', ['pendiente', 'en_revision'])->count();
-        $aprobadas = Solicitud::where('estado', 'aprobado')->count();
-        $rechazadas = Solicitud::where('estado', 'rechazado')->count();
+        
+        $ausentesHoy = Solicitud::where('estado', 'aprobado')
+            ->whereDate('fecha_inicio', '<=', now())
+            ->whereDate('fecha_fin', '>=', now())
+            ->count();
+            
+        $aprobadasMes = Solicitud::where('estado', 'aprobado')
+            ->whereMonth('fecha_solicitud', now()->month)
+            ->whereYear('fecha_solicitud', now()->year)
+            ->count();
 
         return [
-            Stat::make('Total', $total)
-                ->description('Todas las solicitudes')
-                ->descriptionIcon('heroicon-m-document-text')
-                ->color('gray'),
+            Stat::make('Solicitudes Pendientes', $pendientes)
+                ->description('Esperando revisión urgente')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($pendientes > 0 ? 'danger' : 'gray'),
 
-            Stat::make('Pendientes', $pendientes)
-                ->description('En espera de aprobación')
-                ->descriptionIcon('heroicon-m-clock')
+            Stat::make('Agentes Ausentes Hoy', $ausentesHoy)
+                ->description('Personal fuera del Tribunal')
+                ->descriptionIcon('heroicon-m-user-minus')
                 ->color('warning'),
 
-            Stat::make('Aprobadas', $aprobadas)
-                ->description('Licencias concedidas')
-                ->descriptionIcon('heroicon-m-check-circle')
+            Stat::make('Aprobadas este Mes', $aprobadasMes)
+                ->description('Volumen de ausencias autorizadas')
+                ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
-
-            Stat::make('Rechazadas', $rechazadas)
-                ->description('Solicitudes denegadas')
-                ->descriptionIcon('heroicon-m-x-circle')
-                ->color('danger'),
         ];
     }
 }

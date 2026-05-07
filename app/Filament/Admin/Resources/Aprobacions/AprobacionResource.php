@@ -2,64 +2,72 @@
 
 namespace App\Filament\Admin\Resources\Aprobacions;
 
-use App\Filament\Admin\Resources\Aprobacions\Pages\CreateAprobacion;
-use App\Filament\Admin\Resources\Aprobacions\Pages\EditAprobacion;
-use App\Filament\Admin\Resources\Aprobacions\Pages\ListAprobacions;
 use App\Models\Aprobacion;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Tables\Grouping\Group;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use UnitEnum;
+use Illuminate\Contracts\Support\Htmlable;
+use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
-
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 
     protected static ?string $modelLabel = 'Aprobación';
 
-    public static function canAccess(): bool
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return ! Auth::user()?->hasRole('agente');
+        return 'heroicon-o-check-badge';
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->components([
+            ->schema([
                 Select::make('solicitud_id')
                     ->label('Solicitud')
                     ->relationship('solicitud', 'id')
                     ->searchable()
                     ->preload()
                     ->required(),
+
                 Select::make('aprobado_por')
                     ->label('Aprobado por')
                     ->relationship('aprobador', 'apellido')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido}, {$record->nombre}")
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->apellido} {$record->nombre}")
                     ->searchable()
                     ->preload()
                     ->required(),
+
                 TextInput::make('etapa')
+                    ->label('Etapa')
                     ->maxLength(255),
+
                 Select::make('estado')
+                    ->label('Estado')
                     ->options([
                         'pendiente' => 'Pendiente',
                         'aprobado' => 'Aprobado',
@@ -67,12 +75,13 @@ class AprobacionResource extends Resource
                     ])
                     ->default('pendiente')
                     ->required(),
+
                 Textarea::make('observacion')
                     ->label('Observación')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-                DatePicker::make('fecha')
-                    ->required(),
+
+                DatePicker::make('fecha'),
             ]);
     }
 
@@ -112,7 +121,7 @@ class AprobacionResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
@@ -145,9 +154,9 @@ class AprobacionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListAprobacions::route('/'),
-            'create' => CreateAprobacion::route('/create'),
-            'edit' => EditAprobacion::route('/{record}/edit'),
+            'index' => Pages\ListAprobacions::route('/'),
+            'create' => Pages\CreateAprobacion::route('/create'),
+            'edit' => Pages\EditAprobacion::route('/{record}/edit'),
         ];
     }
 }
