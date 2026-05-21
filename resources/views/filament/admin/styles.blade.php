@@ -73,4 +73,12 @@
         width: 3.5rem !important;
         height: 3.5rem !important;
     }
+
+    /* Asegurar que la imagen del logo no se desborde y mantenga la proporción */
+    .fi-logo img {
+        height: 6rem !important;
+        max-height: 6rem !important;
+        width: auto !important;
+        object-fit: contain !important;
+    }
 </style>

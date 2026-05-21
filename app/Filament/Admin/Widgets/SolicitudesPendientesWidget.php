@@ -22,17 +22,41 @@ class SolicitudesPendientesWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return Auth::user()?->hasAnyRole(['administrador', 'jefatura']) ?? false;
+        return Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                Solicitud::query()
+            ->query(function () {
+                $user = Auth::user();
+                $query = Solicitud::query()
                     ->whereIn('estado', ['pendiente', 'en_revision'])
-                    ->with(['agente.area', 'tipoSolicitud'])
-            )
+                    ->with(['agente.area', 'tipoSolicitud', 'aprobaciones']);
+
+                if ($user->hasRole('administrador')) {
+                    return $query;
+                }
+
+                if ($user->hasRole('jefatura')) {
+                    // Jefatura: solicitudes que no tienen ninguna aprobación todavía
+                    return $query->whereDoesntHave('aprobaciones');
+                }
+
+                if ($user->hasRole('secretaria_general')) {
+                    // Secretaría: tiene aprobación de jefatura pero no de secretaría
+                    return $query->whereHas('aprobaciones', fn($q) => $q->where('etapa', 'jefatura')->where('estado', 'aprobado'))
+                                 ->whereDoesntHave('aprobaciones', fn($q) => $q->where('etapa', 'secretaria'));
+                }
+
+                if ($user->hasRole('presidencia')) {
+                    // Presidencia: tiene aprobación de secretaría pero no de presidencia (dirección)
+                    return $query->whereHas('aprobaciones', fn($q) => $q->where('etapa', 'secretaria')->where('estado', 'aprobado'))
+                                 ->whereDoesntHave('aprobaciones', fn($q) => $q->where('etapa', 'direccion'));
+                }
+
+                return $query;
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('agente.apellido')
                     ->label('Agente')
@@ -64,6 +88,17 @@ class SolicitudesPendientesWidget extends BaseWidget
                     ->label('Días')
                     ->alignCenter()
                     ->weight('bold'),
+
+                Tables\Columns\TextColumn::make('etapa_actual')
+                    ->label('Etapa Actual')
+                    ->state(fn ($record) => match ($record->etapaActual()) {
+                        'jefatura' => 'Jefatura',
+                        'secretaria' => 'Secretaría Gral.',
+                        'direccion' => 'Presidencia',
+                        default => 'Finalizado',
+                    })
+                    ->badge()
+                    ->color('info'),
             ])
             ->actions([
                 Action::make('aprobar')
