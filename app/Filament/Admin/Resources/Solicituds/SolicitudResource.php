@@ -24,6 +24,7 @@ use Filament\Forms\Components\Toggle;
 use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -329,45 +330,6 @@ class SolicitudResource extends Resource
     {
         return $schema
             ->components([
-                // ── Sección 1: Datos del Agente ───────────────────
-                Section::make('Datos del Agente')
-                    ->icon('heroicon-o-user-circle')
-                    ->collapsible()
-                    ->components([
-                        Grid::make(4)
-                            ->components([
-                                TextEntry::make('agente.apellido')
-                                    ->label('Apellido')
-                                    ->weight('bold')
-                                    ->formatStateUsing(fn ($record) => $record->agente?->apellido ?? '—'),
-
-                                TextEntry::make('agente.nombre')
-                                    ->label('Nombre')
-                                    ->formatStateUsing(fn ($record) => $record->agente?->nombre ?? '—'),
-
-                                TextEntry::make('agente.id')
-                                    ->label('Nº de Legajo')
-                                    ->badge()
-                                    ->color('gray'),
-
-                                TextEntry::make('agente.area.nombre')
-                                    ->label('Área')
-                                    ->icon('heroicon-m-building-office'),
-                            ]),
-                        Grid::make(2)
-                            ->components([
-                                TextEntry::make('agente.cargo')
-                                    ->label('Cargo')
-                                    ->icon('heroicon-m-briefcase')
-                                    ->default('Sin cargo asignado'),
-
-                                TextEntry::make('agente.fecha_ingreso')
-                                    ->label('Fecha de Ingreso')
-                                    ->date('d/m/Y')
-                                    ->icon('heroicon-m-calendar'),
-                            ]),
-                    ]),
-
                 // ── Sección 2: Detalle de la Solicitud ────────────
                 Section::make('Detalle de la Solicitud')
                     ->icon('heroicon-o-document-text')
@@ -471,8 +433,23 @@ class SolicitudResource extends Resource
                             ->label('')
                             ->columns(3)
                             ->components([
+                                ImageEntry::make('ruta')
+                                    ->label('Previsualización')
+                                    ->disk('public')
+                                    ->size(150)
+                                    ->visible(fn ($record) => in_array(pathinfo($record->ruta, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png'])),
+
+                                TextEntry::make('ruta')
+                                    ->label('Archivo PDF')
+                                    ->icon('heroicon-m-eye')
+                                    ->color('primary')
+                                    ->formatStateUsing(fn () => 'Ver documento PDF')
+                                    ->url(fn ($record) => asset('storage/' . $record->ruta))
+                                    ->openUrlInNewTab()
+                                    ->visible(fn ($record) => pathinfo($record->ruta, PATHINFO_EXTENSION) === 'pdf'),
+
                                 TextEntry::make('nombre_archivo')
-                                    ->label('Archivo')
+                                    ->label('Nombre')
                                     ->icon('heroicon-m-document')
                                     ->weight('medium'),
 
