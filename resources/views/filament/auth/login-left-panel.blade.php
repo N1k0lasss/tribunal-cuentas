@@ -239,7 +239,7 @@
 .tcse-split-left__bg {
     position: absolute;
     inset: 0;
-    background-image: url('/images/torres%20juan%20felipe%20ibarra.jpg');
+    background-image: url('/images/edificio-noche.jpg');
     background-size: cover;
     background-position: center top;
     transform: scale(1.06);
