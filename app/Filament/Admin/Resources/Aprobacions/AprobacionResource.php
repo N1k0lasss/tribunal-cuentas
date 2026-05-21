@@ -93,9 +93,10 @@ class AprobacionResource extends Resource
                     ->label('Solicitud #')
                     ->sortable(),
                 TextColumn::make('aprobador.apellido')
-                    ->label('Aprobado por')
+                    ->label('Resuelto por')
                     ->formatStateUsing(fn ($record) => $record->aprobador ? "{$record->aprobador->apellido}, {$record->aprobador->nombre}" : '-')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('etapa')
                     ->sortable(),
                 TextColumn::make('estado')
@@ -131,11 +132,11 @@ class AprobacionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['aprobador', 'solicitud']);
+            ->with(['aprobador', 'solicitud', 'solicitud.agente', 'solicitud.tipoSolicitud', 'solicitud.aprobaciones']);
 
         $tienePermisosDeAdmin = Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
 
-        if (!$tienePermisosDeAdmin) {
+        if (! $tienePermisosDeAdmin) {
             $query->whereHas('solicitud', function (Builder $query): void {
                 $query->where('agente_id', Auth::user()->agente?->id);
             });

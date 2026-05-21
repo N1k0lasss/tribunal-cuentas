@@ -3,11 +3,12 @@
 use App\Filament\Admin\Resources\Aprobacions\AprobacionResource;
 use App\Models\Aprobacion;
 use App\Models\User;
+use Illuminate\Contracts\Auth\Authenticatable;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 beforeEach(function () {
-    /** @var \Illuminate\Contracts\Auth\Authenticatable $user */
+    /** @var Authenticatable $user */
     $user = User::factory()->create();
     actingAs($user);
 });
