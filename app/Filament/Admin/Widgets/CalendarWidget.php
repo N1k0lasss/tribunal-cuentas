@@ -15,23 +15,27 @@ use Illuminate\Support\Facades\Log;
 
 class CalendarWidget extends FullCalendarWidget
 {   
-    protected static ?int $sort = 1;
-    /**
-     * Show only on the calendar (Feriados) pages.
-     */
-    public static function canView(): bool
+    #[On('calendar--refresh')]
+    public function refreshCalendar(): void
     {
-        // Adjust the path according to your Filament admin URL structure.
-        // This will hide the widget from the main dashboard.
-        return request()->is('admin/feriados*');
+        // Usar el helper del paquete para forzar la recarga de registros
+        Log::info('CalendarWidget: recibido evento calendar--refresh, refrescando registros');
+        $this->refreshRecords();
     }
     // Indicamos el modelo con el que trabaja el calendario
     public Model|string|null $model = Feriados::class;
+
+    protected int | string | array $columnSpan = 2;
 
     public function config(): array
     {
         return [
             'displayEventTime' => false,
+            'headerToolbar' => [
+                'left' => 'prev,next today',
+                'center' => 'title',
+                'right' => 'dayGridMonth,timeGridWeek,timeGridDay'
+            ],
         ];
     }
 
@@ -41,7 +45,7 @@ class CalendarWidget extends FullCalendarWidget
     $start = \Illuminate\Support\Carbon::parse($fetchInfo['start']);
     $end = \Illuminate\Support\Carbon::parse($fetchInfo['end']);
 
-    return Feriados::query() // Iniciamos la consulta
+    $feriados = Feriados::query() // Iniciamos la consulta
         ->where(function ($query) use ($start, $end) {
             // Buscamos los que están en este mes O los que son recurrentes
             $query->whereBetween('fecha_inicio', [$start, $end])
@@ -63,7 +67,14 @@ class CalendarWidget extends FullCalendarWidget
                 'title' => $feriado->nombre,
                 'start' => $inicio,
                 'end' => $fin,
+                // Agregamos campos extra para el widget de lista
+                'nombre' => $feriado->nombre,
+                'tipo' => $feriado->tipo,
+                'fecha_inicio' => $inicio,
+                'recurrente' => $feriado->recurrente,
+                
                 'allDay' => (bool) $feriado->todo_el_dia,
+                'display' => 'block',
                 'backgroundColor' => match ($feriado->tipo) {
                     'Nacional' => '#3b82f6',
                     'Provincial' => '#f59e0b',
@@ -75,6 +86,18 @@ class CalendarWidget extends FullCalendarWidget
             ];
         })
         ->toArray();
+
+    // Emitir evento para sincronizar el widget de lista (usamos el centro de la vista para asegurar el mes correcto)
+    $mesVisible = $start->copy()->addDays(15);
+    // Extraemos solo los feriados que caen exactamente en el mes visible para la barra lateral
+    $feriadosDelMes = array_filter($feriados, function($f) use ($mesVisible) {
+        $fecha = \Illuminate\Support\Carbon::parse($f['fecha_inicio']);
+        return $fecha->month === $mesVisible->month && $fecha->year === $mesVisible->year;
+    });
+
+    $this->dispatch('calendar-state-update', month: $mesVisible->month, year: $mesVisible->year, eventos: array_values($feriadosDelMes));
+
+    return $feriados;
 }
 
 

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\CreateAction;
-use Illuminate\Contracts\Support\Htmlable;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
@@ -26,12 +25,28 @@ class FeriadosResource extends Resource
     protected static ?string $model = Feriados::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
-
+    //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Calendario';
+    protected static ?string $slug = 'gestion-calendario';
 
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    public static function canViewAny(): bool
     {
-        return 'heroicon-o-calendar-days';
+        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
     }
 
     public static function form(Schema $schema): Schema
