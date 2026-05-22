@@ -20,14 +20,12 @@ class ListFeriados extends ListRecords
     {
         return [
             \App\Filament\Admin\Widgets\CalendarWidget::class,
+            \App\Filament\Admin\Widgets\FeriadosListWidget::class,
         ];
     }
     public function getHeaderWidgetsColumns(): int | array
     {
-        return 1;
+        return 3;
     }
-
-
-
 
 }
