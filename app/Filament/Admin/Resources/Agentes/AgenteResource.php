@@ -27,15 +27,16 @@ class AgenteResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'apellido';
 
-    public static function canAccess(): bool
-    {
-        return ! Auth::user()?->hasRole('agente');
-    }
-
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
         return 'heroicon-o-rectangle-stack';
     }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de personal';
+
+    protected static ?string $navigationLabel = 'Agentes';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {

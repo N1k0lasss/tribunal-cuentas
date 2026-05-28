@@ -32,7 +32,9 @@ class AprobacionResource extends Resource
 
     protected static ?string $navigationLabel = 'Aprobaciones';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Flujo de licencias';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $pluralModelLabel = 'Aprobaciones';
 

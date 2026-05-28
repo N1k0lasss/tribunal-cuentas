@@ -28,6 +28,8 @@ class TipoSolicitudResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
 
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $pluralModelLabel = 'Régimenes Legales';
 
     protected static ?string $modelLabel = 'Régimen Legal';

@@ -19,6 +19,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Illuminate\Support\HtmlString;
 
 class HistorialSolicitudes extends Page implements HasTable
 {
@@ -30,13 +31,13 @@ class HistorialSolicitudes extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Historial';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Licencias';
+    protected static string|\UnitEnum|null $navigationGroup = 'Flujo de licencias';
 
     protected static ?string $title = 'Historial de Solicitudes';
 
     protected static ?string $slug = 'historial-solicitudes';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 6;
 
     public function table(Table $table): Table
     {
@@ -111,6 +112,16 @@ class HistorialSolicitudes extends Page implements HasTable
                         'rechazado' => 'heroicon-o-x-circle',
                         default => null,
                     }),
+                TextColumn::make('flujo')
+                    ->label('Flujo')
+                    ->html()
+                    ->state(function (Solicitud $record) {
+                        $aprobaciones = $record->aprobaciones ?? collect();
+                        $map = $aprobaciones->keyBy('etapa');
+
+                        return new HtmlString(self::renderWorkflowDots($record, $map));
+                    })
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('anio')
@@ -154,7 +165,6 @@ class HistorialSolicitudes extends Page implements HasTable
                     ->visible(fn () => ! $esAgente),
             ])
             ->defaultSort('fecha_solicitud', 'desc')
-            ->recordAction('ver_detalle')
             ->recordActions([
                 Action::make('ver_detalle')
                     ->label('')
@@ -222,6 +232,16 @@ class HistorialSolicitudes extends Page implements HasTable
                         Section::make('Flujo de Aprobación')
                             ->icon('heroicon-o-check-badge')
                             ->schema([
+                                TextEntry::make('flujo_resumen')
+                                    ->label('')
+                                    ->html()
+                                    ->state(function (Solicitud $record) {
+                                        $aprobaciones = $record->aprobaciones ?? collect();
+                                        $map = $aprobaciones->keyBy('etapa');
+
+                                        return new HtmlString(self::renderWorkflowTimeline($record, $map));
+                                    })
+                                    ->columnSpanFull(),
                                 RepeatableEntry::make('aprobaciones')
                                     ->label('')
                                     ->schema([
@@ -276,6 +296,89 @@ class HistorialSolicitudes extends Page implements HasTable
             ->emptyStateHeading('Sin solicitudes registradas')
             ->emptyStateDescription('Tu historial de licencias está vacío o no hay registros que coincidan con los filtros de búsqueda actuales.')
             ->emptyStateIcon('heroicon-o-folder-open');
+    }
+
+    private static function renderWorkflowDots(Solicitud $record, \Illuminate\Support\Collection $map): string
+    {
+        $steps = collect($record->flujoEtapas())
+            ->mapWithKeys(fn (string $etapa) => [$etapa => self::etapaDisplayLabel($etapa)]);
+
+        $dots = [];
+
+        foreach ($steps as $key => $label) {
+            $aprobacion = $map->get($key);
+            $state = $aprobacion?->estado ?? 'pendiente';
+            $class = match ($state) {
+                'aprobado' => 'workflow-dot workflow-dot--ok',
+                'rechazado' => 'workflow-dot workflow-dot--no',
+                default => 'workflow-dot workflow-dot--wait',
+            };
+
+            if ($record->estado === Solicitud::ESTADO_RECHAZADO && $state === 'pendiente') {
+                $class = 'workflow-dot workflow-dot--muted';
+            }
+
+            $dots[] = sprintf('<span class="%s" title="%s"></span>', $class, $label);
+        }
+
+        return '<div class="workflow-dots" aria-hidden="true">'.implode('', $dots).'</div>';
+    }
+
+    private static function renderWorkflowTimeline(Solicitud $record, \Illuminate\Support\Collection $map): string
+    {
+        $steps = collect($record->flujoEtapas())
+            ->mapWithKeys(fn (string $etapa) => [$etapa => self::etapaDisplayLabel($etapa)]);
+
+        $items = [];
+
+        foreach ($steps as $key => $label) {
+            $aprobacion = $map->get($key);
+            $estado = $aprobacion?->estado ?? 'pendiente';
+            $fecha = $aprobacion?->fecha?->format('d/m/Y');
+            $actor = $aprobacion?->aprobador ? $aprobacion->aprobador->nombre.' '.$aprobacion->aprobador->apellido : '—';
+
+            $badgeClass = match ($estado) {
+                'aprobado' => 'workflow-status workflow-status--ok',
+                'rechazado' => 'workflow-status workflow-status--no',
+                default => 'workflow-status workflow-status--wait',
+            };
+
+            if ($record->estado === Solicitud::ESTADO_RECHAZADO && $estado === 'pendiente') {
+                $badgeClass = 'workflow-status workflow-status--muted';
+            }
+
+            $items[] = sprintf(
+                '<div class="workflow-step">'
+                .'<div class="workflow-step__head">'
+                .'<span class="workflow-step__label">%s</span>'
+                .'<span class="%s">%s</span>'
+                .'</div>'
+                .'<div class="workflow-step__meta">Responsable: %s</div>'
+                .'<div class="workflow-step__meta">Fecha: %s</div>'
+                .'</div>',
+                $label,
+                $badgeClass,
+                match ($estado) {
+                    'aprobado' => 'Aprobado',
+                    'rechazado' => 'Rechazado',
+                    default => 'Pendiente',
+                },
+                $actor,
+                $fecha ?? '—'
+            );
+        }
+
+        return '<div class="workflow-timeline">'.implode('', $items).'</div>';
+    }
+
+    private static function etapaDisplayLabel(string $etapa): string
+    {
+        return match ($etapa) {
+            Solicitud::ETAPA_JEFATURA => 'Jefatura',
+            Solicitud::ETAPA_SECRETARIA => 'Secretaría General',
+            Solicitud::ETAPA_DIRECCION => 'Presidencia',
+            default => $etapa,
+        };
     }
 
     protected function getHeaderActions(): array

@@ -44,9 +44,21 @@ class SolicitudesPendientesWidget extends BaseWidget
                 }
 
                 if ($user->hasRole('secretaria_general')) {
-                    // Secretaría: tiene aprobación de jefatura pero no de secretaría
-                    return $query->whereHas('aprobaciones', fn($q) => $q->where('etapa', 'jefatura')->where('estado', 'aprobado'))
-                                 ->whereDoesntHave('aprobaciones', fn($q) => $q->where('etapa', 'secretaria'));
+                    // Secretaría: flujo general con jefatura aprobada o pendientes de Salud y Maternidad.
+                    return $query
+                        ->whereDoesntHave('aprobaciones', fn ($q) => $q->where('etapa', 'secretaria'))
+                        ->where(function ($subQuery) {
+                            $subQuery
+                                ->whereHas('aprobaciones', fn ($q) => $q
+                                    ->where('etapa', 'jefatura')
+                                    ->where('estado', 'aprobado'))
+                                ->orWhere(function ($healthQuery) {
+                                    $healthQuery
+                                        ->where('estado', Solicitud::ESTADO_PENDIENTE)
+                                        ->whereHas('tipoSolicitud', fn ($tipoQuery) => $tipoQuery
+                                            ->where('categoria', Solicitud::CATEGORIA_SALUD_MATERNIDAD));
+                                });
+                        });
                 }
 
                 if ($user->hasRole('presidencia')) {

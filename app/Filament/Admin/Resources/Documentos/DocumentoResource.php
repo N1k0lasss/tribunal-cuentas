@@ -31,7 +31,9 @@ class DocumentoResource extends Resource
 
     protected static ?string $navigationLabel = 'Documentos';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Licencias';
+    protected static UnitEnum|string|null $navigationGroup = 'Flujo de licencias';
+
+    protected static ?int $navigationSort = 4;
 
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {

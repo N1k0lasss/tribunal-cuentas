@@ -56,10 +56,11 @@ class FirmaDigitalService
     public function obtenerResumenFirmas(Solicitud $solicitud): array
     {
         $firmas = $solicitud->firmasDigitales()->with('agente')->get();
+        $totalEtapas = count($solicitud->flujoEtapas());
 
         return [
-            'completo' => $firmas->count() === count(Solicitud::FLUJO_ETAPAS),
-            'total' => count(Solicitud::FLUJO_ETAPAS),
+            'completo' => $firmas->count() === $totalEtapas,
+            'total' => $totalEtapas,
             'firmadas' => $firmas->count(),
             'firmantes' => $firmas->map(fn ($f) => [
                 'etapa' => $f->etapa,

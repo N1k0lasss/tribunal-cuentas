@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Aprobacion;
 use App\Models\Solicitud;
 use App\Models\User;
+use App\Notifications\SolicitudSaludMaternidadAprobadaNotification;
 use App\Notifications\SolicitudResueltaNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -99,9 +100,29 @@ class WorkflowSolicitudesService
                     Notification::route('mail', $email)
                         ->notify(new SolicitudResueltaNotification($solicitud));
                 }
+
+                if ($solicitud->estado === Solicitud::ESTADO_APROBADO && $solicitud->esCategoriaSaludYMaternidad()) {
+                    $this->notificarAprobacionSaludYMaternidad($solicitud);
+                }
             }
 
             return $aprobacion;
         });
+    }
+
+    private function notificarAprobacionSaludYMaternidad(Solicitud $solicitud): void
+    {
+        $emails = User::query()
+            ->role(['jefatura', 'presidencia'])
+            ->whereNotNull('email')
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->values();
+
+        foreach ($emails as $email) {
+            Notification::route('mail', $email)
+                ->notify(new SolicitudSaludMaternidadAprobadaNotification($solicitud));
+        }
     }
 }

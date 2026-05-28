@@ -29,6 +29,10 @@ class FeriadosResource extends Resource
     protected static ?string $navigationLabel = 'Calendario';
     protected static ?string $slug = 'gestion-calendario';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+
+    protected static ?int $navigationSort = 2;
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;

@@ -28,7 +28,9 @@ class SaldoResource extends Resource
 
     protected static ?string $navigationLabel = 'Saldos';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Gestión de Personal';
+    protected static UnitEnum|string|null $navigationGroup = 'Gestión de personal';
+
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {

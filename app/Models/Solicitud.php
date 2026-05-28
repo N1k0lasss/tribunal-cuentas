@@ -70,6 +70,8 @@ class Solicitud extends Model
         self::ETAPA_DIRECCION => 'presidencia',
     ];
 
+    public const CATEGORIA_SALUD_MATERNIDAD = 'Salud y Maternidad';
+
     /**
      * Determina si la solicitud ya entró al flujo de aprobación.
      */
@@ -92,7 +94,7 @@ class Solicitud extends Model
      */
     public function etapaActual(): ?string
     {
-        foreach (self::FLUJO_ETAPAS as $etapa) {
+        foreach ($this->flujoEtapas() as $etapa) {
             $aprobacion = $this->aprobaciones->firstWhere('etapa', $etapa);
 
             if (! $aprobacion || $aprobacion->estado === 'pendiente') {
@@ -118,9 +120,35 @@ class Solicitud extends Model
             return null;
         }
 
-        $index = array_search($actual, self::FLUJO_ETAPAS, true);
+        $flujoEtapas = $this->flujoEtapas();
+        $index = array_search($actual, $flujoEtapas, true);
 
-        return self::FLUJO_ETAPAS[$index + 1] ?? null;
+        return $flujoEtapas[$index + 1] ?? null;
+    }
+
+    /**
+     * Devuelve el flujo de aprobación aplicable para esta solicitud.
+     *
+     * @return list<string>
+     */
+    public function flujoEtapas(): array
+    {
+        if ($this->esCategoriaSaludYMaternidad()) {
+            return [self::ETAPA_SECRETARIA];
+        }
+
+        return self::FLUJO_ETAPAS;
+    }
+
+    public function esCategoriaSaludYMaternidad(): bool
+    {
+        $categoria = $this->tipoSolicitud?->categoria;
+
+        if ($categoria === null && $this->tipo_solicitud_id !== null) {
+            $categoria = $this->tipoSolicitud()->value('categoria');
+        }
+
+        return $categoria === self::CATEGORIA_SALUD_MATERNIDAD;
     }
 
     /**

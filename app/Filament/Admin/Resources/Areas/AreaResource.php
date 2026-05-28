@@ -31,6 +31,12 @@ class AreaResource extends Resource
         return 'heroicon-o-rectangle-stack';
     }
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de personal';
+
+    protected static ?string $navigationLabel = 'Areas';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $pluralModelLabel = 'Áreas';
 
     protected static ?string $modelLabel = 'Área';
