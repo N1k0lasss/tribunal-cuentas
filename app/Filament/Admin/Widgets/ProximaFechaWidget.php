@@ -17,25 +17,32 @@ class ProximaFechaWidget extends Widget
     public function getNextHoliday()
     {
         $today = now()->startOfDay();
-        
-        return Feriados::all()
+
+        $nonRecurrent = Feriados::where('recurrente', false)
+            ->whereDate('fecha_inicio', '>=', $today)
+            ->orderBy('fecha_inicio')
+            ->first();
+
+        $recurrent = Feriados::where('recurrente', true)->get()
             ->map(function (Feriados $f) use ($today) {
-                $fechaProxima = $f->fecha_inicio->copy();
-                
-                if ($f->recurrente) {
-                    $fechaProxima->year($today->year);
-                    
-                    if ($fechaProxima->isBefore($today)) {
-                        $fechaProxima->addYear();
-                    }
+                $fechaProxima = $f->fecha_inicio->copy()->year($today->year);
+                if ($fechaProxima->isBefore($today)) {
+                    $fechaProxima->addYear();
                 }
-                
                 $f->computed_proxima_fecha = $fechaProxima;
                 return $f;
             })
-            ->filter(fn($f) => $f->computed_proxima_fecha->isAfter($today) || $f->computed_proxima_fecha->isSameDay($today))
+            ->filter(fn ($f) => $f->computed_proxima_fecha->gte($today))
             ->sortBy('computed_proxima_fecha')
             ->first();
+
+        if ($nonRecurrent && $recurrent) {
+            return $nonRecurrent->fecha_inicio->lte($recurrent->computed_proxima_fecha)
+                ? $nonRecurrent
+                : $recurrent;
+        }
+
+        return $nonRecurrent ?? $recurrent;
     }
 
     public static function canView(): bool

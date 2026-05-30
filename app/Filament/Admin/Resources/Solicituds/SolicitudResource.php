@@ -127,7 +127,7 @@ class SolicitudResource extends Resource
             // ═══════════════════════════════════════════════════════════
             Section::make('')
                 ->visible(
-                    fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->requiere_adjunto === true
+                    fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->requiere_adjunto === true
                 )
                 ->schema([
                     Placeholder::make('requiere_adjunto_info')
@@ -189,7 +189,7 @@ class SolicitudResource extends Resource
 
                     DatePicker::make('fecha_inicio')
                         ->label(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
                                 ? 'Fecha de la Franquicia'
                                 : 'Fecha de Inicio'
                         )
@@ -207,11 +207,11 @@ class SolicitudResource extends Resource
                     DatePicker::make('fecha_fin')
                         ->label('Fecha de Fin')
                         ->required(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
                         )
                         ->visible(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
-                                || ! TipoSolicitud::find($get('tipo_solicitud_id'))
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
                         )
                         ->native(false)
                         ->displayFormat('d/m/Y')
@@ -228,20 +228,20 @@ class SolicitudResource extends Resource
                     TimePicker::make('hora_inicio')
                         ->label('Hora de Salida')
                         ->required(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
                         )
                         ->visible(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
                         )
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
                     TimePicker::make('hora_fin')
                         ->label('Hora de Regreso')
                         ->required(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
                         )
                         ->visible(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
                         )
                         ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
                     // Campo calculado — diferenciado visualmente del resto
@@ -253,8 +253,8 @@ class SolicitudResource extends Resource
                         ->helperText('Calculado automáticamente según el régimen legal seleccionado.')
                         ->extraInputAttributes(['class' => 'bg-gray-100 dark:bg-white/5 cursor-not-allowed'])
                         ->visible(
-                            fn ($get) => TipoSolicitud::find($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
-                                || ! TipoSolicitud::find($get('tipo_solicitud_id'))
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
                         ),
                 ]),
 
@@ -334,7 +334,7 @@ class SolicitudResource extends Resource
             return null;
         }
 
-        $tipo = TipoSolicitud::find($tipoId);
+        $tipo = static::getTipoSolicitudMemoized($tipoId);
 
         if (! $tipo || $tipo->unidad_medida !== 'dias') {
             return null;
@@ -872,7 +872,7 @@ class SolicitudResource extends Resource
         $user = Auth::user();
 
         return parent::getEloquentQuery()
-            ->with(['agente', 'tipoSolicitud'])
+            ->with(['agente', 'tipoSolicitud', 'aprobaciones'])
             ->when($user->hasRole('agente'), function (Builder $query) use ($user) {
                 // El agente solo ve sus propias solicitudes
                 return $query->where('agente_id', $user->agente?->id);
@@ -923,5 +923,14 @@ class SolicitudResource extends Resource
             'create' => CreateSolicitud::route('/create'),
             'edit' => EditSolicitud::route('/{record}/edit'),
         ];
+    }
+
+    private static function getTipoSolicitudMemoized($id): ?TipoSolicitud
+    {
+        static $cache = [];
+        if ($id && ! isset($cache[$id])) {
+            $cache[$id] = TipoSolicitud::find($id);
+        }
+        return $cache[$id] ?? null;
     }
 }

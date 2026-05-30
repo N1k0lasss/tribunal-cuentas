@@ -21,6 +21,8 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 use BackedEnum;
 use Illuminate\Contracts\Support\Htmlable;
@@ -124,6 +126,12 @@ class DocumentoResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['agente', 'solicitud.tipoSolicitud']);
     }
 
     public static function getRelations(): array

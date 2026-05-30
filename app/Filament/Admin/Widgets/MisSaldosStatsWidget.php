@@ -6,8 +6,8 @@ use App\Models\Saldo;
 use App\Models\Solicitud;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class MisSaldosStatsWidget extends BaseWidget
 {
@@ -92,15 +92,15 @@ class MisSaldosStatsWidget extends BaseWidget
      */
     private function getMonthlyChart(int $agenteId, string|array $estado): array
     {
-        $data = [];
+        $cacheKey = 'monthly_chart_' . $agenteId . '_' . (is_array($estado) ? implode('_', $estado) : $estado);
 
-        for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
+        return Cache::remember($cacheKey, 300, function () use ($agenteId, $estado) {
+            $data = [];
+            $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
 
-            /** @var Builder $query */
-            $query = Solicitud::where('agente_id', $agenteId)
-                ->whereYear('fecha_solicitud', $date->year)
-                ->whereMonth('fecha_solicitud', $date->month);
+            $query = Solicitud::selectRaw('YEAR(fecha_solicitud) as year, MONTH(fecha_solicitud) as month, COUNT(*) as total')
+                ->where('agente_id', $agenteId)
+                ->where('fecha_solicitud', '>=', $sixMonthsAgo);
 
             if (is_array($estado)) {
                 $query->whereIn('estado', $estado);
@@ -108,9 +108,19 @@ class MisSaldosStatsWidget extends BaseWidget
                 $query->where('estado', $estado);
             }
 
-            $data[] = $query->count();
-        }
+            $results = $query->groupBy('year', 'month')
+                ->orderBy('year')
+                ->orderBy('month')
+                ->get()
+                ->keyBy(fn ($r) => $r->year . '-' . str_pad($r->month, 2, '0', STR_PAD_LEFT));
 
-        return $data;
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $key = $date->year . '-' . str_pad($date->month, 2, '0', STR_PAD_LEFT);
+                $data[] = (int) ($results[$key]->total ?? 0);
+            }
+
+            return $data;
+        });
     }
 }
