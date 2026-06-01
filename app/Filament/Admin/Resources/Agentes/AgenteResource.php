@@ -2,8 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Agentes;
 
-use App\Filament\Admin\Resources\Agentes\Pages\CreateAgente;
-use App\Filament\Admin\Resources\Agentes\Pages\EditAgente;
+
 use App\Filament\Admin\Resources\Agentes\Pages\ListAgentes;
 use App\Filament\Admin\Resources\Agentes\Pages\ViewAgente;
 use App\Filament\Admin\Resources\Agentes\Schemas\AgenteForm;
@@ -64,9 +63,7 @@ class AgenteResource extends Resource
     {
         return [
             'index' => ListAgentes::route('/'),
-            'create' => CreateAgente::route('/create'),
             'view' => ViewAgente::route('/{record}'),
-            'edit' => EditAgente::route('/{record}/edit'),
         ];
     }
 }

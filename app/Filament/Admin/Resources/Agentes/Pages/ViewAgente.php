@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources\Agentes\Pages;
 
 use App\Filament\Admin\Resources\Agentes\AgenteResource;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewAgente extends ViewRecord
@@ -13,7 +12,6 @@ class ViewAgente extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
         ];
     }
 }

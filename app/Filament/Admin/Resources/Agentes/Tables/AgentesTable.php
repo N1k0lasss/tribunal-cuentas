@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\Agentes\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
@@ -94,9 +93,6 @@ class AgentesTable
                 ViewAction::make()
                     ->label('')
                     ->tooltip('Ver detalle'),
-                EditAction::make()
-                    ->label('')
-                    ->tooltip('Editar agente'),
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make(),
