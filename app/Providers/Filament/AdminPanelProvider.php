@@ -76,8 +76,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Admin\Widgets\SolicitudesPendientesWidget::class,
                 \App\Filament\Admin\Widgets\UsoLicenciasChartWidget::class,
                 \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
-                \App\Filament\Admin\Widgets\DiasDisponiblesDetalleWidget::class,
-                \App\Filament\Admin\Widgets\LicenciasAprobadasDetalleWidget::class,
                 //AccountWidget::class,
                 //FilamentInfoWidget::class,
             ])
