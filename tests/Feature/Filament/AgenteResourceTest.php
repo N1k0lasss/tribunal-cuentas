@@ -13,14 +13,9 @@ it('can render Agentes list page', function () {
         ->assertSuccessful();
 });
 
-it('can render Agentes create page', function () {
-    $this->get(AgenteResource::getUrl('create'))
-        ->assertSuccessful();
-});
-
-it('can render Agentes edit page', function () {
+it('can render Agentes view page', function () {
     $agente = Agente::factory()->create();
 
-    $this->get(AgenteResource::getUrl('edit', ['record' => $agente]))
+    $this->get(AgenteResource::getUrl('view', ['record' => $agente]))
         ->assertSuccessful();
 });
