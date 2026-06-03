@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\Agentes\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+
 use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
@@ -39,14 +40,8 @@ class AgentesTable
                     ->sortable()
                     ->color('gray')
                     ->placeholder('—'),
-                TextColumn::make('tipo_contrato')
-                    ->label('Tipo de Contrato')
-                    ->badge()
-                    ->colors([
-                        'success' => fn ($state) => str_contains(strtolower($state ?? ''), 'permanente'),
-                        'warning' => fn ($state) => str_contains(strtolower($state ?? ''), 'transitoria'),
-                        'gray' => fn ($state) => str_contains(strtolower($state ?? ''), 'locación') || str_contains(strtolower($state ?? ''), 'locacion'),
-                    ])
+                TextColumn::make('situacion_revista')
+                    ->label('Situación de Revista')
                     ->searchable(),
                 TextColumn::make('area.nombre')
                     ->label('Área')
@@ -72,14 +67,14 @@ class AgentesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('tipo_contrato')
-                    ->label('Tipo de Contrato')
+                SelectFilter::make('situacion_revista')
+                    ->label('Situación de Revista')
                     ->options(function () {
                         return \App\Models\Agente::query()
                             ->distinct()
                             /** @phpstan-ignore-next-line */
-                            ->whereNotNull('tipo_contrato')
-                            ->pluck('tipo_contrato', 'tipo_contrato')
+                            ->whereNotNull('situacion_revista')
+                            ->pluck('situacion_revista', 'situacion_revista')
                             ->toArray();
                     }),
                 SelectFilter::make('area_id')
