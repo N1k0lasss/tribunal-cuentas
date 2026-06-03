@@ -739,13 +739,14 @@ class SolicitudResource extends Resource
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
                     ->modalSubmitActionLabel('Confirmar Aprobación')
                     ->modalCancelActionLabel('Cancelar')
-                    ->form([
-                        Textarea::make('observacion')
-                            ->label('Observación (opcional)')
-                            ->maxLength(500),
-                    ])
+                    ->form(fn (Solicitud $record) => static::getAprobarFormSchema($record))
                     ->action(function (Solicitud $record, array $data) {
-                        static::procesarAprobacion($record, 'aprobado', $data['observacion'] ?? null);
+                        static::procesarAprobacion(
+                            $record,
+                            'aprobado',
+                            $data['observacion'] ?? null,
+                            $data['numero_resolucion'] ?? null
+                        );
 
                         Notification::make()
                             ->success()
@@ -781,6 +782,47 @@ class SolicitudResource extends Resource
                             ->send();
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('rechazar', $record)),
+
+                // ── Action: Agregar Resolución ──────────────────────
+                Action::make('agregar_resolucion')
+                    ->label('Agregar Resolución')
+                    ->icon('heroicon-o-document-plus')
+                    ->color('info')
+                    ->iconButton()
+                    ->tooltip('Agregar Resolución')
+                    ->modalHeading('Crear Resolución')
+                    ->form([
+                        TextInput::make('numero')
+                            ->label('Número de Resolución')
+                            ->required()
+                            ->maxLength(255),
+                        DatePicker::make('fecha_emision')
+                            ->label('Fecha de Emisión')
+                            ->default(now())
+                            ->required(),
+                        Textarea::make('detalle')
+                            ->label('Detalle')
+                            ->maxLength(65535)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Solicitud $record, array $data) {
+                        $record->resolucion()->create([
+                            'numero' => $data['numero'],
+                            'fecha_emision' => $data['fecha_emision'],
+                            'detalle' => $data['detalle'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Resolución creada')
+                            ->body("Se ha asociado la resolución N° {$data['numero']} a la solicitud #{$record->id}.")
+                            ->send();
+                    })
+                    ->visible(fn (Solicitud $record) => 
+                        (Auth::user()?->hasRole('secretaria_general') || Auth::user()?->hasRole('administrador'))
+                        && in_array($record->estado, ['aprobado', 'en_revision'])
+                        && ! $record->resolucion()->exists()
+                    ),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -789,9 +831,30 @@ class SolicitudResource extends Resource
             ]);
     }
 
+    public static function getAprobarFormSchema(?Solicitud $record = null): array
+    {
+        $form = [];
+        $user = Auth::user();
+        $isSecretariaStage = $record?->etapaActual() === 'secretaria';
+
+        if ($user?->hasRole('secretaria_general') || ($isSecretariaStage && $user?->hasRole('administrador'))) {
+            $form[] = TextInput::make('numero_resolucion')
+                ->label('Número de Resolución')
+                ->placeholder('Ej: RESOL-2026-100')
+                ->required()
+                ->maxLength(255);
+        }
+
+        $form[] = Textarea::make('observacion')
+            ->label('Observación (opcional)')
+            ->maxLength(500);
+
+        return $form;
+    }
+
     // ── Lógica de Aprobación / Rechazo ─────────────────────────
 
-    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion): void
+    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion, ?string $numeroResolucion = null): void
     {
         $user = Auth::user();
 
@@ -802,6 +865,18 @@ class SolicitudResource extends Resource
         /** @var WorkflowSolicitudesService $workflow */
         $workflow = app(WorkflowSolicitudesService::class);
         $workflow->resolver($record, $user, $estado, $observacion);
+
+        if ($numeroResolucion) {
+            $record->resolucion()->updateOrCreate(
+                ['solicitud_id' => $record->id],
+                [
+                    'numero' => $numeroResolucion,
+                    'fecha_emision' => now(),
+                    'detalle' => 'Creada automáticamente al aprobar la solicitud.',
+                ]
+            );
+        }
+
         $record->load('aprobaciones');
     }
 
