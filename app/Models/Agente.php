@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $apellido
  * @property string $dni
  * @property string|null $cargo
- * @property string|null $tipo_contrato
+ * @property string|null $situacion_revista
  * @property int $area_id
  * @property Carbon $fecha_ingreso
  * @property Carbon|null $created_at
@@ -48,7 +48,7 @@ class Agente extends Model
         'apellido',
         'dni',
         'cargo',
-        'tipo_contrato',
+        'situacion_revista',
         'area_id',
         'fecha_ingreso',
         'user_id',

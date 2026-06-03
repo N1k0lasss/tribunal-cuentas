@@ -16,7 +16,7 @@ class AgenteInfolist
                 TextEntry::make('dni'),
                 TextEntry::make('cargo')
                     ->placeholder('-'),
-                TextEntry::make('tipo_contrato')
+                TextEntry::make('situacion_revista')
                     ->placeholder('-'),
                 TextEntry::make('area_id')
                     ->numeric(),
