@@ -2,13 +2,9 @@
 
 namespace App\Filament\Admin\Resources\Areas;
 
-use App\Filament\Admin\Resources\Areas\Pages\CreateArea;
-use App\Filament\Admin\Resources\Areas\Pages\EditArea;
 use App\Filament\Admin\Resources\Areas\Pages\ListAreas;
-use App\Filament\Admin\Resources\Areas\Schemas\AreaForm;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
-use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -41,10 +37,6 @@ class AreaResource extends Resource
 
     protected static ?string $modelLabel = 'Área';
 
-    public static function form(Schema $schema): Schema
-    {
-        return AreaForm::configure($schema);
-    }
 
     public static function table(Table $table): Table
     {
@@ -62,8 +54,6 @@ class AreaResource extends Resource
     {
         return [
             'index' => ListAreas::route('/'),
-            'create' => CreateArea::route('/create'),
-            'edit' => EditArea::route('/{record}/edit'),
         ];
     }
 }
