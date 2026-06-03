@@ -13,9 +13,11 @@ class MisSaldosStatsWidget extends BaseWidget
 {
     protected static ?int $sort = -1;
 
+    protected string $view = 'filament.admin.widgets.mis-saldos-stats-widget';
+
     public static function canView(): bool
     {
-        return Auth::user()?->hasRole('agente') ?? false;
+        return false;
     }
 
     protected function getStats(): array
@@ -55,21 +57,25 @@ class MisSaldosStatsWidget extends BaseWidget
 
         return [
             Stat::make('Días Disponibles', max(0, $diasDisponibles) . ' días')
-                ->description('Saldo para el año ' . $anioActual)
-                ->descriptionIcon('heroicon-m-calendar-days')
+                ->description('Saldo para el año ' . $anioActual . ' (Clica para ver desglose)')
+                ->descriptionIcon('heroicon-m-chevron-down')
                 ->color('success')
                 ->chart([max(0, $diasDisponibles), max(0, $diasDisponibles)])
                 ->extraAttributes([
-                    'class' => 'ring-1 ring-success-600/20',
+                    'class' => 'ring-1 ring-success-600/20 cursor-pointer hover:ring-2 hover:ring-success-500/50 transition-all',
+                    'x-on:click' => 'activeTab = activeTab === \'disponibles\' ? null : \'disponibles\'',
+                    'title' => 'Haz clic para desplegar los detalles',
                 ]),
 
             Stat::make('Solicitudes Aprobadas', $solicitudesAprobadas)
-                ->description('Licencias finalizadas ' . $anioActual)
-                ->descriptionIcon('heroicon-m-check-badge')
+                ->description('Licencias finalizadas ' . $anioActual . ' (Clica para ver detalle)')
+                ->descriptionIcon('heroicon-m-chevron-down')
                 ->color('info')
                 ->chart($chartAprobadas)
                 ->extraAttributes([
-                    'class' => 'ring-1 ring-info-600/20',
+                    'class' => 'ring-1 ring-info-600/20 cursor-pointer hover:ring-2 hover:ring-info-500/50 transition-all',
+                    'x-on:click' => 'activeTab = activeTab === \'aprobadas\' ? null : \'aprobadas\'',
+                    'title' => 'Haz clic para desplegar los detalles',
                 ]),
 
             Stat::make('Trámites en Curso', $solicitudesPendientes)
@@ -81,6 +87,86 @@ class MisSaldosStatsWidget extends BaseWidget
                     'class' => 'ring-1 ring-warning-600/20',
                 ]),
         ];
+    }
+
+    /**
+     * Desglose de saldos por tipo de licencia para el año actual.
+     *
+     * @return array<int, array{tipo: string, otorgados: int, usados: int, disponibles: int}>
+     */
+    public function getDetalleSaldos(): array
+    {
+        $agenteId = Auth::user()?->agente?->id;
+
+        if (! $agenteId) {
+            return [];
+        }
+
+        return Saldo::where('agente_id', $agenteId)
+            ->where('anio', (int) date('Y'))
+            ->get()
+            ->map(fn ($saldo) => [
+                'tipo'        => $saldo->tipo_saldo,
+                'otorgados'   => $saldo->dias_otorgados,
+                'usados'      => $saldo->dias_usados,
+                'disponibles' => max(0, $saldo->dias_otorgados - $saldo->dias_usados),
+            ])
+            ->sortByDesc('disponibles')
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Total de días disponibles del agente en el año actual.
+     */
+    public function getTotalDias(): int
+    {
+        return array_sum(array_column($this->getDetalleSaldos(), 'disponibles'));
+    }
+
+    /**
+     * Detalle de cada solicitud aprobada del año actual.
+     *
+     * @return array<int, array{tipo: string, fecha_inicio: string, fecha_fin: string, dias: int}>
+     */
+    public function getDetalleLicencias(): array
+    {
+        $agenteId = Auth::user()?->agente?->id;
+
+        if (! $agenteId) {
+            return [];
+        }
+
+        return Solicitud::where('agente_id', $agenteId)
+            ->where('estado', 'aprobado')
+            ->whereYear('fecha_solicitud', (int) date('Y'))
+            ->with('tipoSolicitud')
+            ->orderByDesc('fecha_inicio')
+            ->get()
+            ->map(fn ($s) => [
+                'tipo'         => $s->tipoSolicitud?->nombre ?? 'Sin tipo',
+                'fecha_inicio' => $s->fecha_inicio?->format('d/m/Y') ?? '-',
+                'fecha_fin'    => $s->fecha_fin?->format('d/m/Y') ?? '-',
+                'dias'         => $s->dias_solicitados,
+            ])
+            ->toArray();
+    }
+
+    /**
+     * Total de licencias aprobadas del agente en el año actual.
+     */
+    public function getTotalLicencias(): int
+    {
+        $agenteId = Auth::user()?->agente?->id;
+
+        if (! $agenteId) {
+            return 0;
+        }
+
+        return Solicitud::where('agente_id', $agenteId)
+            ->where('estado', 'aprobado')
+            ->whereYear('fecha_solicitud', (int) date('Y'))
+            ->count();
     }
 
     /**

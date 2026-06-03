@@ -18,58 +18,12 @@
         </div>
     </div>
 
-    {{-- Stats Cards --}}
-    @php
-        $user = auth()->user();
-        $esAgente = $user?->hasRole('agente');
-        $anio = $this->tableFilters['anio']['value'] ?? date('Y');
-        $baseQuery = \App\Models\Solicitud::query()
-            ->when($esAgente, fn($q) => $q->where('agente_id', $user->agente?->id))
-            ->whereYear('fecha_solicitud', $anio);
-        $total = (clone $baseQuery)->count();
-        $aprobadas = (clone $baseQuery)->where('estado', 'aprobado')->count();
-        $pendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
-        $rechazadas = (clone $baseQuery)->where('estado', 'rechazado')->count();
-    @endphp
-
-    <div class="historial-stats">
-        <div class="historial-stat historial-stat--total">
-            <div class="historial-stat__icon-wrap historial-stat__icon-wrap--total">
-                <x-heroicon-o-document-text class="historial-stat__icon" />
-            </div>
-            <div class="historial-stat__data">
-                <span class="historial-stat__value">{{ $total }}</span>
-                <span class="historial-stat__label">Total Solicitudes</span>
-            </div>
+    {{-- Enlace a Estadísticas (mantener disponible solo para roles) --}}
+    @if($this->canViewLicenciasStats())
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url('admin/estadisticas-licencias') }}?{{ http_build_query(request()->query()) }}" class="filament-button filament-button-secondary">Ver estadísticas</a>
         </div>
-        <div class="historial-stat historial-stat--aprobadas">
-            <div class="historial-stat__icon-wrap historial-stat__icon-wrap--aprobadas">
-                <x-heroicon-o-check-circle class="historial-stat__icon" />
-            </div>
-            <div class="historial-stat__data">
-                <span class="historial-stat__value">{{ $aprobadas }}</span>
-                <span class="historial-stat__label">Aprobadas</span>
-            </div>
-        </div>
-        <div class="historial-stat historial-stat--pendientes">
-            <div class="historial-stat__icon-wrap historial-stat__icon-wrap--pendientes">
-                <x-heroicon-o-clock class="historial-stat__icon" />
-            </div>
-            <div class="historial-stat__data">
-                <span class="historial-stat__value">{{ $pendientes }}</span>
-                <span class="historial-stat__label">Pendientes</span>
-            </div>
-        </div>
-        <div class="historial-stat historial-stat--rechazadas">
-            <div class="historial-stat__icon-wrap historial-stat__icon-wrap--rechazadas">
-                <x-heroicon-o-x-circle class="historial-stat__icon" />
-            </div>
-            <div class="historial-stat__data">
-                <span class="historial-stat__value">{{ $rechazadas }}</span>
-                <span class="historial-stat__label">Rechazadas</span>
-            </div>
-        </div>
-    </div>
+    @endif
 
     {{-- Table --}}
     <div class="historial-table-wrapper">
