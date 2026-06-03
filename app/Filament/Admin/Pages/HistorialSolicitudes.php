@@ -20,6 +20,7 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Collection;
 
 class HistorialSolicitudes extends Page implements HasTable
 {
@@ -38,6 +39,25 @@ class HistorialSolicitudes extends Page implements HasTable
     protected static ?string $slug = 'historial-solicitudes';
 
     protected static ?int $navigationSort = 6;
+
+    public function canViewLicenciasStats(): bool
+    {
+        return Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+    }
+
+    /**
+     * @return array{
+     *     anio: int,
+     *     estado: string|null,
+     *     agente: Agente|null,
+     *     agente_label: string,
+     *     total_solicitudes: int,
+     *     total_dias: int,
+     *     tipos_utilizados: int,
+     *     por_tipo: Collection<int, array{tipo: string, cantidad: int, dias_totales: int, promedio_dias: float}>
+     * }
+     */
+    // Estadísticas movidas a la página separada EstadisticasLicencias
 
     public function table(Table $table): Table
     {
@@ -385,7 +405,7 @@ class HistorialSolicitudes extends Page implements HasTable
     {
         return [
             Action::make('exportar_pdf')
-                ->label('Exportar PDF')
+                ->label('Exportar historial PDF')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('primary')
                 ->action(function () {
@@ -442,6 +462,23 @@ class HistorialSolicitudes extends Page implements HasTable
                         $nombreArchivo
                     );
                 }),
+            // Estadísticas ahora están en su propia página
+        ];
+    }
+
+    /**
+     * @return array{anio: int, estado: string|null, agente_id: int|null}
+     */
+    private function getActiveFilters(): array
+    {
+        $filterState = $this->tableFilters;
+
+        return [
+            'anio' => (int) ($filterState['anio']['value'] ?? date('Y')),
+            'estado' => $filterState['estado']['value'] ?? null,
+            'agente_id' => isset($filterState['agente_id']['value']) && $filterState['agente_id']['value'] !== ''
+                ? (int) $filterState['agente_id']['value']
+                : null,
         ];
     }
 }

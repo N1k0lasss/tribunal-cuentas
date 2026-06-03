@@ -2,78 +2,69 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Models\Saldo;
 use App\Models\Solicitud;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
 
 class UsoLicenciasChartWidget extends ChartWidget
 {
-    protected ?string $heading = 'Resumen de Uso de Licencias';
-    
+    protected ?string $heading = 'Estadísticas Anuales por Tipo de Licencia';
+
     protected static ?int $sort = 0;
 
     protected ?string $maxHeight = '300px';
 
     protected int | string | array $columnSpan = 'full';
 
+    public ?string $filter = null;
+
     public static function canView(): bool
     {
-        return Auth::user()?->hasRole('agente') ?? false;
+        return false;
     }
 
     protected function getData(): array
     {
         $agenteId = Auth::user()?->agente?->id;
-        
-        if (!$agenteId) {
+
+        if (! $agenteId) {
             return [
                 'datasets' => [],
                 'labels' => [],
             ];
         }
 
-        $anioActual = now()->year;
+        $anioSeleccionado = (int) ($this->filter ?? now()->year);
 
-        // 1. Calcular Días Disponibles Totales del año actual
-        $diasDisponibles = Saldo::where('agente_id', $agenteId)
-            ->where('anio', $anioActual)
-            ->get()
-            ->sum(fn($s) => max(0, $s->dias_otorgados - $s->dias_usados));
-
-        // 2. Calcular Días Usados por Tipo de Licencia (Solicitudes aprobadas)
-        $usoPorTipo = Solicitud::where('agente_id', $agenteId)
-            ->where('estado', 'aprobado')
-            ->whereYear('fecha_solicitud', $anioActual)
+        $solicitudes = Solicitud::query()
+            ->where('agente_id', $agenteId)
+            ->whereYear('fecha_solicitud', $anioSeleccionado)
             ->with('tipoSolicitud')
-            ->get()
-            ->groupBy('tipoSolicitud.nombre')
-            ->map(fn($group) => $group->sum('dias_solicitados'));
+            ->get();
 
-        $labels = ['Días Disponibles'];
-        $data = [$diasDisponibles];
-        $colors = ['#10b981']; // Verde para disponibles
+        $agrupadasPorTipo = $solicitudes
+            ->groupBy(fn (Solicitud $solicitud) => $solicitud->tipoSolicitud?->nombre ?? 'Sin tipo')
+            ->sortKeys();
 
-        // Paleta de colores para los tipos de licencia
-        $palette = ['#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
-        $i = 0;
+        $labels = $agrupadasPorTipo->keys()->values()->all();
 
-        foreach ($usoPorTipo as $nombre => $dias) {
-            if ($dias > 0) {
-                $labels[] = $nombre;
-                $data[] = $dias;
-                $colors[] = $palette[$i % count($palette)];
-                $i++;
-            }
+        if ($labels === []) {
+            $labels = ['Sin registros'];
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Días',
-                    'data' => $data,
-                    'backgroundColor' => $colors,
-                    'borderColor' => 'transparent',
+                    'label' => 'Cantidad de solicitudes',
+                    'data' => $agrupadasPorTipo->map(fn ($group) => $group->count())->values()->all() ?: [0],
+                    'backgroundColor' => '#0f766e',
+                    'borderRadius' => 6,
+                ],
+                [
+                    'label' => 'Días solicitados',
+                    'data' => $agrupadasPorTipo->map(fn ($group) => (int) $group->sum('dias_solicitados'))->values()->all() ?: [0],
+                    'backgroundColor' => '#1d4ed8',
+                    'borderRadius' => 6,
                 ],
             ],
             'labels' => $labels,
@@ -82,18 +73,46 @@ class UsoLicenciasChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'pie';
+        return 'bar';
     }
 
     protected function getOptions(): array
     {
         return [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
             'plugins' => [
                 'legend' => [
                     'display' => true,
                     'position' => 'bottom',
                 ],
             ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => [
+                        'precision' => 0,
+                    ],
+                ],
+            ],
         ];
+    }
+
+    protected function getFilters(): ?array
+    {
+        $primerRegistro = Solicitud::query()
+            ->whereNotNull('fecha_solicitud')
+            ->min('fecha_solicitud');
+
+        $anioActual = now()->year;
+        $primerAnio = $primerRegistro ? (int) date('Y', strtotime($primerRegistro)) : $anioActual;
+
+        $anios = [];
+
+        for ($anio = $anioActual; $anio >= $primerAnio; $anio--) {
+            $anios[(string) $anio] = (string) $anio;
+        }
+
+        return $anios;
     }
 }

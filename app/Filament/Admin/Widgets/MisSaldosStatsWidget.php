@@ -17,7 +17,7 @@ class MisSaldosStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return Auth::user()?->hasRole('agente') ?? false;
+        return false;
     }
 
     protected function getStats(): array
@@ -210,4 +210,3 @@ class MisSaldosStatsWidget extends BaseWidget
         });
     }
 }
-
