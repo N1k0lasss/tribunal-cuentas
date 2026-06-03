@@ -23,7 +23,7 @@ class AgenteFactory extends Factory
             'apellido' => $this->faker->lastName(),
             'dni' => $this->faker->unique()->numerify('########'),
             'cargo' => $this->faker->jobTitle(),
-            'tipo_contrato' => $this->faker->randomElement(['Planta Permanente', 'Contrato de Locación', 'Planta Transitoria']),
+            'situacion_revista' => $this->faker->randomElement(['Planta Permanente', 'Contrato de Locación', 'Planta Transitoria']),
             'area_id' => Area::factory(),
             'fecha_ingreso' => $this->faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d'),
         ];

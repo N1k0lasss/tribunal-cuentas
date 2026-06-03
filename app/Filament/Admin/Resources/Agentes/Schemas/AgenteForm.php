@@ -20,7 +20,7 @@ class AgenteForm
                 TextInput::make('dni')
                     ->required(),
                 TextInput::make('cargo'),
-                TextInput::make('tipo_contrato'),
+                TextInput::make('situacion_revista'),
                 Select::make('area_id')
                     ->relationship('area', 'nombre')
                     ->searchable()
