@@ -88,4 +88,83 @@
         width: auto !important;
         object-fit: contain !important;
     }
+
+    /* Footer Admin Panel */
+    .tcse-admin-footer {
+        background-color: #1A365D;
+        color: #ffffff;
+        padding: 1.25rem 2rem;
+        margin-top: 2.5rem;
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .dark .tcse-admin-footer {
+        background-color: #0d1b2e;
+        border-top-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .tcse-admin-footer-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+        gap: 1.5rem;
+    }
+
+    .tcse-admin-footer-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .tcse-admin-footer-logo-banner {
+        height: 3.25rem;
+        max-height: 3.25rem;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .tcse-admin-footer-info {
+        text-align: right;
+    }
+
+    .tcse-admin-footer-copy {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.8) !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+
+    .tcse-admin-footer-rights {
+        font-size: 0.62rem;
+        color: rgba(255, 255, 255, 0.5) !important;
+        margin: 0.15rem 0 0 !important;
+        letter-spacing: 0.02em;
+        line-height: 1.2 !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .tcse-admin-footer-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .tcse-admin-footer-brand {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tcse-admin-footer-info {
+            text-align: center;
+        }
+    }
 </style>
