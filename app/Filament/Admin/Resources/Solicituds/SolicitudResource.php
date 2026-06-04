@@ -362,53 +362,9 @@ class SolicitudResource extends Resource
     {
         return $schema
             ->components([
-                // ── Seccion 1: Estado del flujo ────────────
-                Section::make('Estado del flujo')
-                    ->icon('heroicon-o-arrow-path')
-                    ->columns(3)
-                    ->components([
-                        TextEntry::make('estado')
-                            ->label('Estado')
-                            ->badge()
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
-                                'pendiente' => 'Pendiente',
-                                'en_revision' => 'En Revision',
-                                'aprobado' => 'Aprobado',
-                                'rechazado' => 'Rechazado',
-                                default => $state,
-                            })
-                            ->color(fn (string $state): string => match ($state) {
-                                'pendiente' => 'warning',
-                                'en_revision' => 'info',
-                                'aprobado' => 'success',
-                                'rechazado' => 'danger',
-                                default => 'gray',
-                            })
-                            ->icon(fn (string $state): string => match ($state) {
-                                'pendiente' => 'heroicon-m-clock',
-                                'en_revision' => 'heroicon-m-arrow-path',
-                                'aprobado' => 'heroicon-m-check-badge',
-                                'rechazado' => 'heroicon-m-x-circle',
-                                default => 'heroicon-m-question-mark-circle',
-                            }),
-                        TextEntry::make('etapa_actual')
-                            ->label('Etapa actual')
-                            ->state(fn (Solicitud $record) => static::etapaLabel($record))
-                            ->badge()
-                            ->color(fn (Solicitud $record) => static::etapaColor($record))
-                            ->icon('heroicon-m-flag'),
-                        TextEntry::make('siguiente_etapa')
-                            ->label('Siguiente etapa')
-                            ->state(fn (Solicitud $record) => static::siguienteEtapaLabel($record))
-                            ->badge()
-                            ->color('gray')
-                            ->icon('heroicon-m-arrow-right'),
-                    ]),
-
-                // ── Seccion 2: Detalle de la Solicitud ────────────
+                // ── Sección 1: Detalle de la Solicitud ────────────
                 Section::make('Detalle de la Solicitud')
                     ->icon('heroicon-o-document-text')
-                    ->collapsible()
                     ->components([
                         Grid::make(3)
                             ->components([
@@ -454,18 +410,6 @@ class SolicitudResource extends Resource
                             ]),
                         Grid::make(3)
                             ->components([
-                                TextEntry::make('hora_inicio')
-                                    ->label('Hora de Salida')
-                                    ->icon('heroicon-m-clock')
-                                    ->default('—')
-                                    ->visible(fn ($record) => $record->hora_inicio !== null),
-
-                                TextEntry::make('hora_fin')
-                                    ->label('Hora de Regreso')
-                                    ->icon('heroicon-m-clock')
-                                    ->default('—')
-                                    ->visible(fn ($record) => $record->hora_fin !== null),
-
                                 TextEntry::make('estado')
                                     ->label('Estado')
                                     ->badge()
@@ -490,6 +434,18 @@ class SolicitudResource extends Resource
                                         'rechazado' => 'heroicon-m-x-circle',
                                         default => 'heroicon-m-question-mark-circle',
                                     }),
+
+                                TextEntry::make('hora_inicio')
+                                    ->label('Hora de Salida')
+                                    ->icon('heroicon-m-clock')
+                                    ->default('—')
+                                    ->visible(fn ($record) => $record->hora_inicio !== null),
+
+                                TextEntry::make('hora_fin')
+                                    ->label('Hora de Regreso')
+                                    ->icon('heroicon-m-clock')
+                                    ->default('—')
+                                    ->visible(fn ($record) => $record->hora_fin !== null),
                             ]),
                         TextEntry::make('motivo')
                             ->label('Motivo / Observaciones')
@@ -498,33 +454,17 @@ class SolicitudResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                // ── Sección 3: Documentos Adjuntos ────────────────
+                // ── Sección 2: Documentos Adjuntos ────────────────
                 Section::make('Documentos Adjuntos')
                     ->icon('heroicon-o-paper-clip')
                     ->collapsible()
-                    ->collapsed()
                     ->components([
                         RepeatableEntry::make('documentos')
                             ->label('')
-                            ->columns(3)
+                            ->columns(2)
                             ->components([
-                                ImageEntry::make('ruta')
-                                    ->label('Previsualización')
-                                    ->disk('public')
-                                    ->size(150)
-                                    ->visible(fn ($record) => in_array(pathinfo($record->ruta, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png'])),
-
-                                TextEntry::make('ruta')
-                                    ->label('Archivo PDF')
-                                    ->icon('heroicon-m-eye')
-                                    ->color('primary')
-                                    ->formatStateUsing(fn () => 'Ver documento PDF')
-                                    ->url(fn ($record) => asset('storage/' . $record->ruta))
-                                    ->openUrlInNewTab()
-                                    ->visible(fn ($record) => pathinfo($record->ruta, PATHINFO_EXTENSION) === 'pdf'),
-
                                 TextEntry::make('nombre_archivo')
-                                    ->label('Nombre')
+                                    ->label('Nombre del archivo')
                                     ->icon('heroicon-m-document')
                                     ->weight('medium'),
 
@@ -533,14 +473,21 @@ class SolicitudResource extends Resource
                                     ->badge()
                                     ->color('gray'),
 
-                                TextEntry::make('descripcion')
-                                    ->label('Descripción')
-                                    ->default('—'),
+                                // Vista de documento (Imagen o PDF)
+                                TextEntry::make('ruta')
+                                    ->label('Previsualización / Archivo')
+                                    ->columnSpanFull()
+                                    ->icon('heroicon-m-arrow-top-right-on-square')
+                                    ->color('primary')
+                                    ->weight('bold')
+                                    ->formatStateUsing(fn () => 'Abrir Documento Adjunto')
+                                    ->url(fn ($record) => route('documento.ver', $record->id))
+                                    ->openUrlInNewTab(),
                             ])
                             ->placeholder('No hay documentos adjuntos.'),
                     ]),
 
-                // ── Sección 4: Historial de Aprobaciones ──────────
+                // ── Sección 3: Historial de Aprobaciones ──────────
                 Section::make('Historial de Aprobaciones')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->collapsible()
@@ -938,22 +885,22 @@ class SolicitudResource extends Resource
         return parent::getEloquentQuery()
             ->with(['agente', 'tipoSolicitud', 'aprobaciones'])
             ->when($user->hasRole('agente'), function (Builder $query) use ($user) {
-                // El agente solo ve sus propias solicitudes
-                return $query->where('agente_id', $user->agente?->id);
+                // El agente solo ve sus propias solicitudes (activas)
+                return $query
+                    ->where('agente_id', $user->agente?->id)
+                    ->whereNotIn('estado', [Solicitud::ESTADO_APROBADO, Solicitud::ESTADO_RECHAZADO]);
             })
             ->when($user->hasRole('jefatura'), function (Builder $query) {
-                // Jefatura ve solicitudes pendientes en su etapa + las que ya procesó
-                return $query->where(function (Builder $q) {
-                    $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_PENDIENTE);
-                });
+                // Jefatura solo ve solicitudes activas (pendientes/en revisión en su etapa)
+                return $query->whereIn('estado', [
+                    Solicitud::ESTADO_PENDIENTE,
+                    Solicitud::ESTADO_EN_REVISION,
+                ]);
             })
             ->when($user->hasRole('secretaria_general'), function (Builder $query) {
-                // Secretaría General ve solicitudes en revisión/aprobadas
-                // y también pendientes de Salud y Maternidad (etapa inicial).
+                // Secretaría ve solicitudes activas: en revisión + pendientes de Salud y Maternidad
                 return $query->where(function (Builder $q) {
                     $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_APROBADO)
                         ->orWhere(function (Builder $subQuery) {
                             $subQuery->where('estado', Solicitud::ESTADO_PENDIENTE)
                                 ->whereHas('tipoSolicitud', fn (Builder $tipoQuery) => $tipoQuery
@@ -962,11 +909,8 @@ class SolicitudResource extends Resource
                 });
             })
             ->when($user->hasRole('presidencia'), function (Builder $query) {
-                // Presidencia ve solicitudes que ya pasaron por secretaría
-                return $query->where(function (Builder $q) {
-                    $q->where('estado', Solicitud::ESTADO_EN_REVISION)
-                        ->orWhere('estado', Solicitud::ESTADO_APROBADO);
-                });
+                // Presidencia solo ve solicitudes en revisión que llegaron a su etapa
+                return $query->where('estado', Solicitud::ESTADO_EN_REVISION);
             });
         // Administrador: no se aplica filtro (ve todo)
     }
