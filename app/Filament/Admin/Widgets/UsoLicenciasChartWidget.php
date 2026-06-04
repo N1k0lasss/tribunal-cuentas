@@ -20,7 +20,7 @@ class UsoLicenciasChartWidget extends ChartWidget
 
     public static function canView(): bool
     {
-        return false;
+        return Auth::user()?->hasRole('agente') ?? false;
     }
 
     protected function getData(): array

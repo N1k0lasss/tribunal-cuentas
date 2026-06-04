@@ -35,22 +35,27 @@ class FeriadosResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()?->hasRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general']) ?? false;
+    }
+
+    public static function canAccess(): bool
+    {
+        return ! auth()->user()?->hasRole('agente');
     }
 
     public static function form(Schema $schema): Schema

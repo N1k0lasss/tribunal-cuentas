@@ -8,11 +8,17 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 
 class EstadisticasLicencias extends Page
 {
+    private const ESTADOS_PERMITIDOS = [
+        'pendiente',
+        'en_revision',
+        'aprobado',
+        'rechazado',
+    ];
+
     protected string $view = 'filament.admin.pages.estadisticas-licencias';
 
     protected static ?string $navigationLabel = 'Estadísticas';
@@ -64,9 +70,9 @@ class EstadisticasLicencias extends Page
      */
     public function getLicenciasStatsFromRequest(): array
     {
-        $anio = (int) (request()->query('anio', now()->year));
-        $estado = request()->query('estado', null);
-        $agenteId = request()->query('agente_id', null);
+        $anio = $this->resolveAnio();
+        $estado = $this->resolveEstado();
+        $agenteId = $this->resolveAgenteId();
 
         $baseQuery = Solicitud::query()
             ->whereYear('fecha_solicitud', $anio)
@@ -97,7 +103,7 @@ class EstadisticasLicencias extends Page
                 'promedio_dias' => round((float) $row->promedio_dias, 1),
             ]);
 
-        $agente = $agenteId ? Agente::find($agenteId) : null;
+        $agente = $agenteId !== null ? Agente::find($agenteId) : null;
 
         return [
             'anio' => $anio,
@@ -109,6 +115,49 @@ class EstadisticasLicencias extends Page
             'tipos_utilizados' => $tiposUtilizados,
             'por_tipo' => $porTipo,
         ];
+    }
+
+    private function resolveAnio(): int
+    {
+        $raw = request()->query('anio', now()->year);
+        $anio = is_numeric($raw) ? (int) $raw : now()->year;
+
+        $min = (int) (Solicitud::query()
+            ->whereNotNull('fecha_solicitud')
+            ->selectRaw('MIN(YEAR(fecha_solicitud)) as min_year')
+            ->value('min_year') ?? now()->year);
+
+        $max = now()->year + 1;
+
+        if ($anio < $min || $anio > $max) {
+            return now()->year;
+        }
+
+        return $anio;
+    }
+
+    private function resolveEstado(): ?string
+    {
+        $raw = request()->query('estado');
+
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        return in_array($raw, self::ESTADOS_PERMITIDOS, true) ? $raw : null;
+    }
+
+    private function resolveAgenteId(): ?int
+    {
+        $raw = request()->query('agente_id');
+
+        if (! is_numeric($raw)) {
+            return null;
+        }
+
+        $agenteId = (int) $raw;
+
+        return Agente::query()->whereKey($agenteId)->exists() ? $agenteId : null;
     }
 
     protected function getHeaderActions(): array
