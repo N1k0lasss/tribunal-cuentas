@@ -139,10 +139,9 @@ class SolicitudResource extends Resource
                                         <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                                     </svg>
                                     <div>
-                                        <p class="font-semibold text-amber-800 dark:text-amber-200">Documentación obligatoria</p>
+                                        <p class="font-semibold text-amber-800 dark:text-amber-200">Plazo para entrega de documentación</p>
                                         <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                                            Este tipo de solicitud <strong>requiere adjuntar documentación respaldatoria</strong> antes de ser enviada.
-                                            Sin el adjunto, la solicitud no podrá avanzar en el flujo de aprobación.
+                                            Este tipo de solicitud requiere adjuntar documentación respaldatoria. Dispone de un plazo de <strong>72 horas</strong> desde la presentación para adjuntar la misma. De lo contrario, si transcurrido ese plazo el apartado permanece vacío, el sistema cambiará el estado de la solicitud automáticamente a <strong>"Rechazada por falta de documentación"</strong>.
                                         </p>
                                     </div>
                                 </div>'
@@ -172,7 +171,7 @@ class SolicitudResource extends Resource
                                 ->columnSpanFull(),
                         ])
                         ->columns(2)
-                        ->defaultItems(1)
+                        ->defaultItems(0)
                         ->addActionLabel('Añadir Otro Documento'),
                 ]),
 

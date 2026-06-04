@@ -42,6 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => view('filament.admin.logo'))
             ->brandLogoHeight('6rem')
             ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Hex('#1A365D'), // Navy
                 'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
