@@ -6,8 +6,15 @@ use App\Models\Documento;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
-// EL TELETRANSPORTADOR: Empuja al usuario al login del admin
-Route::redirect('/', '/admin');
+$filamentPath = env('FILAMENT_PATH', 'sistema');
+
+// EL TELETRANSPORTADOR: Empuja al usuario al login del admin (ruta oculta)
+Route::redirect('/', '/' . $filamentPath);
+
+// Ocultar ruta admin redireccionando a inicio (si el path no es admin)
+if ($filamentPath !== 'admin') {
+    Route::redirect('/admin', '/');
+}
 
 // NUEVA RUTA: Pantalla de Recibos para el agente (¡Lo dejamos intacto!)
 Route::get('/recibos', function () {

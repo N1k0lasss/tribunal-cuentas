@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -31,6 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  */
+// class User extends Authenticatable implements FilamentUser, MustVerifyEmail // Desactivado temporalmente
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */

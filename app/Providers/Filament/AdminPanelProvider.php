@@ -32,12 +32,12 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->login()
-            ->path('admin')
+            ->path(env('FILAMENT_PATH', 'sistema'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->profile()
             ->passwordReset()
+            // ->emailVerification() // Desactivado temporalmente
             ->brandName('TCSE Licencias')
             ->brandLogo(fn () => view('filament.admin.logo'))
             ->brandLogoHeight('6rem')

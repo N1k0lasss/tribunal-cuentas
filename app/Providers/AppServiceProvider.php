@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Hash;
+use App\Hashing\Sha256Hasher;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Hash::extend('sha256', function () {
+            return new Sha256Hasher();
+        });
+
         $this->configureDefaults();
         \App\Models\Solicitud::observe(\App\Observers\SolicitudObserver::class);
     }
