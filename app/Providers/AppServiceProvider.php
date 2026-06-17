@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\View;
 use App\Hashing\Sha256Hasher;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureDefaults();
         \App\Models\Solicitud::observe(\App\Observers\SolicitudObserver::class);
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => View::make('components.session-timeout-script')->render(),
+        );
     }
 
     /**
