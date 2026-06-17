@@ -32,9 +32,9 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->login(\App\Filament\Auth\Pages\Login::class)
             ->path(env('FILAMENT_PATH', 'sistema'))
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->login()
             ->profile()
             ->passwordReset()
             // ->emailVerification() // Desactivado temporalmente
@@ -94,6 +94,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \Illuminate\Routing\Middleware\ThrottleRequests::class . ':20,1',
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,

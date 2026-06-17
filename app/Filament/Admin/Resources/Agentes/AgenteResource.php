@@ -13,7 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Infolists\Infolist;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Support\Icons\Heroicon;
+
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -22,13 +22,11 @@ class AgenteResource extends Resource
 {
     protected static ?string $model = Agente::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
-
     protected static ?string $recordTitleAttribute = 'apellido';
 
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
-        return 'heroicon-o-rectangle-stack';
+        return 'heroicon-o-user-group';
     }
 
     protected static string|\UnitEnum|null $navigationGroup = 'Gestión de personal';
