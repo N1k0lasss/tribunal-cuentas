@@ -89,6 +89,26 @@
         object-fit: contain !important;
     }
 
+    /* Animación del botón de colapsar sidebar (hamburguesa) */
+    .fi-sidebar-open-collapse-sidebar-btn,
+    .fi-sidebar-close-collapse-sidebar-btn,
+    .fi-topbar-open-collapse-sidebar-btn,
+    .fi-topbar-close-collapse-sidebar-btn {
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .fi-sidebar-open-collapse-sidebar-btn:hover,
+    .fi-sidebar-close-collapse-sidebar-btn:hover,
+    .fi-topbar-open-collapse-sidebar-btn:hover,
+    .fi-topbar-close-collapse-sidebar-btn:hover {
+        transform: scale(1.15);
+    }
+    .fi-sidebar-open-collapse-sidebar-btn:active,
+    .fi-sidebar-close-collapse-sidebar-btn:active,
+    .fi-topbar-open-collapse-sidebar-btn:active,
+    .fi-topbar-close-collapse-sidebar-btn:active {
+        transform: scale(0.92);
+    }
+
     /* Footer Admin Panel */
     .tcse-admin-footer {
         background-color: #1A365D;
