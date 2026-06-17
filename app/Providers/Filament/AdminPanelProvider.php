@@ -94,6 +94,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \Illuminate\Routing\Middleware\ThrottleRequests::class . ':20,1',
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,
