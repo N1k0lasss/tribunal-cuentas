@@ -18,6 +18,7 @@ class RoleSeeder extends Seeder
         'jefatura',
         'secretaria_general',
         'presidencia',
+        'personal',
     ];
 
     /**

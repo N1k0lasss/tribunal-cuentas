@@ -96,6 +96,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,
+                \App\Http\Middleware\BlockOutsideWorkingHours::class,
             ])
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
