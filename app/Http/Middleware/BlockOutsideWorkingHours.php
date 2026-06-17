@@ -65,11 +65,12 @@ class BlockOutsideWorkingHours
      */
     protected function isCriticalRequest(Request $request): bool
     {
+        $filamentPath = env('FILAMENT_PATH', 'sistema');
         $criticalPaths = [
-            'admin/solicituds',
-            'admin/aprobacions',
-            'admin/saldos',
-            'admin/documentos',
+            $filamentPath . '/solicituds',
+            $filamentPath . '/aprobacions',
+            $filamentPath . '/saldos',
+            $filamentPath . '/documentos',
         ];
 
         $path = ltrim($request->path(), '/');

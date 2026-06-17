@@ -72,7 +72,8 @@ test('agent is allowed to access critical routes during working hours', function
 
     $this->actingAs($agentUser);
 
-    $response = $this->get('/admin/solicituds');
+    $path = env('FILAMENT_PATH', 'sistema');
+    $response = $this->get("/{$path}/solicituds");
     // It should not return 403. Depending on Filament view policy, it could return 200.
     $response->assertStatus(200);
 });
@@ -87,7 +88,8 @@ test('agent is blocked from accessing critical routes outside working hours', fu
 
     $this->actingAs($agentUser);
 
-    $response = $this->get('/admin/solicituds');
+    $path = env('FILAMENT_PATH', 'sistema');
+    $response = $this->get("/{$path}/solicituds");
     $response->assertStatus(403);
 });
 
@@ -101,7 +103,8 @@ test('agent is blocked from accessing critical routes during weekends', function
 
     $this->actingAs($agentUser);
 
-    $response = $this->get('/admin/solicituds');
+    $path = env('FILAMENT_PATH', 'sistema');
+    $response = $this->get("/{$path}/solicituds");
     $response->assertStatus(403);
 });
 
@@ -115,7 +118,8 @@ test('exempt roles can access critical routes outside working hours', function (
 
     $this->actingAs($exemptUser);
 
-    $response = $this->get('/admin/solicituds');
+    $path = env('FILAMENT_PATH', 'sistema');
+    $response = $this->get("/{$path}/solicituds");
     // Exempt roles have full access or standard auth permission, but not blocked by working hours middleware (not 403).
     $this->assertNotEquals(403, $response->status());
 })->with(['administrador', 'presidencia', 'personal']);
