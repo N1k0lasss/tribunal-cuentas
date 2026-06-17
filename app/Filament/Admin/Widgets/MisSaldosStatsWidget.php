@@ -17,7 +17,7 @@ class MisSaldosStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return false;
+        return Auth::user()?->hasRole('agente') ?? false;
     }
 
     protected function getStats(): array
@@ -184,8 +184,7 @@ class MisSaldosStatsWidget extends BaseWidget
             $data = [];
             $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
 
-            $query = Solicitud::selectRaw('YEAR(fecha_solicitud) as year, MONTH(fecha_solicitud) as month, COUNT(*) as total')
-                ->where('agente_id', $agenteId)
+            $query = Solicitud::where('agente_id', $agenteId)
                 ->where('fecha_solicitud', '>=', $sixMonthsAgo);
 
             if (is_array($estado)) {
@@ -194,15 +193,13 @@ class MisSaldosStatsWidget extends BaseWidget
                 $query->where('estado', $estado);
             }
 
-            $results = $query->groupBy('year', 'month')
-                ->orderBy('year')
-                ->orderBy('month')
-                ->get()
-                ->keyBy(fn ($r) => $r->year . '-' . str_pad($r->month, 2, '0', STR_PAD_LEFT));
+            $results = $query->get()
+                ->groupBy(fn ($solicitud) => $solicitud->fecha_solicitud->format('Y-m'))
+                ->map(fn ($group) => (object) ['total' => $group->count()]);
 
             for ($i = 5; $i >= 0; $i--) {
                 $date = now()->subMonths($i);
-                $key = $date->year . '-' . str_pad($date->month, 2, '0', STR_PAD_LEFT);
+                $key = $date->format('Y-m');
                 $data[] = (int) ($results[$key]->total ?? 0);
             }
 

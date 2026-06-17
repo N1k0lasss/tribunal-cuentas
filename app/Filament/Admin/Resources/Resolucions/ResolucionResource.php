@@ -18,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Grouping\Group;
 use Illuminate\Support\Facades\Auth;
 use BackedEnum;
 use UnitEnum;
@@ -89,6 +90,12 @@ class ResolucionResource extends Resource
                     ->label('Solicitud #')
                     ->sortable(),
             ])
+            ->groups([
+                Group::make('numero')
+                    ->label('Número de Resolución')
+                    ->collapsible(),
+            ])
+            ->defaultGroup('numero')
             ->filters([
                 //
             ])

@@ -37,6 +37,11 @@ class SaldoResource extends Resource
         return 'heroicon-o-calculator';
     }
 
+    public static function canAccess(): bool
+    {
+        return ! auth()->user()?->hasRole('agente');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

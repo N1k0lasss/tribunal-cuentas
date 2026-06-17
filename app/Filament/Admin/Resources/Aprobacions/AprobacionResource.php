@@ -45,6 +45,11 @@ class AprobacionResource extends Resource
         return 'heroicon-o-check-badge';
     }
 
+    public static function canAccess(): bool
+    {
+        return ! auth()->user()?->hasRole('agente');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

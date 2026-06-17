@@ -22,6 +22,10 @@ class DelegacionService
 
     public function puedeActuarEnEtapa(User $user, Solicitud $solicitud, ?string $etapa = null): bool
     {
+        if ($user->hasRole('administrador')) {
+            return true;
+        }
+
         $etapaActual = $etapa ?? $solicitud->etapaActual();
 
         if ($etapaActual === null) {

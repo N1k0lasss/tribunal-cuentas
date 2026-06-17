@@ -32,16 +32,17 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->login()
-            ->path('admin')
+            ->path(env('FILAMENT_PATH', 'sistema'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->profile()
             ->passwordReset()
+            // ->emailVerification() // Desactivado temporalmente
             ->brandName('TCSE Licencias')
             ->brandLogo(fn () => view('filament.admin.logo'))
             ->brandLogoHeight('6rem')
             ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Hex('#1A365D'), // Navy
                 'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
@@ -93,6 +94,8 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\SessionTimeout::class,
+                \Illuminate\Routing\Middleware\ThrottleRequests::class . ':20,1',
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,
