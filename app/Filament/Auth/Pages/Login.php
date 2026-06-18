@@ -3,7 +3,6 @@
 namespace App\Filament\Auth\Pages;
 
 use App\Listeners\LoginAttemptListener;
-use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Contracts\Support\Htmlable;
@@ -21,7 +20,7 @@ class Login extends BaseLogin
         return 'Tribunal de Cuentas de Santiago del Estero';
     }
 
-    public function authenticate(): ?LoginResponse
+    public function authenticate(): ?\Filament\Auth\Http\Responses\Contracts\LoginResponse
     {
         $data = $this->form->getState();
         $email = $data['email'] ?? '';
@@ -42,6 +41,12 @@ class Login extends BaseLogin
         }
 
         return parent::authenticate();
+    }
+
+    protected function rateLimit($maxAttempts, $decaySeconds = 60, $method = null, $component = null): void
+    {
+        // Suprimimos el rate limit nativo de Filament (5 intentos/min)
+        // porque nosotros manejamos el bloqueo con 4 intentos / 15 min
     }
 
     protected function isAccountLocked(string $email): bool
