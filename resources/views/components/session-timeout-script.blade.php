@@ -46,7 +46,7 @@
             setTimeout(function() {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '/admin/logout';
+                form.action = '{{ filament()->getLogoutUrl() }}';
                 const csrf = document.createElement('input');
                 csrf.type = 'hidden';
                 csrf.name = '_token';
@@ -76,7 +76,7 @@
             fail(({ status, preventDefault }) => {
                 if (status === 419) {
                     preventDefault();
-                    window.location.href = '/admin/login';
+                    window.location.href = '{{ filament()->getLoginUrl() }}';
                 }
             });
         });
