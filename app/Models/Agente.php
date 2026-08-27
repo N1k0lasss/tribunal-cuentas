@@ -120,4 +120,9 @@ class Agente extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function informeDetalles(): HasMany
+    {
+        return $this->hasMany(InformeDiarioDetalle::class, 'agente_id');
+    }
 }

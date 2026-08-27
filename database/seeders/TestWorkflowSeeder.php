@@ -28,7 +28,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Admin',
                 'email' => 'admin@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'administrador',
                 'agente_data' => [
                     'nombre' => 'Carlos',
@@ -43,7 +43,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Agente',
                 'email' => 'agente@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'agente',
                 'agente_data' => [
                     'nombre' => 'Juan',
@@ -58,7 +58,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Jefe',
                 'email' => 'jefe@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'jefatura',
                 'agente_data' => [
                     'nombre' => 'María',
@@ -73,7 +73,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Secretario',
                 'email' => 'secretario@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'secretaria_general',
                 'agente_data' => [
                     'nombre' => 'Pedro',
@@ -88,7 +88,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Presidente',
                 'email' => 'presidente@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'presidencia',
                 'agente_data' => [
                     'nombre' => 'Ana',
@@ -103,7 +103,7 @@ class TestWorkflowSeeder extends Seeder
             [
                 'name' => 'Usuario Personal',
                 'email' => 'personal@test.com',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'personal',
                 'agente_data' => [
                     'nombre' => 'Marta',
