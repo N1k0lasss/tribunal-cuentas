@@ -201,8 +201,26 @@ class InformeDiarioPage extends Page
         ];
     }
 
+    public function esAdmin(): bool
+    {
+        /** @var User|null $user */
+        $user = auth()->user();
+
+        return $user?->hasRole('administrador') ?? false;
+    }
+
     public function guardarInforme(): void
     {
+        if (! $this->esAdmin()) {
+            Notification::make()
+                ->title('Acceso denegado')
+                ->body('Solo el usuario Administrador puede modificar o guardar el Informe Diario.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $informe = InformeDiario::updateOrCreate(
             ['fecha' => $this->fecha],
             [
@@ -238,7 +256,9 @@ class InformeDiarioPage extends Page
 
     public function exportarPdf()
     {
-        $this->guardarInforme();
+        if ($this->esAdmin()) {
+            $this->guardarInforme();
+        }
 
         $cantidades = [
             'presente' => 0,
@@ -312,6 +332,7 @@ class InformeDiarioPage extends Page
                 ->label('Sincronizar Licencias')
                 ->icon('heroicon-o-arrow-path')
                 ->color('info')
+                ->visible(fn () => $this->esAdmin())
                 ->action(function () {
                     $this->sincronizarAgentesYLicencias();
                     Notification::make()
@@ -325,6 +346,7 @@ class InformeDiarioPage extends Page
                 ->label('Guardar Informe')
                 ->icon('heroicon-o-check')
                 ->color('success')
+                ->visible(fn () => $this->esAdmin())
                 ->action(fn () => $this->guardarInforme()),
 
             Action::make('exportar_pdf')

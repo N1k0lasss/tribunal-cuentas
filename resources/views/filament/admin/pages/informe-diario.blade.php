@@ -25,7 +25,8 @@
                         type="text" 
                         id="destinatario" 
                         wire:model.defer="destinatario" 
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
+                        @disabled(! $this->esAdmin())
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm disabled:opacity-75 disabled:bg-gray-100 dark:disabled:bg-gray-800/80"
                         placeholder="Secretaría General"
                     >
                 </div>
@@ -38,7 +39,8 @@
                         type="text" 
                         id="observacionesGenerales" 
                         wire:model.defer="observacionesGenerales" 
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
+                        @disabled(! $this->esAdmin())
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm disabled:opacity-75 disabled:bg-gray-100 dark:disabled:bg-gray-800/80"
                         placeholder="Notas para Secretaría General..."
                     >
                 </div>
@@ -121,16 +123,40 @@
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    <select 
-                                        wire:model.live="detalles.{{ $index }}.tipo_novedad"
-                                        class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1.5 focus:ring-primary-500 focus:border-primary-500"
-                                    >
-                                        <option value="presente">✅ Presente</option>
-                                        <option value="licencia">🔷 Licencia</option>
-                                        <option value="falta_justificada">⚠️ Falta Justificada</option>
-                                        <option value="ausente_sin_aviso">❌ Ausente sin aviso</option>
-                                        <option value="tardanza">⏱️ Tardanza</option>
-                                    </select>
+                                    @if($this->esAdmin())
+                                        <select 
+                                            wire:model.live="detalles.{{ $index }}.tipo_novedad"
+                                            class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1.5 focus:ring-primary-500 focus:border-primary-500"
+                                        >
+                                            <option value="presente">✅ Presente</option>
+                                            <option value="licencia">🔷 Licencia</option>
+                                            <option value="falta_justificada">⚠️ Falta Justificada</option>
+                                            <option value="ausente_sin_aviso">❌ Ausente sin aviso</option>
+                                            <option value="tardanza">⏱️ Tardanza</option>
+                                        </select>
+                                    @else
+                                        @php
+                                            $tipo = $det['tipo_novedad'] ?? 'presente';
+                                            $badgeClasses = [
+                                                'presente' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+                                                'licencia' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+                                                'falta_justificada' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+                                                'ausente_sin_aviso' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300',
+                                                'tardanza' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+                                            ][$tipo] ?? 'bg-gray-100 text-gray-800';
+
+                                            $labels = [
+                                                'presente' => '✅ Presente',
+                                                'licencia' => '🔷 Licencia',
+                                                'falta_justificada' => '⚠️ Falta Justificada',
+                                                'ausente_sin_aviso' => '❌ Ausente sin aviso',
+                                                'tardanza' => '⏱️ Tardanza',
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClasses }}">
+                                            {{ $labels[$tipo] ?? ucfirst($tipo) }}
+                                        </span>
+                                    @endif
 
                                     @if(!empty($det['tipo_licencia_nombre']) && $det['tipo_novedad'] === 'licencia')
                                         <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-1">
@@ -141,32 +167,50 @@
 
                                 <td class="px-4 py-3">
                                     @if(($detalles[$index]['tipo_novedad'] ?? '') === 'tardanza')
-                                        <div class="flex items-center space-x-2">
-                                            <input 
-                                                type="text" 
-                                                placeholder="08:30 hs" 
-                                                wire:model.defer="detalles.{{ $index }}.hora_llegada"
-                                                class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
-                                            >
-                                            <input 
-                                                type="number" 
-                                                placeholder="Min (ej. 15)" 
-                                                wire:model.defer="detalles.{{ $index }}.minutos_tardanza"
-                                                class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
-                                            >
-                                        </div>
+                                        @if($this->esAdmin())
+                                            <div class="flex items-center space-x-2">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="08:30 hs" 
+                                                    wire:model.defer="detalles.{{ $index }}.hora_llegada"
+                                                    class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                                >
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="Min (ej. 15)" 
+                                                    wire:model.defer="detalles.{{ $index }}.minutos_tardanza"
+                                                    class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                                >
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-gray-700 dark:text-gray-300">
+                                                {{ $det['hora_llegada'] ? $det['hora_llegada'].' hs' : '' }}
+                                                @if(!empty($det['minutos_tardanza']))
+                                                    <span class="font-medium text-purple-600 dark:text-purple-400">({{ $det['minutos_tardanza'] }} min)</span>
+                                                @endif
+                                                @if(empty($det['hora_llegada']) && empty($det['minutos_tardanza']))
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     @else
                                         <span class="text-gray-400 text-xs">-</span>
                                     @endif
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Observaciones..." 
-                                        wire:model.defer="detalles.{{ $index }}.observaciones"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
-                                    >
+                                    @if($this->esAdmin())
+                                        <input 
+                                            type="text" 
+                                            placeholder="Observaciones..." 
+                                            wire:model.defer="detalles.{{ $index }}.observaciones"
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                        >
+                                    @else
+                                        <span class="text-xs text-gray-700 dark:text-gray-300">
+                                            {{ $det['observaciones'] ?: '-' }}
+                                        </span>
+                                    @endif
                                 </td>
 
                             </tr>
@@ -182,21 +226,23 @@
             </div>
 
             <div class="p-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
-                <x-filament::button 
-                    color="info" 
-                    icon="heroicon-o-arrow-path" 
-                    wire:click="sincronizarAgentesYLicencias"
-                >
-                    Sincronizar Licencias
-                </x-filament::button>
+                @if($this->esAdmin())
+                    <x-filament::button 
+                        color="info" 
+                        icon="heroicon-o-arrow-path" 
+                        wire:click="sincronizarAgentesYLicencias"
+                    >
+                        Sincronizar Licencias
+                    </x-filament::button>
 
-                <x-filament::button 
-                    color="success" 
-                    icon="heroicon-o-check" 
-                    wire:click="guardarInforme"
-                >
-                    Guardar Informe Diario
-                </x-filament::button>
+                    <x-filament::button 
+                        color="success" 
+                        icon="heroicon-o-check" 
+                        wire:click="guardarInforme"
+                    >
+                        Guardar Informe Diario
+                    </x-filament::button>
+                @endif
 
                 <x-filament::button 
                     color="primary" 

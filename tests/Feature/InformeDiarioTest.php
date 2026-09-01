@@ -117,3 +117,32 @@ test('informe diario automatically loads approved licenses for specified date', 
         ->assertSet('detalles.0.solicitud_id', $solicitud->id)
         ->assertSet('detalles.0.tipo_solicitud_id', $tipoSolicitud->id);
 });
+
+test('informe diario page can be accessed by secretaria_general but cannot save changes', function () {
+    $secretario = User::factory()->create();
+    $secretario->assignRole('secretaria_general');
+
+    $area = Area::create(['nombre' => 'Secretaría', 'codigo' => 'SEC']);
+    Agente::create([
+        'nombre' => 'Ana',
+        'apellido' => 'Lopez',
+        'dni' => '11223344',
+        'area_id' => $area->id,
+        'fecha_ingreso' => '2020-01-01',
+    ]);
+
+    $fecha = date('Y-m-d');
+
+    $this->actingAs($secretario);
+
+    expect(InformeDiarioPage::canAccess())->toBeTrue();
+
+    Livewire::test(InformeDiarioPage::class)
+        ->set('fecha', $fecha)
+        ->set('observacionesGenerales', 'Intento de guardar por secretaria')
+        ->call('guardarInforme');
+
+    $informe = InformeDiario::whereDate('fecha', $fecha)->first();
+    expect($informe)->toBeNull();
+});
+
