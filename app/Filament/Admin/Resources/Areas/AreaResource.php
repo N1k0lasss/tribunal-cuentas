@@ -17,11 +17,6 @@ class AreaResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
-    public static function canAccess(): bool
-    {
-        return ! Auth::user()?->hasRole('agente');
-    }
-
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
         return 'heroicon-o-rectangle-stack';

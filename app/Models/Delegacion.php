@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +28,7 @@ use Illuminate\Support\Carbon;
  */
 class Delegacion extends Model
 {
+    use LogsActivity;
     use HasFactory;
 
     protected $table = 'delegaciones';
@@ -78,4 +82,13 @@ class Delegacion extends Model
     {
         return $this->belongsTo(User::class, 'creada_por_user_id');
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

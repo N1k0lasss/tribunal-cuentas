@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\AreaFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +22,7 @@ use Illuminate\Support\Carbon;
  */
 class Area extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<AreaFactory> */
     use HasFactory;
 
@@ -40,4 +44,13 @@ class Area extends Model
     {
         return $this->hasMany(Agente::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

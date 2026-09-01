@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\TipoSolicitudFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +26,7 @@ use Illuminate\Support\Carbon;
  */
 class TipoSolicitud extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<TipoSolicitudFactory> */
     use HasFactory;
 
@@ -43,6 +47,7 @@ class TipoSolicitud extends Model
         'goce_sueldo_porcentaje',
         'requiere_intervencion_medica',
         'limite_mensual_dias_horas',
+        'antiguedad_minima_meses',
         'requiere_adjunto'
     ];
 
@@ -59,6 +64,7 @@ class TipoSolicitud extends Model
             'duracion_maxima_dias' => 'integer',
             'goce_sueldo_porcentaje' => 'integer',
             'limite_mensual_dias_horas' => 'integer',
+            'antiguedad_minima_meses' => 'integer',
         ];
     }
 
@@ -71,4 +77,13 @@ class TipoSolicitud extends Model
     {
         return $this->hasMany(Solicitud::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\DocumentoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +28,7 @@ use Illuminate\Support\Carbon;
  */
 class Documento extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<DocumentoFactory> */
     use HasFactory;
 
@@ -72,4 +76,13 @@ class Documento extends Model
     {
         return $this->belongsTo(Agente::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

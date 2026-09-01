@@ -31,7 +31,7 @@ class EstadisticasLicencias extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'secretaria_general', 'presidencia']) ?? false;
     }
 
     public function getFilters(): array

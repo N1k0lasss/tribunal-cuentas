@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\AprobacionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +26,7 @@ use Illuminate\Support\Carbon;
  */
 class Aprobacion extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<AprobacionFactory> */
     use HasFactory;
 
@@ -73,4 +77,13 @@ class Aprobacion extends Model
     {
         return $this->belongsTo(Agente::class, 'aprobado_por');
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

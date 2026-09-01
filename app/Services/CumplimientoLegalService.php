@@ -20,6 +20,7 @@ class CumplimientoLegalService
         $this->validarDuracionMaxima($solicitud);
         $this->validarSaldoDisponible($solicitud);
         $this->validarProrroga($solicitud);
+        $this->validarAntiguedad($solicitud);
         $this->calcularVentanaJustificacion($solicitud);
     }
 
@@ -126,5 +127,23 @@ class CumplimientoLegalService
     {
         $solicitud->justificacion_presentada_en = now();
         $solicitud->save();
+    }
+
+    public function validarAntiguedad(Solicitud $solicitud): void
+    {
+        $solicitud->loadMissing('agente', 'tipoSolicitud');
+
+        $antiguedadRequerida = $solicitud->tipoSolicitud?->antiguedad_minima_meses;
+        if (! $antiguedadRequerida || ! $solicitud->agente || ! $solicitud->agente->fecha_ingreso) {
+            return;
+        }
+
+        $mesesAntiguedad = Carbon::parse($solicitud->agente->fecha_ingreso)->diffInMonths(now());
+
+        if ($mesesAntiguedad < $antiguedadRequerida) {
+            throw ValidationException::withMessages([
+                'tipo_solicitud_id' => "Se requiere una antigüedad mínima de {$antiguedadRequerida} meses para solicitar esta licencia (antigüedad actual: {$mesesAntiguedad} meses).",
+            ]);
+        }
     }
 }

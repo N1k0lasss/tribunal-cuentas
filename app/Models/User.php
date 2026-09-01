@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -34,6 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
 // class User extends Authenticatable implements FilamentUser, MustVerifyEmail // Desactivado temporalmente
 class User extends Authenticatable implements FilamentUser
 {
+    use LogsActivity;
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
@@ -99,4 +103,13 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(Agente::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

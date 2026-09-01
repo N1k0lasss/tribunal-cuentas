@@ -39,6 +39,12 @@ class AppServiceProvider extends ServiceProvider
             PanelsRenderHook::BODY_END,
             fn (): string => View::make('components.session-timeout-script')->render(),
         );
+
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            activity('auth')
+                ->causedBy($event->user)
+                ->log('Usuario inició sesión');
+        });
     }
 
     /**

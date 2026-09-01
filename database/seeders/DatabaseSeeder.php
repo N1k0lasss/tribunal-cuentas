@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RoleSeeder::class,
-            TestWorkflowSeeder::class,
             TipoSolicitudSeeder::class,
+            TestWorkflowSeeder::class,
         ]);
     }
 }
