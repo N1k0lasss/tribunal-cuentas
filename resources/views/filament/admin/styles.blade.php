@@ -67,6 +67,19 @@
     .fi-topbar a:hover {
         color: white !important;
     }
+
+    /* El selector del tema (modo claro/oscuro) no debe ser blanco,
+       sino usar un color legible según el fondo del menú desplegable */
+    .fi-theme-switcher-btn,
+    .fi-theme-switcher-btn svg,
+    .fi-theme-switcher-btn:hover svg {
+        color: #374151 !important;
+    }
+    html.dark .fi-theme-switcher-btn,
+    html.dark .fi-theme-switcher-btn svg,
+    html.dark .fi-theme-switcher-btn:hover svg {
+        color: #e5e7eb !important;
+    }
     /* Menú lateral (Sidebar) - Hover en tono azul */
     .fi-sidebar-item-button:hover {
         background-color: rgba(26, 54, 93, 0.08) !important; /* Tono Navy claro */
