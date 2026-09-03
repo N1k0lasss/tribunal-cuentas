@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Documento;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,6 +24,8 @@ Route::get('/recibos', function () {
 
 // Ruta segura para ver documentos adjuntos (requiere autenticación)
 Route::get('/documentos/{documento}/ver', function (Documento $documento) {
+    Gate::authorize('view', $documento);
+
     $path = $documento->ruta;
 
     if (! Storage::disk('local')->exists($path)) {
