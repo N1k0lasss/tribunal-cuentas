@@ -20,6 +20,9 @@ php artisan db:seed
 
 # Ejecutar servidor local
 php artisan serve
+
+# Sincronizar los agentes desde la base externa legajos
+php artisan app:sync-agentes-desde-legajos
 ```
 # Usuario	Email	Contraseña
 ```
