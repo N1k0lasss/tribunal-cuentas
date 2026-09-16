@@ -807,7 +807,7 @@ DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notifications` (
-  `id` uuid NOT NULL,
+  `id` varchar(36) NOT NULL,
   `type` varchar(255) NOT NULL,
   `notifiable_type` varchar(255) NOT NULL,
   `notifiable_id` bigint(20) unsigned NOT NULL,
