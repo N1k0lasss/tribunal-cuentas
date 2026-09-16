@@ -1222,3 +1222,7 @@ Cache::remember("saldo_agente_{$agente_id}",
 **Estado:** En Desarrollo y Producción  
 
 ---
+
+
+
+--- Pendiente Que tabla y datos consuminir y llenar con php artisan tinker
