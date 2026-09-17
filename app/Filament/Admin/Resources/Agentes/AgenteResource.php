@@ -37,11 +37,6 @@ class AgenteResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    public static function canAccess(): bool
-    {
-        return ! auth()->user()?->hasRole('agente');
-    }
-
     public static function form(Schema $schema): Schema
     {
         return AgenteForm::configure($schema);

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\SolicitudFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +36,7 @@ use Illuminate\Support\Carbon;
  */
 class Solicitud extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<SolicitudFactory> */
     use HasFactory;
 
@@ -239,4 +243,13 @@ class Solicitud extends Model
     {
         return $this->hasMany(Documento::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

@@ -34,11 +34,6 @@ class TipoSolicitudResource extends Resource
 
     protected static ?string $modelLabel = 'Régimen Legal';
 
-    public static function canAccess(): bool
-    {
-        return ! Auth::user()?->hasRole('agente');
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -54,6 +49,9 @@ class TipoSolicitudResource extends Resource
                     ->maxLength(255),
                 TextInput::make('duracion_maxima_dias')
                     ->label('Duración Máxima (días)')
+                    ->numeric(),
+                TextInput::make('antiguedad_minima_meses')
+                    ->label('Antigüedad Mínima (meses)')
                     ->numeric(),
                 Toggle::make('requiere_adjunto')
                     ->label('Requiere Adjunto'),
@@ -75,6 +73,9 @@ class TipoSolicitudResource extends Resource
                 TextColumn::make('duracion_maxima_dias')
                     ->label('Duración Máx. (días)')
                     ->sortable(),
+                TextColumn::make('antiguedad_minima_meses')
+                    ->label('Antigüedad Mín. (meses)')
+                    ->sortable(),
                 IconColumn::make('requiere_adjunto')
                     ->label('Req. Adjunto')
                     ->boolean(),
@@ -83,6 +84,7 @@ class TipoSolicitudResource extends Resource
                 //
             ])
             ->recordActions([
+                \Filament\Actions\ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

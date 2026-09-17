@@ -9,8 +9,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\View;
 use App\Hashing\Sha256Hasher;
 
 class AppServiceProvider extends ServiceProvider
@@ -45,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
             PanelsRenderHook::BODY_END,
             fn (): string => View::make('components.session-timeout-script')->render(),
         );
+
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            activity('auth')
+                ->causedBy($event->user)
+                ->log('Usuario inició sesión');
+        });
     }
 
     /**

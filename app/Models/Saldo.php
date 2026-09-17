@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\SaldoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class Saldo extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<SaldoFactory> */
     use HasFactory;
 
@@ -60,4 +64,13 @@ class Saldo extends Model
     {
         return $this->belongsTo(Agente::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

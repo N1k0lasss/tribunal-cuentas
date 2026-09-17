@@ -17,6 +17,26 @@
     color: rgba(255, 255, 255, 0.85) !important;
 }
 
+/* Fullcalendar dark mode: borders, gridlines and today cell */
+html.dark .fc {
+    --fc-border-color: rgba(148, 163, 184, 0.35);
+    --fc-today-bg-color: rgba(26, 54, 93, 0.3);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgba(148, 163, 184, 0.12);
+}
+
+html.dark .fc .fc-scrollgrid,
+html.dark .fc .fc-scrollgrid-section > td,
+html.dark .fc .fc-daygrid-day,
+html.dark .fc .fc-timegrid-slot,
+html.dark .fc .fc-list-day-cushion {
+    border-color: var(--fc-border-color) !important;
+}
+
+html.dark .fc .fc-day-today {
+    background-color: var(--fc-today-bg-color) !important;
+}
+
 :root {
     --tcse-bordeaux: #6d0b4f;
     --tcse-bordeaux-soft: #8a1f67;
@@ -38,18 +58,18 @@ body,
     color: var(--tcse-text);
 }
 
-.fi-ta,
-.fi-section,
-.fi-card {
+html:not(.dark) .fi-ta,
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-card {
     background: var(--tcse-card);
 }
 
-.fi-ta,
-.fi-section,
-.fi-card,
-.fi-input-wrp,
-.fi-select-input,
-textarea.fi-input {
+html:not(.dark) .fi-ta,
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-card,
+html:not(.dark) .fi-input-wrp,
+html:not(.dark) .fi-select-input,
+html:not(.dark) textarea.fi-input {
     border-color: var(--tcse-border);
 }
 

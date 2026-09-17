@@ -39,6 +39,12 @@ class HistorialSolicitudes extends Page implements HasTable
 
     protected static ?int $navigationSort = 6;
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->hasAnyRole(['administrador', 'secretaria_general', 'presidencia']);
+    }
+
     public function canViewLicenciasStats(): bool
     {
         return Auth::user()?->hasAnyRole(['administrador', 'jefatura', 'secretaria_general', 'presidencia']) ?? false;

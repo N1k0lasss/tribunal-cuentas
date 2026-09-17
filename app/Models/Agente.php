@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\AgenteFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +38,7 @@ use Illuminate\Support\Carbon;
  */
 class Agente extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<AgenteFactory> */
     use HasFactory;
 
@@ -125,4 +129,13 @@ class Agente extends Model
     {
         return $this->hasMany(InformeDiarioDetalle::class, 'agente_id');
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

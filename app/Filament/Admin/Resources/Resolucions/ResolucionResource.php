@@ -38,11 +38,6 @@ class ResolucionResource extends Resource
 
     protected static ?string $modelLabel = 'Resolución';
 
-    public static function canAccess(): bool
-    {
-        return ! Auth::user()?->hasRole('agente');
-    }
-
     public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
         return 'heroicon-o-document-check';

@@ -23,7 +23,8 @@ class SessionTimeout
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();
 
-                    return redirect('/admin/login')->with('mensaje', 'Tu sesión expiró por inactividad.');
+                    $loginUrl = '/' . trim(config('filament.path', 'sistema'), '/') . '/login';
+                    return redirect($loginUrl)->with('mensaje', 'Tu sesión expiró por inactividad.');
                 }
             }
 

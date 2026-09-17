@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Database\Factories\ResolucionFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +27,7 @@ use Illuminate\Support\Carbon;
  */
 class Resolucion extends Model
 {
+    use LogsActivity;
     /** @use HasFactory<ResolucionFactory> */
     use HasFactory;
 
@@ -72,4 +76,13 @@ class Resolucion extends Model
     {
         return $this->hasMany(Documento::class);
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
+

@@ -27,6 +27,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 100,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 6,
                 'requiere_adjunto' => false,
             ],
             [
@@ -39,6 +40,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 100,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 6,
                 'requiere_adjunto' => false,
             ],
             
@@ -151,6 +153,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 0,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 6,
                 'requiere_adjunto' => true,
             ],
             [
@@ -163,6 +166,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 0,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 6,
                 'requiere_adjunto' => true,
             ],
             [
@@ -187,6 +191,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 100,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 12,
                 'requiere_adjunto' => true,
             ],
             [
@@ -283,6 +288,7 @@ class TipoSolicitudSeeder extends Seeder
                 'goce_sueldo_porcentaje' => 0,
                 'requiere_intervencion_medica' => false,
                 'limite_mensual_dias_horas' => null,
+                'antiguedad_minima_meses' => 12,
                 'requiere_adjunto' => false, // Opcional, dependiendo de la solicitud interna
             ],
 

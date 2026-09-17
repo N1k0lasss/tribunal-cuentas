@@ -16,7 +16,7 @@
                     <!-- Textos Informativos -->
                     <div class="flex-1 min-w-0" style="padding-left: 1rem;">
                         <p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none mb-1">Próximo Feriado</p>
-                        <h3 class="text-xl md:text-2xl font-bold text-gray-950 dark:text-white truncate" style="color: #1A365D;">
+                        <h3 class="text-xl md:text-2xl font-bold text-[#1A365D] dark:text-white truncate">
                             {{ $nextHoliday->nombre }}
                         </h3>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 capitalize mt-1 flex items-center gap-1.5">
