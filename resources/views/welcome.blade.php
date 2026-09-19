@@ -34,7 +34,7 @@
                     
                     @auth
                         <p class="text-[11px] text-blue-300 mt-1 font-normal italic">
-                            {{ auth()->user()->name }} • Legajo: {{ auth()->user()->legajo ?? 'EMP001' }}
+                            {{ auth()->user()->name }} • Legajo: {{ auth()->user()->agente?->legajo ?? 'EMP001' }}
                         </p>
                     @endauth
                 </div>
