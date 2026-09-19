@@ -17,6 +17,12 @@ class AgentesTable
     {
         return $table
             ->columns([
+                TextColumn::make('legajo')
+                    ->label('Legajo')
+                    ->sortable()
+                    ->searchable()
+                    ->placeholder('—')
+                    ->weight(FontWeight::SemiBold),
                 TextColumn::make('apellido')
                     ->label('Agente')
                     ->formatStateUsing(fn($record) => "{$record->nombre} {$record->apellido}")
