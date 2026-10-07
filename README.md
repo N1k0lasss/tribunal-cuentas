@@ -20,15 +20,98 @@ php artisan db:seed
 
 # Ejecutar servidor local
 php artisan serve
+```
 
-# Sincronizar los agentes desde la base externa legajos
+## Conexión con la API de legajos
+
+Los agentes se sincronizan desde la API externa de legajos
+(`https://10.0.7.6/api`) mediante Bearer token.
+
+### 1. Variables de entorno
+
+En `.env` (copiadas desde `.env.example`), completar el token:
+
+```env
+LEGAJOS_API_URL=https://10.0.7.6/api
+LEGAJOS_API_TOKEN=        # <-- completar con el token de acceso
+LEGAJOS_API_VERIFY_SSL=false
+LEGAJOS_API_TIMEOUT=15
+LEGAJOS_API_RETRIES=2
+```
+
+> `.env.example` trae el token **vacío** a propósito: el token es un secreto y
+> **no se sube al repositorio**. Cada quien debe completarlo en su `.env`.
+
+### 2. Requisitos
+
+- **Misma red**: `10.0.7.6` es una IP privada, hay que poder alcanzarla
+  (red local del tribunal / VPN). Sin ruta de red, el comando falla con un
+  mensaje claro sin romper la aplicación.
+- **TLS**: `LEGAJOS_API_VERIFY_SSL=false` porque el certificado del servidor
+  es autofirmado. No hace falta instalar ningún certificado.
+- La conexión MySQL `legajos` (`LEGAJOS_DB_*`) **ya no se utiliza**: la
+  sincronización es 100% HTTP. Esas variables pueden quedar como están.
+
+### 3. Verificar la conexión
+
+```bash
+# Diagnóstico general (trae la lista de personas)
+php artisan app:legajos-api-check
+
+# Diagnóstico con un DNI puntual
+php artisan app:legajos-api-check --dni=20987654
+```
+
+Salida esperada:
+
+```
+API: https://10.0.7.6/api
+TLS verify_ssl: desactivado
+Token: 6|aUuJ…******
+
+GET /personas -> OK: 30 personas (400 ms)
+GET /legajos/por-dni/20987654 -> OK: Roberto Carlos, 1 legajo(s) (93 ms)
+```
+
+### 4. Sincronizar agentes
+
+```bash
 php artisan app:sync-agentes-desde-legajos
 ```
-# Usuario	Email	Contraseña
-```
-Admin	admin@test.com (mailto:admin@test.com)	password
-Agente	agente@test.com (mailto:agente@test.com)	password
-Jefe	jefe@test.com (mailto:jefe@test.com)	password
-Secretario	secretario@test.com (mailto:secretario@test.com)	password
-Presidente	presidente@test.com (mailto:presidente@test.com)	password
 
+Salida esperada:
+
+```
+Agentes sincronizados: 24
+Sin legajo (ignorados): 6
+No encontrados en la API: 0
+```
+
+Comportamiento:
+
+- Crea o actualiza los agentes por DNI (`Agente::updateOrCreate`); **nunca
+  borra** registros locales (los agentes manuales y los usuarios quedan intactos).
+- Las personas sin legajo se ignoran.
+- Un DNI inexistente en la API (404) se cuenta como "no encontrado" y el
+  proceso continúa.
+- Ante un error de red o de la API el comando termina con código de error y
+  detalla cada DNI fallido.
+
+### 5. Tests
+
+```bash
+vendor/bin/pest tests/Feature/LegajosApiClientTest.php tests/Feature/SyncAgentesDesdeLegajosTest.php
+```
+
+Los 14 tests corren **sin conexión a la red**: usan `Http::fake()` y el
+`phpunit.xml` define `LEGAJOS_API_URL` / `LEGAJOS_API_TOKEN` de prueba.
+
+## Usuarios de prueba
+
+| Usuario    | Email               | Contraseña |
+|------------|---------------------|------------|
+| Admin      | admin@test.com      | password   |
+| Agente     | agente@test.com     | password   |
+| Jefe       | jefe@test.com       | password   |
+| Secretario | secretario@test.com | password   |
+| Presidente | presidente@test.com | password   |
