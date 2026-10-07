@@ -32,5 +32,9 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="APP_URL" value="http://localhost"/>
+        <env name="LEGAJOS_API_URL" value="https://legajos.test/api"/>
+        <env name="LEGAJOS_API_TOKEN" value="token-de-prueba"/>
+        <env name="LEGAJOS_API_VERIFY_SSL" value="false"/>
+        <env name="LEGAJOS_API_RETRIES" value="1"/>
     </php>
 </phpunit>

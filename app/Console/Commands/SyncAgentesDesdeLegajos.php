@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Exceptions\LegajosApiException;
 use App\Models\Agente;
 use App\Models\Area;
+use App\Services\LegajosApiClient;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -11,69 +13,143 @@ class SyncAgentesDesdeLegajos extends Command
 {
     protected $signature = 'app:sync-agentes-desde-legajos';
 
-    protected $description = 'Sincroniza los agentes locales con los legajos de la base externa';
+    protected $description = 'Sincroniza los agentes locales con los legajos de la API externa';
 
-    public function handle(): int
+    public function handle(LegajosApiClient $api): int
     {
         try {
-            $external = DB::connection('legajos');
-            $external->getPdo();
-        } catch (\Exception $e) {
-            $this->error("No se pudo conectar a la base de datos de legajos: {$e->getMessage()}");
+            $personas = $api->getPersonas();
+        } catch (LegajosApiException $e) {
+            $this->error($e->getMessage());
+
             return self::FAILURE;
         }
 
-        $synced = 0;
+        if ($personas === []) {
+            $this->warn('La API de legajos no devolvió ninguna persona.');
 
-        DB::transaction(function () use (&$synced) {
-            $external = DB::connection('legajos');
+            return self::FAILURE;
+        }
 
-            $external->table('legajos as l')
-                ->join('personas as p', 'p.id', '=', 'l.persona_id')
-                ->leftJoin('areas as a', 'a.id', '=', 'l.area_id')
-                ->leftJoin('cargos as c', 'c.id', '=', 'l.cargo_id')
-                ->select([
-                    'l.num_legajo as legajo',
-                    'p.nombre',
-                    'p.apellido',
-                    'p.dni',
-                    'l.fecha_de_ingreso',
-                    'l.tipo_contrato',
-                    'a.nombre as area_nombre',
-                    'c.nombre as cargo_nombre',
-                ])
-                ->orderBy('l.id')
-                ->chunk(100, function ($records) use (&$synced) {
-                    foreach ($records as $record) {
-                        $area = Area::firstOrCreate([
-                            'nombre' => $record->area_nombre ?: 'Sin área',
-                        ]);
+        $sincronizados = 0;
+        $sinLegajo = 0;
+        $noEncontrados = 0;
+        $fallos = 0;
 
-                        Agente::updateOrCreate(
-                            ['dni' => (string) $record->dni],
-                            [
-                                'legajo' => $record->legajo,
-                                'nombre' => $record->nombre,
-                                'apellido' => $record->apellido,
-                                'cargo' => $record->cargo_nombre,
-                                'situacion_revista' => $this->contractTypeLabel($record->tipo_contrato),
-                                'area_id' => $area->id,
-                                'fecha_ingreso' => $record->fecha_de_ingreso,
-                            ],
-                        );
+        foreach ($personas as $persona) {
+            $dni = (string) ($persona['dni'] ?? '');
 
-                        $synced++;
-                    }
-                });
-        });
+            if ($dni === '') {
+                $fallos++;
 
-        $this->info("Agentes sincronizados: {$synced}");
+                continue;
+            }
 
-        return self::SUCCESS;
+            try {
+                $payload = $api->getLegajosPorDni($dni);
+            } catch (LegajosApiException $e) {
+                $fallos++;
+                $this->warn("DNI {$dni}: {$e->getMessage()}");
+
+                continue;
+            }
+
+            if ($payload === null) {
+                $noEncontrados++;
+
+                continue;
+            }
+
+            $legajos = $payload['legajo'] ?? [];
+
+            if (! is_array($legajos) || $legajos === []) {
+                $sinLegajo++;
+
+                continue;
+            }
+
+            $legajo = end($legajos);
+
+            if (! is_array($legajo)) {
+                $fallos++;
+
+                continue;
+            }
+
+            try {
+                DB::transaction(fn () => $this->persistir($persona, $legajo));
+            } catch (\Throwable $e) {
+                $fallos++;
+                $this->warn("DNI {$dni}: no se pudo guardar el agente ({$e->getMessage()}).");
+
+                continue;
+            }
+
+            $sincronizados++;
+        }
+
+        $this->info("Agentes sincronizados: {$sincronizados}");
+        $this->line("Sin legajo (ignorados): {$sinLegajo}");
+        $this->line("No encontrados en la API: {$noEncontrados}");
+
+        if ($fallos > 0) {
+            $this->warn("Errores: {$fallos}");
+        }
+
+        return $fallos > 0 ? self::FAILURE : self::SUCCESS;
     }
 
-    private function contractTypeLabel(?int $type): ?string
+    /**
+     * @param  array<string, mixed>  $persona  Persona devuelta por /personas (incluye apellido).
+     * @param  array<string, mixed>  $legajo
+     */
+    private function persistir(array $persona, array $legajo): void
     {
+        $dni = (string) ($persona['dni'] ?? '');
+
+        if ($dni === '') {
+            return;
+        }
+
+        $areaNombre = $this->nombreAnidado($legajo, 'area') ?: 'Sin área';
+        $cargoNombre = $this->nombreAnidado($legajo, 'cargo');
+
+        $area = Area::firstOrCreate(['nombre' => $areaNombre]);
+
+        Agente::updateOrCreate(
+            ['dni' => $dni],
+            [
+                'legajo' => $legajo['num_legajo'] ?? null,
+                'nombre' => (string) ($persona['nombre'] ?? ''),
+                'apellido' => (string) ($persona['apellido'] ?? ''),
+                'cargo' => $cargoNombre,
+                'situacion_revista' => $this->contractTypeLabel($legajo['tipo_contrato'] ?? null),
+                'area_id' => $area->id,
+                'fecha_ingreso' => $legajo['fecha_de_ingreso'] ?? null,
+            ],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $legajo
+     */
+    private function nombreAnidado(array $legajo, string $clave): ?string
+    {
+        $nodo = $legajo[$clave] ?? null;
+
+        if (! is_array($nodo)) {
+            return null;
+        }
+
+        $nombre = $nodo['nombre'] ?? null;
+
+        return is_string($nombre) && $nombre !== '' ? $nombre : null;
+    }
+
+    private function contractTypeLabel(mixed $type): ?string
+    {
+        $type = is_numeric($type) ? (int) $type : null;
+
         return match ($type) {
             0 => 'Permanente',
             1 => 'Contratado',

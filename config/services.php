@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'legajos_api' => [
+        'base_url' => env('LEGAJOS_API_URL', 'https://10.0.7.6/api'),
+        'token' => env('LEGAJOS_API_TOKEN'),
+        'verify_ssl' => filter_var(env('LEGAJOS_API_VERIFY_SSL', false), FILTER_VALIDATE_BOOLEAN),
+        'timeout' => (int) env('LEGAJOS_API_TIMEOUT', 15),
+        'retries' => (int) env('LEGAJOS_API_RETRIES', 2),
+    ],
+
 ];
