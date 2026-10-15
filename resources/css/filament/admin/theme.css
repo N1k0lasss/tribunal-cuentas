@@ -1,0 +1,610 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* Calendar plugin */
+@import '../../../../vendor/saade/filament-fullcalendar/resources/css/filament-fullcalendar.css';
+@source '../../../../vendor/saade/filament-fullcalendar/resources/views/**/*.blade.php';
+
+
+/* Fix Saade Fullcalendar text in dark mode */
+.dark .fc .fc-col-header-cell-cushion, 
+.dark .fc .fc-daygrid-day-number,
+.dark .fc .fc-list-event-time,
+.dark .fc .fc-list-event-title,
+.dark .fc .fc-timegrid-slot-label-cushion {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Fullcalendar dark mode: borders, gridlines and today cell */
+html.dark .fc {
+    --fc-border-color: rgba(148, 163, 184, 0.35);
+    --fc-today-bg-color: rgba(26, 54, 93, 0.3);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgba(148, 163, 184, 0.12);
+}
+
+html.dark .fc .fc-scrollgrid,
+html.dark .fc .fc-scrollgrid-section > td,
+html.dark .fc .fc-daygrid-day,
+html.dark .fc .fc-timegrid-slot,
+html.dark .fc .fc-list-day-cushion {
+    border-color: var(--fc-border-color) !important;
+}
+
+html.dark .fc .fc-day-today {
+    background-color: var(--fc-today-bg-color) !important;
+}
+
+:root {
+    --tcse-bordeaux: #6d0b4f;
+    --tcse-bordeaux-soft: #8a1f67;
+    --tcse-slate: #183149;
+    --tcse-cyan: #2a9ec2;
+    --tcse-bg: #f2f5f8;
+    --tcse-primary-rgb: 109, 11, 79;
+    --tcse-surface-rgb: 248, 250, 252;
+    --tcse-border-rgb: 15, 23, 42;
+    --tcse-text: #0f1a2b;
+    --tcse-text-muted: #4b5563;
+    --tcse-card: #ffffff;
+    --tcse-border: rgba(15, 23, 42, 0.12);
+}
+
+body,
+.fi-body,
+.fi-main {
+    color: var(--tcse-text);
+}
+
+html:not(.dark) .fi-ta,
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-card {
+    background: var(--tcse-card);
+}
+
+html:not(.dark) .fi-ta,
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-card,
+html:not(.dark) .fi-input-wrp,
+html:not(.dark) .fi-select-input,
+html:not(.dark) textarea.fi-input {
+    border-color: var(--tcse-border);
+}
+
+.fi-input,
+.fi-input-wrp,
+.fi-select-input,
+textarea.fi-input {
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-input-wrp:focus-within,
+textarea.fi-input:focus {
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+    border-color: rgba(26, 54, 93, 0.5) !important;
+}
+
+.fi-ta th,
+.fi-ta td {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+}
+
+.fi-ta th {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+}
+
+.fi-ta td {
+    font-size: 0.92rem;
+}
+
+.fi-btn,
+.fi-btn button,
+button.fi-btn {
+    min-height: 2.6rem;
+}
+
+.fi-link,
+.fi-ac-link {
+    color: #1a365d;
+}
+
+.fi-link:hover,
+.fi-ac-link:hover {
+    color: #0f1a2b;
+}
+
+.fi-topbar {
+    backdrop-filter: blur(8px);
+}
+
+.fi-sidebar {
+    border-right: 1px solid var(--tcse-border);
+}
+
+.fi-sidebar-item .fi-sidebar-item-button {
+    font-size: 0.92rem;
+}
+
+.fi-sidebar-heading {
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    color: var(--tcse-text-muted);
+}
+
+/* Login split-screen styles live in resources/views/filament/auth/login-left-panel.blade.php */
+
+
+/* ======================================================================
+   HISTORIAL DE SOLICITUDES — Premium Dark UI
+   ====================================================================== */
+
+/* ---------- Hero Section ---------- */
+.historial-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.06) 50%, rgba(6, 182, 212, 0.03) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.historial-hero__content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.historial-hero__icon-wrapper {
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
+    border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.historial-hero__icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: rgb(6, 182, 212);
+}
+
+.historial-hero__subtitle {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgb(6, 182, 212);
+    margin-bottom: 0.35rem;
+}
+
+.historial-hero__description {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.55);
+    max-width: 42rem;
+}
+
+.historial-hero__decoration {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40%;
+    pointer-events: none;
+}
+
+.historial-hero__glow {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+    filter: blur(40px);
+}
+
+/* ---------- Stats Cards ---------- */
+.historial-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .historial-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .historial-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.historial-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.historial-stat:hover {
+    background: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.historial-stat__icon-wrap {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.6rem;
+}
+
+.historial-stat__icon-wrap--total {
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.historial-stat__icon-wrap--aprobadas {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.historial-stat__icon-wrap--pendientes {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.historial-stat__icon-wrap--rechazadas {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.historial-stat__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.historial-stat--total .historial-stat__icon {
+    color: rgb(6, 182, 212);
+}
+
+.historial-stat--aprobadas .historial-stat__icon {
+    color: rgb(16, 185, 129);
+}
+
+.historial-stat--pendientes .historial-stat__icon {
+    color: rgb(245, 158, 11);
+}
+
+.historial-stat--rechazadas .historial-stat__icon {
+    color: rgb(239, 68, 68);
+}
+
+.historial-stat__data {
+    display: flex;
+    flex-direction: column;
+}
+
+.historial-stat__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: -0.02em;
+}
+
+.historial-stat__label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.2rem;
+}
+
+/* ---------- Table Wrapper ---------- */
+.historial-table-wrapper {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+/* Give the table container a subtle border */
+.historial-table-wrapper .fi-ta {
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+/* Table header (toolbar/search area) */
+.historial-table-wrapper .fi-ta-header-toolbar {
+    padding: 1rem 1.25rem;
+}
+
+/* Improve table row spacing and roundness */
+.historial-table-wrapper .fi-ta-row {
+    transition: background 0.15s ease;
+}
+
+.historial-table-wrapper .fi-ta-row:hover td {
+    background: rgba(6, 182, 212, 0.04) !important;
+}
+
+/* Pagination area */
+.historial-table-wrapper .fi-ta-pagination {
+    padding: 0.75rem 1.25rem;
+}
+
+/* ---------- Light Mode Overrides ---------- */
+html:not(.dark) .historial-hero {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(139, 92, 246, 0.04) 50%, rgba(6, 182, 212, 0.02) 100%);
+    border-color: rgba(6, 182, 212, 0.15);
+}
+
+html:not(.dark) .historial-hero__description {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+html:not(.dark) .historial-stat {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+html:not(.dark) .historial-stat:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+html:not(.dark) .historial-stat__value {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+html:not(.dark) .historial-stat__label {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.dark) .historial-table-wrapper .fi-ta {
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .historial-table-wrapper .fi-ta-row:hover td {
+    background: rgba(6, 182, 212, 0.03) !important;
+}
+
+/* ======================================================================
+   Workflow indicators
+   ====================================================================== */
+
+.workflow-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.workflow-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.2);
+    border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+.workflow-dot--ok {
+    background: rgba(16, 185, 129, 0.35);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+.workflow-dot--no {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.workflow-dot--wait {
+    background: rgba(245, 158, 11, 0.35);
+    border-color: rgba(245, 158, 11, 0.5);
+}
+
+.workflow-dot--muted {
+    background: rgba(148, 163, 184, 0.35);
+    border-color: rgba(148, 163, 184, 0.5);
+}
+
+.workflow-timeline {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0.5rem 0;
+}
+
+.workflow-step {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.workflow-step__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.workflow-step__label {
+    font-weight: 600;
+    color: var(--tcse-text);
+}
+
+.workflow-step__meta {
+    font-size: 0.82rem;
+    color: var(--tcse-text-muted);
+}
+
+.workflow-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.workflow-status--ok {
+    color: #0f5132;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.workflow-status--no {
+    color: #842029;
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.workflow-status--wait {
+    color: #7c4a03;
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.workflow-status--muted {
+    color: #475569;
+    background: rgba(148, 163, 184, 0.2);
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+html.dark .workflow-step {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+html.dark .workflow-step__label {
+    color: rgba(226, 232, 240, 0.95);
+}
+
+html.dark .workflow-step__meta {
+    color: rgba(148, 163, 184, 0.85);
+}
+
+/* ---------- Custom Colored Section Header ---------- */
+.custom-section-header>header {
+    background-color: #1A365D !important;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+}
+
+.custom-section-header>header .fi-section-header-heading,
+.custom-section-header>header svg {
+    color: #ffffff !important;
+}
+
+.custom-section-header>header .fi-section-header-description {
+    color: #e2e8f0 !important;
+}
+
+html.dark .fi-resource-resolucions .fi-section-header {
+    background: linear-gradient(135deg, rgba(var(--tcse-primary-rgb), 0.24), rgba(42, 158, 194, 0.14));
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.fi-resource-resolucions .fi-input-wrp,
+.fi-resource-resolucions .fi-select-input,
+.fi-resource-resolucions textarea.fi-input {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.fi-resource-resolucions .fi-input-wrp:focus-within,
+.fi-resource-resolucions .fi-select-input:focus,
+.fi-resource-resolucions textarea.fi-input:focus {
+    border-color: rgba(var(--tcse-primary-rgb), 0.45) !important;
+    box-shadow: 0 0 0 3px rgba(var(--tcse-primary-rgb), 0.16) !important;
+}
+
+.fi-resource-resolucions .fi-ta .fi-badge {
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .fi-resource-resolucions .fi-section-header {
+        padding-inline: 0.875rem;
+    }
+}
+
+/* ======================================================================
+   APROBACIONES — Quick Win UX polish
+   ====================================================================== */
+
+.fi-resource-aprobacions .fi-ta {
+    border-radius: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.fi-resource-aprobacions .fi-ta-header-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.65);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fi-resource-aprobacions .fi-ta-row {
+    transition: background-color 0.18s ease;
+}
+
+.fi-resource-aprobacions .fi-ta-row td {
+    padding-top: 0.78rem;
+    padding-bottom: 0.78rem;
+}
+
+.fi-resource-aprobacions .fi-ta-row:hover td {
+    background: rgba(245, 158, 11, 0.06) !important;
+}
+
+.fi-resource-aprobacions .fi-badge {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.fi-resource-aprobacions .fi-ta-group-header {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.11), rgba(245, 158, 11, 0.03));
+    border-top: 1px solid rgba(245, 158, 11, 0.18);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+html:not(.dark) .fi-resource-aprobacions .fi-ta {
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+html:not(.dark) .fi-resource-aprobacions .fi-ta-header-toolbar {
+    background: rgba(255, 255, 255, 0.86);
+    border-bottom-color: rgba(15, 23, 42, 0.09);
+}
+
+html:not(.dark) .fi-resource-aprobacions .fi-ta-row:hover td {
+    background: rgba(245, 158, 11, 0.08) !important;
+}
