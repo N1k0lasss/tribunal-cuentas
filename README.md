@@ -54,7 +54,11 @@ LEGAJOS_API_CONNECT_TIMEOUT=3
 php artisan legajos:sync
 ```
 
-Trae los agentes desde la API y los guarda localmente (idempotente: se puede correr varias veces). Para sincronizar un solo DNI:
+Trae los agentes desde la API y los guarda localmente (idempotente: se puede correr varias veces).
+
+> 🌐 **Requiere estar conectado a la red interna del Tribunal.** La API vive en una IP interna y **no** es accesible desde internet; si no estás en la red, `legajos:sync` falla (el sistema sigue funcionando con los datos locales que ya tenga).
+
+Para sincronizar un solo DNI:
 
 ```bash
 php artisan legajos:sync --dni=22456700
