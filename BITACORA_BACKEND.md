@@ -187,9 +187,12 @@ Mockery               → Mocking en tests
 │ apellido                         │
 │ dni (único)                      │
 │ cargo                            │
-│ tipo_contrato                    │
+│ situacion_revista                │
 │ area_id (FK)                     │
 │ fecha_ingreso                    │
+│ estado_legajo                    │
+│ fecha_baja                       │
+│ motivo_baja                      │
 │ created_at / updated_at          │
 └──────────────────────────────────┘
     │ OneToMany    OneToMany
@@ -1253,9 +1256,12 @@ Cache::remember("saldo_agente_{$agente_id}",
 - Importa `nombre`, `apellido` (del listado: por-dni no lo trae), `cargo`, `area_id`, `fecha_ingreso`, `situacion_revista`, `estado_legajo`, `fecha_baja` y `motivo_baja`.
 - **Áreas mapeadas por nombre** (`Area::firstOrCreate`); sin legajo activo va a un área placeholder **"Sin asignar"**. No hay tabla de equivalencias entre áreas locales y del legajo.
 - **`situacion_revista`** se importa de `tipo_contrato`: la API lo envía como **texto** (`"Funcionario"`, `"Locación"`, `"Permanente"`); se admite también el código numérico viejo (0/1/2). Un valor desconocido deja la situación vacía y el comando lo avisa.
+- **Nombre del campo vs. valor (aclaración explícita):** `tipo_contrato` es el nombre que usa el Sistema de Legajos y **no se usa como tal** del lado local; nosotros ya representamos ese dato como `situacion_revista`. El valor se persiste **tal cual lo envía la API** (`"Permanente"`, `"Locación"`, `"Funcionario"`), **sin traducirlo** a las etiquetas que aparecen en seeders/factories (`"Planta Permanente"`, `"Contrato de Locación"`, etc.). Es decir, `etiquetaTipoContrato()` funciona como un **pasamanos** del texto de la API, no como un traductor a un catálogo local.
 - **Bajas:** `estado` 0 = dado de baja. Esos agentes **se importan igual** (para poder verlos) pero marcados con `estado_legajo = 0`, `fecha_baja` y `motivo_baja`; en la tabla de Agentes se distinguen con un badge **Activo/Baja** y hay un filtro por estado.
 - Opción `--dni=` para sincronizar un solo DNI.
 - Migración `2026_10_07_100000_make_fecha_ingreso_nullable_in_agentes_table`: `agentes.fecha_ingreso` pasa a **nullable** porque las personas sin legajo activo no traen fecha (quedan como simple referencia de identidad, §2.1). En consecuencia, `fecha_ingreso` dejó de ser obligatoria en `AgenteForm`.
+- Migración `2026_06_02_000001_rename_tipo_contrato_to_situacion_revista_in_agentes_table`: renombra la columna `agentes.tipo_contrato` → `agentes.situacion_revista`. Es la base de esquema sobre la que escribe el mapeo de arriba (el `tipo_contrato` de la API se persiste en `situacion_revista`); está fechada 2026_06_02, **previa a la integración**, que la aprovecha.
+- Migración `2026_10_13_100000_add_estado_legajo_to_agentes_table`: agrega `estado_legajo`, `fecha_baja` y `motivo_baja` (ver correcciones del 13/10 más abajo).
 
 **Resultado de la primera corrida (07/10/2026):** 30 personas → **29 creados, 1 actualizado, 0 errores**; 6 sin legajo activo (22456700, 26345678, 23456789, 22987321, 24123890, 21345678). Total local: 35 agentes, 15 áreas, **0 DNIs de la API faltantes**. Tests: `tests/Feature/LegajosSyncCommandTest.php`.
 
