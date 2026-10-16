@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\LegajoApiException;
+use App\Models\Agente;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use Illuminate\Support\Carbon;
@@ -11,6 +13,7 @@ class CumplimientoLegalService
 {
     public function __construct(
         private readonly SaldoLicenciaService $saldoLicenciaService,
+        private readonly LegajoApiService $legajoApi,
     ) {}
 
     public function validarCreacion(Solicitud $solicitud): void
@@ -18,6 +21,7 @@ class CumplimientoLegalService
         $solicitud->loadMissing('tipoSolicitud');
         $this->validarRangoFechas($solicitud);
         $this->validarDuracionMaxima($solicitud);
+        $this->validarEstadoLegajo($solicitud);
         $this->validarSaldoDisponible($solicitud);
         $this->validarProrroga($solicitud);
         $this->validarAntiguedad($solicitud);
@@ -134,16 +138,85 @@ class CumplimientoLegalService
         $solicitud->loadMissing('agente', 'tipoSolicitud');
 
         $antiguedadRequerida = $solicitud->tipoSolicitud?->antiguedad_minima_meses;
-        if (! $antiguedadRequerida || ! $solicitud->agente || ! $solicitud->agente->fecha_ingreso) {
+        if (! $antiguedadRequerida || ! $solicitud->agente) {
             return;
         }
 
-        $mesesAntiguedad = Carbon::parse($solicitud->agente->fecha_ingreso)->diffInMonths(now());
+        $mesesAntiguedad = $this->mesesDeAntiguedad($solicitud->agente);
+
+        if ($mesesAntiguedad === null) {
+            return;
+        }
 
         if ($mesesAntiguedad < $antiguedadRequerida) {
             throw ValidationException::withMessages([
                 'tipo_solicitud_id' => "Se requiere una antigüedad mínima de {$antiguedadRequerida} meses para solicitar esta licencia (antigüedad actual: {$mesesAntiguedad} meses).",
             ]);
         }
+    }
+
+    /**
+     * Valida que el agente tenga un legajo activo en el Sistema de Legajos.
+     *
+     * El estado se consulta en vivo (fuente de verdad); si la API no responde
+     * o el agente no figura, se usa el `estado_legajo` local como respaldo.
+     * Si no se puede determinar el estado, NO bloquea (misma política que la
+     * antigüedad: nunca impedir el alta por una caída de la API).
+     */
+    public function validarEstadoLegajo(Solicitud $solicitud): void
+    {
+        $solicitud->loadMissing('agente');
+
+        $agente = $solicitud->agente;
+
+        if ($agente === null) {
+            return;
+        }
+
+        $estado = null;
+
+        try {
+            $datos = $this->legajoApi->datosBasicos((string) $agente->dni);
+            $estado = $datos['estado'] ?? null;
+        } catch (LegajoApiException) {
+            $estado = null;
+        }
+
+        $estado ??= $agente->estado_legajo;
+
+        if ($estado === null) {
+            return;
+        }
+
+        if ((int) $estado !== 1) {
+            throw ValidationException::withMessages([
+                'agente_id' => 'El agente no tiene un legajo activo en el Sistema de Legajos (figura dado de baja).',
+            ]);
+        }
+    }
+
+    /**
+     * Antigüedad en meses de un agente. La fecha de ingreso la aporta el
+     * Sistema de Legajos por API (fuente de verdad, ver
+     * integracion-legajos-api.md §2.1); si la API no responde o el agente no
+     * figura con legajo activo, se usa la fecha local de `agentes` como
+     * respaldo para no cortar el alta de solicitudes.
+     */
+    private function mesesDeAntiguedad(Agente $agente): ?int
+    {
+        try {
+            $fecha = $this->legajoApi->fechaIngreso((string) $agente->dni);
+        } catch (LegajoApiException) {
+            $fecha = null;
+        }
+
+        $fecha ??= $agente->fecha_ingreso;
+
+        if ($fecha === null) {
+            return null;
+        }
+
+        // Carbon 3 devuelve diffInMonths() como float: se trunca a meses completos.
+        return (int) Carbon::parse($fecha)->diffInMonths(now());
     }
 }

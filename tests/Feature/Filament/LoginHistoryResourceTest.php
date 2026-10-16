@@ -2,13 +2,12 @@
 
 use App\Filament\Admin\Resources\LoginHistories\LoginHistoryResource;
 use App\Models\User;
-use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(RoleSeeder::class);
+    $this->seed(\Database\Seeders\RoleSeeder::class);
 });
 
 it('can render Login Histories list page for administrator', function () {

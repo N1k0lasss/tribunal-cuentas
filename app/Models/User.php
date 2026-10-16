@@ -108,9 +108,9 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Get the login histories for the user.
      *
-     * @return HasMany<LoginHistory, $this>
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<LoginHistory, $this>
      */
-    public function loginHistories(): HasMany
+    public function loginHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(LoginHistory::class);
     }

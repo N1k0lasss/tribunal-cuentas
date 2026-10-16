@@ -14,8 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            BlockOutsideWorkingHours::class,
-            SessionTimeout::class,
+            \App\Http\Middleware\BlockOutsideWorkingHours::class,
+            \App\Http\Middleware\SessionTimeout::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

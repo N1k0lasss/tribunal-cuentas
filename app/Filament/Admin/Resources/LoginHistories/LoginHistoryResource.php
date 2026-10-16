@@ -5,11 +5,11 @@ namespace App\Filament\Admin\Resources\LoginHistories;
 use App\Filament\Admin\Resources\LoginHistories\Pages\ListLoginHistories;
 use App\Filament\Admin\Resources\LoginHistories\Tables\LoginHistoriesTable;
 use App\Models\LoginHistory;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use BackedEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class LoginHistoryResource extends Resource
 {
@@ -22,7 +22,7 @@ class LoginHistoryResource extends Resource
         return ! Auth::user()?->hasRole('agente');
     }
 
-    public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
+    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
     {
         return 'heroicon-o-shield-check';
     }

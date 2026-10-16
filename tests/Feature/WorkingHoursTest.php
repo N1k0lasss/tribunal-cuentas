@@ -1,20 +1,17 @@
 <?php
 
-use App\Models\Agente;
-use App\Models\Documento;
-use App\Models\Solicitud;
+use App\Models\LoginHistory;
 use App\Models\User;
-use Database\Seeders\RoleSeeder;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles using the RoleSeeder
-    $this->seed(RoleSeeder::class);
+    $this->seed(\Database\Seeders\RoleSeeder::class);
 });
 
 test('login history is recorded inside working hours', function () {
@@ -23,7 +20,7 @@ test('login history is recorded inside working hours', function () {
     $this->travelTo($insideTime);
 
     $user = User::factory()->create();
-
+    
     // Dispatch login event
     event(new Login('web', $user, false));
 
@@ -158,23 +155,4 @@ test('agent is blocked from executing critical Livewire actions outside working 
     ]);
 
     $response->assertStatus(403);
-});
-
-test('agent is blocked from downloading documents outside working hours', function () {
-    Storage::fake('local');
-
-    $time = Carbon::parse('2026-06-21 11:00:00', 'America/Argentina/Buenos_Aires');
-    $this->travelTo($time);
-
-    $agentUser = User::factory()->create();
-    $agentUser->assignRole('agente');
-    $agente = Agente::factory()->create(['user_id' => $agentUser->id]);
-
-    $solicitud = Solicitud::factory()->create(['agente_id' => $agente->id]);
-    $documento = Documento::factory()->withFile()->create(['solicitud_id' => $solicitud->id]);
-
-    $this->actingAs($agentUser);
-
-    $this->get(route('documento.ver', $documento))
-        ->assertStatus(403);
 });

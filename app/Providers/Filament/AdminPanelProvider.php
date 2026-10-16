@@ -109,8 +109,8 @@ class AdminPanelProvider extends PanelProvider
                 ThrottleRequests::class.':20,1',
             ])
             ->authMiddleware([
-                Authenticate::class,
-                BlockOutsideWorkingHours::class,
+                \Filament\Http\Middleware\Authenticate::class,
+                \App\Http\Middleware\BlockOutsideWorkingHours::class,
             ])
             ->plugins([
                 FilamentFullCalendarPlugin::make(),

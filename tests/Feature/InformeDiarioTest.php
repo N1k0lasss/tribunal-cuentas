@@ -145,3 +145,4 @@ test('informe diario page can be accessed by secretaria_general but cannot save 
     $informe = InformeDiario::whereDate('fecha', $fecha)->first();
     expect($informe)->toBeNull();
 });
+

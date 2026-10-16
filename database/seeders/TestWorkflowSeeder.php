@@ -17,11 +17,6 @@ class TestWorkflowSeeder extends Seeder
 {
     public function run(): void
     {
-        Storage::disk('local')->put(
-            'documentos/demo.pdf',
-            "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n",
-        );
-
         $roles = ['administrador', 'agente', 'jefatura', 'secretaria_general', 'presidencia', 'personal'];
         foreach ($roles as $role) {
             Role::findOrCreate($role, 'web');
