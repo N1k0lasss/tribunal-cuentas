@@ -26,7 +26,7 @@
                 {{-- Badges --}}
                 <div class="mt-4 flex items-center justify-center gap-4 flex-wrap">
                     <x-filament::badge color="info" size="lg" class="px-4 py-1.5 text-sm">
-                        Nº de Legajo: {{ $this->agente->legajo ?? 'N/A' }}
+                        Nº de Legajo: {{ $this->agente->id ?? 'N/A' }}
                     </x-filament::badge>
                     <x-filament::badge color="secondary" size="lg" class="px-4 py-1.5 text-sm">
                         {{ $this->agente->cargo ?? 'Sin Cargo' }}

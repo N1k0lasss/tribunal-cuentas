@@ -18,7 +18,7 @@ class TestWorkflowSeeder extends Seeder
 {
     public function run(): void
     {
-        $roles = ['administrador', 'agente', 'jefatura', 'secretaria_general', 'presidencia'];
+        $roles = ['administrador', 'agente', 'jefatura', 'secretaria_general', 'presidencia', 'personal'];
         foreach ($roles as $role) {
             Role::findOrCreate($role, 'web');
         }
@@ -86,6 +86,21 @@ class TestWorkflowSeeder extends Seeder
                     'situacion_revista' => 'Planta Permanente',
                     'area_id' => $areaDireccion->id,
                     'fecha_ingreso' => '2010-01-01',
+                ],
+            ],
+            [
+                'name' => 'Usuario Personal',
+                'email' => 'personal@test.com',
+                'password' => 'password',
+                'role' => 'personal',
+                'agente_data' => [
+                    'nombre' => 'Marta',
+                    'apellido' => 'Personal',
+                    'dni' => '55555555',
+                    'cargo' => 'Jefe de Personal',
+                    'situacion_revista' => 'Planta Permanente',
+                    'area_id' => $areaDireccion->id,
+                    'fecha_ingreso' => '2012-05-10',
                 ],
             ],
             [

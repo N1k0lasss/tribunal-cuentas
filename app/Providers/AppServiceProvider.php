@@ -2,16 +2,22 @@
 
 namespace App\Providers;
 
+use App\Hashing\Sha256Hasher;
+use App\Listeners\LogSuccessfulLogin;
+use App\Models\Solicitud;
+use App\Observers\SolicitudObserver;
+use App\Services\LegajoApiService;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
-use App\Hashing\Sha256Hasher;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Singleton: la memoria corta de la API (30 s por DNI) debe compartirse
+        // entre todas las entradas de una misma pantalla.
+        $this->app->singleton(LegajoApiService::class);
     }
 
     /**
@@ -29,18 +37,24 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Hash::extend('sha256', function () {
-            return new Sha256Hasher();
+            return new Sha256Hasher;
         });
 
         $this->configureDefaults();
-        \App\Models\Solicitud::observe(\App\Observers\SolicitudObserver::class);
+
+        Event::listen(
+            Login::class,
+            LogSuccessfulLogin::class
+        );
+
+        Solicitud::observe(SolicitudObserver::class);
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,
             fn (): string => View::make('components.session-timeout-script')->render(),
         );
 
-        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+        Event::listen(Login::class, function ($event) {
             activity('auth')
                 ->causedBy($event->user)
                 ->log('Usuario inició sesión');

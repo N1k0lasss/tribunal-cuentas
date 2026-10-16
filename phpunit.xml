@@ -32,9 +32,10 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="APP_URL" value="http://localhost"/>
-        <env name="LEGAJOS_API_URL" value="https://legajos.test/api"/>
-        <env name="LEGAJOS_API_TOKEN" value="token-de-prueba"/>
-        <env name="LEGAJOS_API_VERIFY_SSL" value="false"/>
-        <env name="LEGAJOS_API_RETRIES" value="1"/>
+        <!-- La API de Legajos queda sin configurar en tests: el servicio lanza
+             LegajoApiException al instante y los validadores caen al respaldo
+             local, sin depender de red externa. -->
+        <env name="LEGAJOS_API_URL" value=""/>
+        <env name="LEGAJOS_API_TOKEN" value=""/>
     </php>
 </phpunit>

@@ -35,12 +35,18 @@ return [
         ],
     ],
 
-    'legajos_api' => [
-        'base_url' => env('LEGAJOS_API_URL', 'https://10.0.7.6/api'),
+    /*
+    | API del Sistema de Legajos (fuente de verdad de los datos del agente).
+    | Ver integracion-legajos-api.md.
+    */
+    'legajos' => [
+        'url' => env('LEGAJOS_API_URL'),
         'token' => env('LEGAJOS_API_TOKEN'),
-        'verify_ssl' => filter_var(env('LEGAJOS_API_VERIFY_SSL', false), FILTER_VALIDATE_BOOLEAN),
-        'timeout' => (int) env('LEGAJOS_API_TIMEOUT', 15),
-        'retries' => (int) env('LEGAJOS_API_RETRIES', 2),
+        // false: el servidor de Legajos usa certificado autofirmado.
+        'verify' => env('LEGAJOS_API_VERIFY_SSL', true),
+        'timeout' => env('LEGAJOS_API_TIMEOUT', 10),
+        // Acota el caso "host caído" (no llega a establecer conexión).
+        'connect_timeout' => env('LEGAJOS_API_CONNECT_TIMEOUT', 3),
     ],
 
 ];

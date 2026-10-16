@@ -64,26 +64,6 @@ return [
             ]) : [],
         ],
 
-        'legajos' => [
-            'driver' => 'mysql',
-            'url' => env('LEGAJOS_DB_URL'),
-            'host' => env('LEGAJOS_DB_HOST', '127.0.0.1'),
-            'port' => env('LEGAJOS_DB_PORT', '3306'),
-            'database' => env('LEGAJOS_DB_DATABASE', 'legajos'),
-            'username' => env('LEGAJOS_DB_USERNAME', env('DB_USERNAME', 'root')),
-            'password' => env('LEGAJOS_DB_PASSWORD', env('DB_PASSWORD', '')),
-            'unix_socket' => env('LEGAJOS_DB_SOCKET', ''),
-            'charset' => env('LEGAJOS_DB_CHARSET', 'utf8mb4'),
-            'collation' => env('LEGAJOS_DB_COLLATION', 'utf8mb4_spanish_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('LEGAJOS_MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ],
-
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
