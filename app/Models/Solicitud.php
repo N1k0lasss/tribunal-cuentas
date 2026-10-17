@@ -244,6 +244,22 @@ class Solicitud extends Model
         return $this->hasMany(Documento::class);
     }
 
+    /**
+     * Documento de la solicitud firmado digitalmente más reciente.
+     *
+     * En el circuito acumulativo, cada entidad descarga la última versión
+     * firmada (la de la etapa anterior), la firma y sube la nueva versión.
+     *
+     * @return Documento|null
+     */
+    public function documentoFirmadoVigente(): ?Documento
+    {
+        return $this->documentos()
+            ->where('tipo_documento', Documento::TIPO_SOLICITUD_FIRMADA)
+            ->latest('id')
+            ->first();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

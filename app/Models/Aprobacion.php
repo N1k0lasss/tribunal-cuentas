@@ -6,9 +6,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 use Database\Factories\AprobacionFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Solicitud $solicitud
  * @property-read Agente $aprobador
+ * @property-read Collection<int, Documento> $documentos
  */
 class Aprobacion extends Model
 {
@@ -76,6 +79,16 @@ class Aprobacion extends Model
     public function aprobador(): BelongsTo
     {
         return $this->belongsTo(Agente::class, 'aprobado_por');
+    }
+
+    /**
+     * Get the documentos vinculados a esta aprobación (etapa).
+     *
+     * @return HasMany<Documento, $this>
+     */
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(Documento::class);
     }
 
     public function getActivitylogOptions(): LogOptions

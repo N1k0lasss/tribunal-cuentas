@@ -18,11 +18,13 @@ use Illuminate\Support\Carbon;
  * @property string $tipo_documento
  * @property string|null $descripcion
  * @property int|null $solicitud_id
+ * @property int|null $aprobacion_id
  * @property int|null $resolucion_id
  * @property int|null $agente_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Solicitud|null $solicitud
+ * @property-read Aprobacion|null $aprobacion
  * @property-read Resolucion|null $resolucion
  * @property-read Agente|null $agente
  */
@@ -31,6 +33,12 @@ class Documento extends Model
     use LogsActivity;
     /** @use HasFactory<DocumentoFactory> */
     use HasFactory;
+
+    /**
+     * Tipo de documento correspondiente a la solicitud firmada digitalmente
+     * por una entidad en el circuito de aprobación.
+     */
+    public const TIPO_SOLICITUD_FIRMADA = 'solicitud_firmada';
 
     /**
      * The attributes that are mass assignable.
@@ -43,6 +51,7 @@ class Documento extends Model
         'tipo_documento',
         'descripcion',
         'solicitud_id',
+        'aprobacion_id',
         'resolucion_id',
         'agente_id',
     ];
@@ -55,6 +64,16 @@ class Documento extends Model
     public function solicitud(): BelongsTo
     {
         return $this->belongsTo(Solicitud::class);
+    }
+
+    /**
+     * Get the aprobacion (etapa) in which the documento was uploaded.
+     *
+     * @return BelongsTo<Aprobacion, $this>
+     */
+    public function aprobacion(): BelongsTo
+    {
+        return $this->belongsTo(Aprobacion::class);
     }
 
     /**

@@ -120,13 +120,16 @@ class SolicitudesPendientesWidget extends BaseWidget
                     ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription('¿Está seguro de que desea aprobar esta licencia?')
+                    ->modalSubmitAction(SolicitudResource::modalSubmitActionDocumentoFirmado())
                     ->form(fn (Solicitud $record) => SolicitudResource::getAprobarFormSchema($record))
                     ->action(function (Solicitud $record, array $data) {
                         SolicitudResource::procesarAprobacion(
                             $record,
                             'aprobado',
                             $data['observacion'] ?? null,
-                            $data['numero_resolucion'] ?? null
+                            $data['numero_resolucion'] ?? null,
+                            $data['documento_firmado'] ?? null,
+                            (bool) ($data['confirmo_documento_integrado'] ?? false),
                         );
 
                         Notification::make()
