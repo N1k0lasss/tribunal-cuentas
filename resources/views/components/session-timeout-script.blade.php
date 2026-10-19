@@ -19,7 +19,9 @@
 <script id="session-timeout-script">
     (function () {
         // Minutos de inactividad antes de cerrar la sesión.
-        const maxInactivity = {{ (int) config('session.inactivity_lifetime', config('session.lifetime', 15)) }} * 60 * 1000;
+        // Se toma del middleware (única fuente de verdad), así el reloj del
+        // navegador y el del servidor nunca se desincronizan.
+        const maxInactivity = {{ (int) \App\Http\Middleware\SessionTimeout::minutosDeInactividad() }} * 60 * 1000;
 
         const actividadUrl = @json(route('session.actividad'));
         const loginUrl = @json(filament()->getLoginUrl());
@@ -94,7 +96,7 @@
 
             // Crear el cartel (modal)
             const modalHtml = `
-                <div id="session-timeout-modal" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px);">
+                <div id="session-timeout-modal" role="alertdialog" aria-modal="true" aria-labelledby="session-timeout-modal-title" aria-describedby="session-timeout-modal-desc" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px);">
                     <div style="background-color: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 24rem; width: 100%; text-align: center; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
                         <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
                             <div style="border-radius: 9999px; background-color: #fee2e2; padding: 0.75rem;">
@@ -103,10 +105,10 @@
                                 </svg>
                             </div>
                         </div>
-                        <h2 style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; margin-top: 0;">
+                        <h2 id="session-timeout-modal-title" style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; margin-top: 0;">
                             Tu sesión terminó
                         </h2>
-                        <p style="color: #6b7280; margin-bottom: 1rem;">
+                        <p id="session-timeout-modal-desc" style="color: #6b7280; margin-bottom: 1rem;">
                             Por inactividad, hemos cerrado tu sesión por seguridad.
                         </p>
                         <p style="color: #2563eb; font-weight: 500; font-size: 0.875rem;">

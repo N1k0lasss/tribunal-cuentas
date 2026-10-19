@@ -43,7 +43,7 @@ class SessionTimeout
         // Carbon 3 devuelve el diff CON SIGNO, por eso hay que pedirlo absoluto.
         $minutosInactivo = now()->diffInMinutes($ultimaActividad, true);
 
-        if ($minutosInactivo >= $this->minutosDeInactividad()) {
+        if ($minutosInactivo >= self::minutosDeInactividad()) {
             return $this->cerrarSesion($request);
         }
 
@@ -54,13 +54,27 @@ class SessionTimeout
      * Minutos de inactividad antes de cerrar la sesión.
      *
      * Fuente de verdad: config/session.php → `inactivity_lifetime`
-     * (variable SESSION_LIFETIME). La sesión del servidor (`session.lifetime`)
-     * se deja un poco más larga para que este middleware alcance a detectar la
-     * inactividad y muestre el aviso antes de que Laravel descarte la sesión.
+     * (variable SESSION_LIFETIME). Se usa la `lifetime` como respaldo por si el
+     * cache de configuración quedó viejo (sin la clave nueva) tras un deploy.
      */
-    protected function minutosDeInactividad(): int
+    public static function minutosDeInactividad(): int
     {
         return max(1, (int) config('session.inactivity_lifetime', config('session.lifetime', 15)));
+    }
+
+    /**
+     * ¿La sesión del servidor dura más que la inactividad aplicada por la app?
+     *
+     * Laravel (driver database) descarta la sesión a los `session.lifetime`
+     * minutos, y lo evalúa ANTES de este middleware. Si ambos valores fueran
+     * iguales, la sesión podría caer primero y el usuario terminaría en el login
+     * sin el aviso de inactividad.
+     *
+     * Se define en config/session.php: `lifetime` = `inactivity_lifetime` + 5.
+     */
+    public static function sesionDelServidorSobreviveALaInactividad(): bool
+    {
+        return (int) config('session.lifetime') > self::minutosDeInactividad();
     }
 
     protected function cerrarSesion(Request $request): Response

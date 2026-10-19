@@ -1,7 +1,9 @@
 <?php
 
-use App\Models\User;
 use App\Http\Middleware\SessionTimeout;
+use App\Models\User;
+use App\Providers\AppServiceProvider;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +19,7 @@ use App\Http\Middleware\SessionTimeout;
 
 test('cierra la sesión cuando se supera el tiempo de inactividad', function () {
     $user = User::factory()->create();
-    $lifetime = (int) config('session.inactivity_lifetime', config('session.lifetime', 15));
+    $lifetime = (int) config('session.inactivity_lifetime');
 
     $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
         ->actingAs($user)
@@ -77,7 +79,7 @@ test('el endpoint de actividad no falla sin sesión iniciada', function () {
 
 test('una petición de Livewire inactiva recibe 419 en lugar de un redirect', function () {
     $user = User::factory()->create();
-    $lifetime = (int) config('session.inactivity_lifetime', config('session.lifetime', 15));
+    $lifetime = (int) config('session.inactivity_lifetime');
 
     $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
         ->actingAs($user)
@@ -90,7 +92,7 @@ test('una petición de Livewire inactiva recibe 419 en lugar de un redirect', fu
 
 test('una petición AJAX (JSON) inactiva recibe 419 en lugar de un redirect', function () {
     $user = User::factory()->create();
-    $lifetime = (int) config('session.inactivity_lifetime', config('session.lifetime', 15));
+    $lifetime = (int) config('session.inactivity_lifetime');
 
     $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
         ->actingAs($user)
@@ -100,9 +102,33 @@ test('una petición AJAX (JSON) inactiva recibe 419 en lugar de un redirect', fu
         ->assertSessionHas('mensaje', SessionTimeout::MENSAJE);
 });
 
-test('la sesión del servidor dura más que la inactividad (margen de seguridad)', function () {
-    // Si ambos valores fueran iguales, Laravel (driver database) podría descartar
-    // la sesión antes que el middleware y el aviso de inactividad no se vería.
-    expect((int) config('session.lifetime'))
-        ->toBeGreaterThan((int) config('session.inactivity_lifetime'));
+test('la sesión del servidor dura más que la inactividad', function () {
+    // Contrato que protege el aviso. La lógica vive en SessionTimeout (única
+    // fuente de verdad); acá se verifica que la configuración lo respete.
+    expect(SessionTimeout::sesionDelServidorSobreviveALaInactividad())->toBeTrue();
+});
+
+test('el chequeo del margen detecta una configuración inválida', function () {
+    // Si la sesión del servidor no durara más que la inactividad, el aviso podría
+    // no mostrarse. Verificamos que el chequeo (usado por AppServiceProvider para
+    // advertir en producción) lo detecte.
+    config([
+        'session.lifetime' => 15,
+        'session.inactivity_lifetime' => 15,
+    ]);
+
+    expect(SessionTimeout::sesionDelServidorSobreviveALaInactividad())->toBeFalse();
+});
+
+test('advierte en el log si la sesión del servidor no dura más que la inactividad', function () {
+    Log::spy();
+
+    config([
+        'session.lifetime' => 15,
+        'session.inactivity_lifetime' => 15,
+    ]);
+
+    AppServiceProvider::ensureSessionOutlivesInactivity();
+
+    Log::shouldHaveReceived('warning')->once();
 });
