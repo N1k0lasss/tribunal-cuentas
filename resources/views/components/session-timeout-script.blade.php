@@ -4,7 +4,9 @@
     - Se inyecta solo con sesión iniciada (ver AppServiceProvider, hook BODY_END).
     - El temporizador y el "latido" al servidor solo se reinician con
       interacción REAL (mouse / teclado), no con el polling de Livewire.
-    - El tiempo de inactividad se toma de config/session.php (SESSION_LIFETIME).
+    - El tiempo de inactividad lo define SessionTimeout::minutosDeInactividad()
+      (que lee config/session.php → SESSION_LIFETIME). Es la MISMA fuente que usa
+      el servidor, así el reloj del navegador y el del servidor no se desincronizan.
 
     Puntos de entrada al cierre:
       1. El modal (a los N minutos) hace el logout en el servidor y navega.
