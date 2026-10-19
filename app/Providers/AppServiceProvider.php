@@ -12,6 +12,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
 use App\Hashing\Sha256Hasher;
+use App\Http\Middleware\SessionTimeout;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,7 +44,29 @@ class AppServiceProvider extends ServiceProvider
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,
-            fn (): string => View::make('components.session-timeout-script')->render(),
+            // El script de inactividad solo aplica con sesión iniciada: en el
+            // login (layout simple) no debe inyectarse.
+            fn (): string => auth()->check()
+                ? View::make('components.session-timeout-script')->render()
+                : '',
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+            function (): string {
+                // Muestra el aviso de "sesión expirada por inactividad" en el login.
+                // Se toma del flash o, si la página de login ya consumió el flash
+                // con alguna petición Livewire, del parámetro de la URL.
+                $mensaje = session('mensaje');
+
+                if (! $mensaje && request()->boolean('sesion_expirada')) {
+                    $mensaje = SessionTimeout::MENSAJE;
+                }
+
+                return $mensaje
+                    ? View::make('filament.auth.session-expired-message', ['mensaje' => $mensaje])->render()
+                    : '';
+            },
         );
 
         \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {

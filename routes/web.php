@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\SessionActivityController;
 use App\Http\Controllers\SolicitudPdfController;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Gate;
@@ -56,6 +57,12 @@ Route::get('/solicitudes/{solicitud}/pdf', [SolicitudPdfController::class, 'ver'
 Route::get('/solicitudes/{solicitud}/pdf-integrado', [SolicitudPdfController::class, 'integrado'])
     ->middleware('auth')
     ->name('solicitud.pdf.integrado');
+
+// Marcador de "actividad real" del usuario (mouse / teclado). Lo dispara el JS
+// del panel y lo usa el middleware SessionTimeout para el cierre por
+// inactividad: así el polling de Livewire no cuenta como actividad.
+Route::post('/session/actividad', SessionActivityController::class)
+    ->name('session.actividad');
 
 require __DIR__ . '/settings.php';
 

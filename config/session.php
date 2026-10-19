@@ -22,6 +22,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tiempo de inactividad (lo aplica la aplicación)
+    |--------------------------------------------------------------------------
+    |
+    | Minutos sin actividad REAL del usuario (mouse / teclado) tras los cuales
+    | la aplicación cierra la sesión y muestra el aviso correspondiente. Lo
+    | usan el middleware App\Http\Middleware\SessionTimeout y el script del
+    | panel (resources/views/components/session-timeout-script.blade.php).
+    |
+    */
+
+    'inactivity_lifetime' => (int) env('SESSION_LIFETIME', 15),
+
+    /*
+    |--------------------------------------------------------------------------
     | Session Lifetime
     |--------------------------------------------------------------------------
     |
@@ -30,9 +44,13 @@ return [
     | to expire immediately when the browser is closed then you may
     | indicate that via the expire_on_close configuration option.
     |
+    | Se deja unos minutos más larga que `inactivity_lifetime` para que la
+    | aplicación alcance a detectar la inactividad y muestre el aviso antes de
+    | que Laravel descarte la sesión por su cuenta (driver database).
+    |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 5),
+    'lifetime' => (int) env('SESSION_LIFETIME', 15) + 5,
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
 

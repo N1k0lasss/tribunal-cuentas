@@ -94,6 +94,9 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Necesario acá además del grupo web de bootstrap/app.php: las
+                // rutas del panel usan esta lista propia de Filament, no el
+                // grupo web (que sí cubre /livewire/update).
                 \App\Http\Middleware\SessionTimeout::class,
                 \Illuminate\Routing\Middleware\ThrottleRequests::class . ':20,1',
             ])
