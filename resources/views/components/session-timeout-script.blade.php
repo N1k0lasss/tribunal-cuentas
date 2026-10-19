@@ -8,15 +8,15 @@
       (que lee config/session.php → SESSION_LIFETIME). Es la MISMA fuente que usa
       el servidor, así el reloj del navegador y el del servidor no se desincronizan.
 
-    Puntos de entrada al cierre:
-      1. El modal (a los N minutos) hace el logout en el servidor y navega.
+    Puntos de entrada (los tres AVISAN con el modal y esperan al usuario):
+      1. El temporizador de inactividad del navegador (a los N minutos).
       2. El latido detecta que el servidor ya cerró la sesión (419/401/redirect).
       3. Un request de Livewire que falla con 419/401.
 
-    Los tres desembocan en `irAlLoginExpirado()`, que es el ÚNICO lugar que
-    navega al login. Así se evita la carrera en la que el modal alcanzaba a
-    mandar su POST con la sesión ya cerrada y aterrizaba en el login "pelado"
-    (sin el aviso de inactividad).
+    El modal NO navega solo: queda hasta que el usuario apriete "Ir al login"
+    (o hasta un margen de seguridad). Recién ahí se hace el logout y se navega a
+    `irAlLoginExpirado()`, el ÚNICO lugar que navega al login. Así el aviso no se
+    lo come una petición de fondo (p. ej. el polling de Livewire cada 5s).
 --}}
 <script id="session-timeout-script">
     (function () {
@@ -31,7 +31,7 @@
         const logoutUrl = @json(filament()->getLogoutUrl());
 
         let timeoutTimer = null; // Dispara el modal.
-        let logoutTimer = null; // Dispara el POST de logout (con el modal ya visible).
+        let cierreTimer = null; // Margen de seguridad para cerrar sesión y navegar.
         let ultimoLatido = 0; // Momento del último latido enviado al servidor.
         let expirado = false; // El modal ya se mostró.
         let redirigiendo = false; // Ya vamos camino al login: no navegar dos veces.
@@ -53,7 +53,7 @@
             redirigiendo = true;
             expirado = true;
             clearTimeout(timeoutTimer);
-            clearTimeout(logoutTimer);
+            clearTimeout(cierreTimer);
             window.location.href = loginExpiradaUrl;
         }
 
@@ -77,9 +77,11 @@
                 },
             }).then(function (res) {
                 // El servidor ya cerró la sesión (419 / 401) o nos redirigió al
-                // login: llevamos al usuario al login con el aviso visible.
+                // login: NO navegamos de una; mostramos el modal (el usuario
+                // confirma desde ahí). Así el aviso nunca se lo "come" una
+                // petición de fondo (p. ej. el polling de Livewire).
                 if (res.status === 419 || res.status === 401 || res.redirected) {
-                    irAlLoginExpirado();
+                    showExpiredModal();
                 }
             }).catch(function () { /* Silencioso: no rompemos la UI por un latido. */ });
         }
@@ -91,8 +93,11 @@
             enviarLatido(false);
         }
 
+        // Muestra el aviso (modal) y ESPERA al usuario. Idempotente: si ya se
+        // mostró, no hace nada. Es el punto único de aviso; lo llaman el
+        // temporizador de inactividad, el latido y el hook 419 de Livewire.
         function showExpiredModal() {
-            if (redirigiendo) return;
+            if (redirigiendo || expirado) return;
             expirado = true;
             clearTimeout(timeoutTimer);
 
@@ -113,9 +118,9 @@
                         <p id="session-timeout-modal-desc" style="color: #6b7280; margin-bottom: 1rem;">
                             Por inactividad, hemos cerrado tu sesión por seguridad.
                         </p>
-                        <p style="color: #2563eb; font-weight: 500; font-size: 0.875rem;">
-                            Redirigiendo al login automáticamente...
-                        </p>
+                        <button id="session-timeout-modal-btn" type="button" style="margin-top: 0.5rem; width: 100%; padding: 0.625rem 1rem; border: 0; border-radius: 0.5rem; background-color: #2563eb; color: white; font-size: 0.9375rem; font-weight: 600; cursor: pointer;">
+                            Ir al login
+                        </button>
                     </div>
                 </div>
             `;
@@ -123,29 +128,44 @@
             // Insertar el cartel al final del body
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // A los 3s: destruir la sesión en el servidor y navegar SIEMPRE al
-            // login con el aviso. Se usa fetch + keepalive (en lugar de un
-            // <form>.submit()) para que la petición sobreviva a la navegación y
-            // para que el destino no dependa de a dónde redirija el servidor.
-            logoutTimer = setTimeout(function () {
-                try {
-                    const datos = new FormData();
-                    datos.append('_token', csrfToken());
-                    fetch(logoutUrl, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        keepalive: true,
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        },
-                        body: datos,
-                    }).catch(function () { /* Silencioso. */ });
-                } catch (e) { /* Silencioso: igual navegamos al login. */ }
+            // El modal queda visible hasta que el usuario confirme. Así el aviso
+            // no se "pierde": antes se cerraba solo a los 3s y era fácil no verlo.
+            const boton = document.getElementById('session-timeout-modal-btn');
+            if (boton) {
+                boton.addEventListener('click', cerrarSesionYNavegar);
+                boton.focus();
+            }
 
-                irAlLoginExpirado();
-            }, 3000);
+            // Margen de seguridad: si el usuario abandona la pestaña, igual lo
+            // llevamos al login (no dejamos el modal colgado con la sesión muerta).
+            cierreTimer = setTimeout(cerrarSesionYNavegar, 120000);
+        }
+
+        // Destruye la sesión en el servidor y navega SIEMPRE al login con el aviso.
+        // Usa fetch + keepalive (en lugar de un <form>.submit()) para que la petición
+        // sobreviva a la navegación y para que el destino no dependa de a dónde
+        // redirija el servidor.
+        function cerrarSesionYNavegar() {
+            if (redirigiendo) return;
+            clearTimeout(cierreTimer);
+
+            try {
+                const datos = new FormData();
+                datos.append('_token', csrfToken());
+                fetch(logoutUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    keepalive: true,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: datos,
+                }).catch(function () { /* Silencioso. */ });
+            } catch (e) { /* Silencioso: igual navegamos al login. */ }
+
+            irAlLoginExpirado();
         }
 
         const events = [
@@ -164,8 +184,10 @@
         enviarLatido(true);
         resetTimer();
 
-        // Interceptar el error 419 (Página expirada) de Livewire para redirigir al
-        // login sin el molesto popup del navegador ("This page has expired...").
+        // Interceptar el error 419 (Página expirada) de Livewire para avisar con
+        // el modal (sin el popup del navegador "This page has expired...").
+        // No navegamos de una: el modal espera al usuario, así el aviso no se
+        // pierde cuando el polling de Livewire detecta la sesión vencida.
         //
         // OJO: los scripts de Filament/Livewire son bloqueantes (sin defer) y van
         // en el <head>, así que Livewire YA está inicializado cuando corre este
@@ -184,7 +206,7 @@
                     fail(({ status, preventDefault }) => {
                         if (status === 419 || status === 401) {
                             preventDefault();
-                            irAlLoginExpirado();
+                            showExpiredModal();
                         }
                     });
                 });
