@@ -77,6 +77,66 @@ test('el endpoint de actividad no falla sin sesión iniciada', function () {
     $this->post(route('session.actividad'))->assertNoContent();
 });
 
+/*
+|--------------------------------------------------------------------------
+| Endpoint de estado de sesión (session.estado)
+|--------------------------------------------------------------------------
+|
+| El JS lo consulta ante un 419/401 para no mostrar el aviso de "sesión
+| terminada" por un token vencido si la sesión sigue viva.
+|
+*/
+
+test('el endpoint de estado confirma la sesión viva', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->getJson(route('session.estado'))
+        ->assertOk()
+        ->assertJson(['authenticated' => true]);
+});
+
+test('el endpoint de estado responde 200 con authenticated=false sin sesión', function () {
+    // Nunca un redirect ni un 419: el fetch del script debe poder leer el JSON.
+    $this->getJson(route('session.estado'))
+        ->assertOk()
+        ->assertJson(['authenticated' => false, 'reason' => 'session_expired']);
+});
+
+test('el cierre por inactividad NO se aplica a los endpoints del script', function () {
+    // Aunque el marcador esté vencido, el latido y la consulta de estado deben
+    // poder responder: si no, el JS no podría verificar nada.
+    $user = User::factory()->create();
+    $lifetime = (int) config('session.inactivity_lifetime');
+
+    $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
+        ->actingAs($user)
+        ->post(route('session.actividad'))
+        ->assertNoContent();
+
+    $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
+        ->actingAs($user)
+        ->getJson(route('session.estado'))
+        ->assertOk();
+});
+
+test('tras el cierre por inactividad el endpoint de estado confirma la sesión caída', function () {
+    // Flujo real que sostiene el fix: una petición inactiva recibe 419 y, cuando
+    // el JS consulta el estado para confirmar, el servidor responde
+    // authenticated=false. Así el aviso se muestra (y no por un 419 aislado).
+    $user = User::factory()->create();
+    $lifetime = (int) config('session.inactivity_lifetime');
+
+    $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
+        ->actingAs($user)
+        ->getJson('/recibos')
+        ->assertStatus(419);
+
+    $this->getJson(route('session.estado'))
+        ->assertOk()
+        ->assertJson(['authenticated' => false]);
+});
+
 test('una petición de Livewire inactiva recibe 419 en lugar de un redirect', function () {
     $user = User::factory()->create();
     $lifetime = (int) config('session.inactivity_lifetime');

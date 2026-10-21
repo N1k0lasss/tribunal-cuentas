@@ -13,6 +13,20 @@ use Symfony\Component\HttpFoundation\Response;
 class SessionTimeout
 {
     /**
+     * Rutas que quedan fuera del cierre por inactividad.
+     *
+     * Son los endpoints del latido y de consulta de estado: si el middleware los
+     * cortara con 419/redirect, el propio JavaScript no podría averiguar si la
+     * sesión sigue viva (rompería la verificación previa al aviso).
+     *
+     * @var list<string>
+     */
+    private const RUTAS_EXENTAS = [
+        'session/actividad',
+        'session/estado',
+    ];
+
+    /**
      * Mensaje que se muestra en el login cuando la sesión se cerró sola.
      */
     public const MENSAJE = 'Tu sesión expiró por inactividad.';
@@ -28,6 +42,10 @@ class SessionTimeout
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::check()) {
+            return $next($request);
+        }
+
+        if ($this->esRutaExenta($request)) {
             return $next($request);
         }
 
@@ -94,6 +112,15 @@ class SessionTimeout
         // Livewire y las peticiones AJAX (por ejemplo el latido de actividad)
         // NO pueden recibir un redirect: devolvemos 419 y el JS del panel
         // redirige al login.
+        //
+        // DEUDA TÉCNICA CONOCIDA: el 419 acá significa "sesión cerrada por
+        // inactividad", pero Laravel también usa 419 para "token CSRF inválido"
+        // (VerifyCsrfToken), que NO implica que la sesión murió. Como el JS no
+        // puede distinguir ambos casos por el código, ante un 419 consulta
+        // /session/estado (SessionStatusController) y recién avisa si la sesión
+        // se cerró de verdad. La solución de fondo sería devolver un código
+        // propio (p. ej. 401) para este caso; no se hizo para no romper el
+        // contrato con Livewire.
         if ($this->esPeticionAjax($request)) {
             return response()->json(['message' => self::MENSAJE, 'redirect' => $url], 419);
         }
@@ -106,6 +133,14 @@ class SessionTimeout
         return $request->hasHeader('X-Livewire')
             || $request->is('livewire*')
             || $request->expectsJson();
+    }
+
+    /**
+     * ¿Es una ruta exenta del cierre por inactividad? (latido y estado).
+     */
+    protected function esRutaExenta(Request $request): bool
+    {
+        return $request->is(...self::RUTAS_EXENTAS);
     }
 
     protected function urlLogin(): string

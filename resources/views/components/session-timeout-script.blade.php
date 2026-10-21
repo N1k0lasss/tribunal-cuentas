@@ -26,9 +26,20 @@
         const maxInactivity = {{ (int) \App\Http\Middleware\SessionTimeout::minutosDeInactividad() }} * 60 * 1000;
 
         const actividadUrl = @json(route('session.actividad'));
+        const estadoUrl = @json(route('session.estado'));
         const loginUrl = @json(filament()->getLoginUrl());
         const loginExpiradaUrl = loginUrl + (loginUrl.indexOf('?') === -1 ? '?' : '&') + 'sesion_expirada=1';
         const logoutUrl = @json(filament()->getLogoutUrl());
+
+        // Los avisos de diagnóstico solo se emiten con la app en modo debug:
+        // en producción no ensuciamos la consola del usuario.
+        const debug = @json((bool) config('app.debug'));
+
+        function log(motivo) {
+            if (debug) {
+                console.warn('[sesión] ' + motivo);
+            }
+        }
 
         let timeoutTimer = null; // Dispara el modal.
         let cierreTimer = null; // Margen de seguridad para cerrar sesión y navegar.
@@ -57,6 +68,42 @@
             window.location.href = loginExpiradaUrl;
         }
 
+        // Verifica contra el servidor si la sesión sigue viva antes de avisar.
+        // Un 419 aislado (token CSRF viejo, petición concurrente) NO significa
+        // que la sesión se cerró: solo eso lo confirma `estadoUrl`.
+        // Devuelve 'expirada', 'viva' o null (no se pudo determinar).
+        function verificarSesion() {
+            return fetch(estadoUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' },
+            }).then(function (res) {
+                if (! res.ok) return null;
+                return res.json().then(function (datos) {
+                    return datos && datos.authenticated ? 'viva' : 'expirada';
+                });
+            }).catch(function () { return null; });
+        }
+
+        // Punto único para reaccionar a un 419/401 (de Livewire o del latido):
+        // primero confirma el estado real y recién avisa si la sesión murió.
+        function avisarTrasFallo(origen) {
+            if (redirigiendo || expirado) return;
+
+            verificarSesion().then(function (estado) {
+                // La sesión está viva: el 419 fue por un token viejo, no por
+                // inactividad. No expulsamos al usuario.
+                if (estado === 'viva') {
+                    log('Fallo 419/401 desde ' + origen + ' pero la sesión sigue viva: se ignora.');
+                    return;
+                }
+
+                // 'expirada' o indeterminado: ante la duda se conserva el aviso
+                // previo (nunca dejar al usuario con una sesión muerta y sin aviso).
+                showExpiredModal(origen);
+            });
+        }
+
         // Avisa al servidor que hubo actividad REAL. El polling de Livewire no
         // cuenta: esto solo se llama con eventos de mouse/teclado.
         function enviarLatido(forzar) {
@@ -77,11 +124,11 @@
                 },
             }).then(function (res) {
                 // El servidor ya cerró la sesión (419 / 401) o nos redirigió al
-                // login: NO navegamos de una; mostramos el modal (el usuario
-                // confirma desde ahí). Así el aviso nunca se lo "come" una
-                // petición de fondo (p. ej. el polling de Livewire).
+                // login: NO navegamos de una; confirmamos el estado y avisamos
+                // desde ahí. Así el aviso no se lo "come" una petición de fondo
+                // ni lo dispara un 419 que no implica sesión cerrada.
                 if (res.status === 419 || res.status === 401 || res.redirected) {
-                    showExpiredModal();
+                    avisarTrasFallo('latido (' + res.status + (res.redirected ? ', redirect' : '') + ')');
                 }
             }).catch(function () { /* Silencioso: no rompemos la UI por un latido. */ });
         }
@@ -89,17 +136,20 @@
         function resetTimer() {
             if (redirigiendo || expirado) return;
             clearTimeout(timeoutTimer);
-            timeoutTimer = setTimeout(showExpiredModal, maxInactivity);
+            timeoutTimer = setTimeout(function () { showExpiredModal('inactividad'); }, maxInactivity);
             enviarLatido(false);
         }
 
         // Muestra el aviso (modal) y ESPERA al usuario. Idempotente: si ya se
         // mostró, no hace nada. Es el punto único de aviso; lo llaman el
         // temporizador de inactividad, el latido y el hook 419 de Livewire.
-        function showExpiredModal() {
+        // `motivo` es solo para diagnóstico (queda en consola).
+        function showExpiredModal(motivo) {
             if (redirigiendo || expirado) return;
             expirado = true;
             clearTimeout(timeoutTimer);
+
+            log('Aviso de sesión terminada. Motivo: ' + (motivo || 'inactividad'));
 
             // Crear el cartel (modal)
             const modalHtml = `
@@ -206,7 +256,7 @@
                     fail(({ status, preventDefault }) => {
                         if (status === 419 || status === 401) {
                             preventDefault();
-                            showExpiredModal();
+                            avisarTrasFallo('livewire (' + status + ')');
                         }
                     });
                 });

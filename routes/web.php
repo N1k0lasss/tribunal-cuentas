@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\SessionActivityController;
+use App\Http\Controllers\SessionStatusController;
 use App\Http\Controllers\SolicitudPdfController;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Gate;
@@ -63,6 +64,13 @@ Route::get('/solicitudes/{solicitud}/pdf-integrado', [SolicitudPdfController::cl
 // inactividad: así el polling de Livewire no cuenta como actividad.
 Route::post('/session/actividad', SessionActivityController::class)
     ->name('session.actividad');
+
+// Estado real de la sesión (¿sigue viva?). Lo consulta el JS del panel cuando una
+// petición falla con 419/401, para no mostrar el aviso de "sesión terminada" por
+// un token vencido si la sesión en realidad sigue activa. Sin middleware `auth`
+// a propósito: si la sesión murió debe responder 200 con authenticated = false.
+Route::get('/session/estado', SessionStatusController::class)
+    ->name('session.estado');
 
 require __DIR__ . '/settings.php';
 
