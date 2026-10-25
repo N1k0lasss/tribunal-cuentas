@@ -41,6 +41,11 @@ class Documento extends Model
     public const TIPO_SOLICITUD_FIRMADA = 'solicitud_firmada';
 
     /**
+     * Tipo de documento correspondiente a la resolución firmada digitalmente.
+     */
+    public const TIPO_RESOLUCION_FIRMADA = 'resolucion_firmada';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

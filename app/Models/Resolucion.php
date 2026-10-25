@@ -77,6 +77,12 @@ class Resolucion extends Model
         return $this->hasMany(Documento::class);
     }
 
+    protected static function booted(): void
+    {
+        // Las resoluciones son documentos auditables y no deben eliminarse.
+        static::deleting(fn (): bool => false);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
