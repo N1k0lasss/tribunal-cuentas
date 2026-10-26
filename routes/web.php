@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\ResolucionPdfController;
 use App\Http\Controllers\SessionActivityController;
 use App\Http\Controllers\SessionStatusController;
 use App\Http\Controllers\SolicitudPdfController;
-use App\Models\Documento;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 $filamentPath = env('FILAMENT_PATH', 'sistema');
 
 // EL TELETRANSPORTADOR: Empuja al usuario al login del admin (ruta oculta)
-Route::redirect('/', '/' . $filamentPath);
+Route::redirect('/', '/'.$filamentPath);
 
 // Ocultar ruta admin redireccionando a inicio (si el path no es admin)
 if ($filamentPath !== 'admin') {
@@ -22,27 +21,13 @@ if ($filamentPath !== 'admin') {
 
 // NUEVA RUTA: Pantalla de Recibos para el agente (¡Lo dejamos intacto!)
 Route::get('/recibos', function () {
-    return "Esta será la pantalla de Recibos de Sueldo del Agente";
+    return 'Esta será la pantalla de Recibos de Sueldo del Agente';
 })->name('recibos.index');
 
 // Ruta segura para ver documentos adjuntos (requiere autenticación)
-Route::get('/documentos/{documento}/ver', function (Documento $documento) {
-    Gate::authorize('view', $documento);
-
-    $path = $documento->ruta;
-
-    if (! Storage::disk('local')->exists($path)) {
-        abort(404, 'Documento no encontrado.');
-    }
-
-    $mime = Storage::disk('local')->mimeType($path);
-    $contenido = Storage::disk('local')->get($path);
-    $nombre = $documento->nombre_archivo ?? basename($path);
-
-    return response($contenido, 200)
-        ->header('Content-Type', $mime)
-        ->header('Content-Disposition', 'inline; filename="' . $nombre . '"');
-})->middleware('auth')->name('documento.ver');
+Route::get('/documentos/{documento}/ver', [DocumentoController::class, 'ver'])
+    ->middleware('auth')
+    ->name('documento.ver');
 
 // Descarga del PDF de la solicitud para el circuito de firma de aprobaciones.
 // Cada entidad descarga este documento, lo firma digitalmente en el organismo
@@ -59,6 +44,12 @@ Route::get('/solicitudes/{solicitud}/pdf-integrado', [SolicitudPdfController::cl
     ->middleware('auth')
     ->name('solicitud.pdf.integrado');
 
+// Descarga del PDF de la resolución diaria que agrupa las licencias
+// aprobadas en la fecha de emisión.
+Route::get('/resoluciones/{resolucion}/pdf', [ResolucionPdfController::class, 'ver'])
+    ->middleware('auth')
+    ->name('resolucion.pdf');
+
 // Marcador de "actividad real" del usuario (mouse / teclado). Lo dispara el JS
 // del panel y lo usa el middleware SessionTimeout para el cierre por
 // inactividad: así el polling de Livewire no cuenta como actividad.
@@ -72,9 +63,10 @@ Route::post('/session/actividad', SessionActivityController::class)
 Route::get('/session/estado', SessionStatusController::class)
     ->name('session.estado');
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';
 
 Route::post('/logout', function () {
     auth()->logout();
+
     return redirect('/');
 })->name('logout');

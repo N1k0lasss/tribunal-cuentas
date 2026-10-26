@@ -2,18 +2,23 @@
 
 namespace App\Providers;
 
+use App\Hashing\Sha256Hasher;
+use App\Http\Middleware\SessionTimeout;
+use App\Listeners\LogSuccessfulLogin;
+use App\Models\Solicitud;
+use App\Observers\SolicitudObserver;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
-use App\Hashing\Sha256Hasher;
-use App\Http\Middleware\SessionTimeout;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,19 +36,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Hash::extend('sha256', function () {
-            return new Sha256Hasher();
+            return new Sha256Hasher;
         });
 
         $this->configureDefaults();
 
         self::ensureSessionOutlivesInactivity();
 
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Login::class,
-            \App\Listeners\LogSuccessfulLogin::class
+        Event::listen(
+            Login::class,
+            LogSuccessfulLogin::class
         );
 
-        \App\Models\Solicitud::observe(\App\Observers\SolicitudObserver::class);
+        Solicitud::observe(SolicitudObserver::class);
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,
@@ -72,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
             },
         );
 
-        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+        Event::listen(Login::class, function ($event) {
             activity('auth')
                 ->causedBy($event->user)
                 ->log('Usuario inició sesión');

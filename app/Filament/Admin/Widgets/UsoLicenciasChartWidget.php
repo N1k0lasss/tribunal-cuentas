@@ -14,7 +14,7 @@ class UsoLicenciasChartWidget extends ChartWidget
 
     protected ?string $maxHeight = '300px';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public ?string $filter = null;
 

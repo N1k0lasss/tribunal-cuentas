@@ -69,6 +69,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Business Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Zona horaria usada para calcular la fecha de las licencias y de la
+    | resolución diaria, independientemente de la zona horaria del servidor.
+    |
+    */
+
+    'business_timezone' => env('APP_BUSINESS_TIMEZONE', 'America/Argentina/Buenos_Aires'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

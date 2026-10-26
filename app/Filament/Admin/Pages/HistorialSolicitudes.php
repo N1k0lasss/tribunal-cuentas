@@ -5,7 +5,12 @@ namespace App\Filament\Admin\Pages;
 use App\Models\Agente;
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Actions\Action;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -13,12 +18,8 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Filament\Actions\Action;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Illuminate\Support\HtmlString;
 
 class HistorialSolicitudes extends Page implements HasTable
@@ -42,6 +43,7 @@ class HistorialSolicitudes extends Page implements HasTable
     public static function canAccess(): bool
     {
         $user = auth()->user();
+
         return $user && $user->hasAnyRole(['administrador', 'secretaria_general', 'presidencia']);
     }
 
@@ -309,7 +311,7 @@ class HistorialSolicitudes extends Page implements HasTable
             ->emptyStateIcon('heroicon-o-folder-open');
     }
 
-    private static function renderWorkflowDots(Solicitud $record, \Illuminate\Support\Collection $map): string
+    private static function renderWorkflowDots(Solicitud $record, Collection $map): string
     {
         $steps = collect($record->flujoEtapas())
             ->mapWithKeys(fn (string $etapa) => [$etapa => self::etapaDisplayLabel($etapa)]);
@@ -335,7 +337,7 @@ class HistorialSolicitudes extends Page implements HasTable
         return '<div class="workflow-dots" aria-hidden="true">'.implode('', $dots).'</div>';
     }
 
-    private static function renderWorkflowTimeline(Solicitud $record, \Illuminate\Support\Collection $map): string
+    private static function renderWorkflowTimeline(Solicitud $record, Collection $map): string
     {
         $steps = collect($record->flujoEtapas())
             ->mapWithKeys(fn (string $etapa) => [$etapa => self::etapaDisplayLabel($etapa)]);
@@ -442,19 +444,18 @@ class HistorialSolicitudes extends Page implements HasTable
                         'estadoFiltro' => $filterState['estado']['value'] ?? null,
                     ]);
 
-                    $nombreArchivo = 'historial_solicitudes_' . $anioFiltro;
+                    $nombreArchivo = 'historial_solicitudes_'.$anioFiltro;
                     if ($agenteFiltro) {
-                        $nombreArchivo .= '_' . str_replace(' ', '_', $agenteFiltro->apellido);
+                        $nombreArchivo .= '_'.str_replace(' ', '_', $agenteFiltro->apellido);
                     }
                     $nombreArchivo .= '.pdf';
 
                     return response()->streamDownload(
-                        fn () => print($pdf->output()),
+                        fn () => print ($pdf->output()),
                         $nombreArchivo
                     );
                 }),
             // Estadísticas ahora están en su propia página
         ];
     }
-
 }

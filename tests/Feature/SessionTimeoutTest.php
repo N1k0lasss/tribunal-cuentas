@@ -24,14 +24,14 @@ test('cierra la sesión cuando se supera el tiempo de inactividad', function () 
     $this->withSession(['last_activity_time' => now()->subMinutes($lifetime + 1)])
         ->actingAs($user)
         ->get('/recibos')
-        ->assertRedirect(route('filament.admin.auth.login') . '?sesion_expirada=1')
+        ->assertRedirect(route('filament.admin.auth.login').'?sesion_expirada=1')
         ->assertSessionHas('mensaje');
 
     $this->assertGuest();
 });
 
 test('el login muestra el aviso cuando llega con sesion_expirada=1', function () {
-    $response = $this->get(route('filament.admin.auth.login') . '?sesion_expirada=1');
+    $response = $this->get(route('filament.admin.auth.login').'?sesion_expirada=1');
 
     $response->assertOk();
     $response->assertSee(SessionTimeout::MENSAJE);

@@ -149,7 +149,7 @@ class SessionTimeout
             return route('filament.admin.auth.login');
         }
 
-        return '/' . trim((string) env('FILAMENT_PATH', 'sistema'), '/') . '/login';
+        return '/'.trim((string) env('FILAMENT_PATH', 'sistema'), '/').'/login';
     }
 
     /**
@@ -159,6 +159,6 @@ class SessionTimeout
     {
         $url = $this->urlLogin();
 
-        return $url . (str_contains($url, '?') ? '&' : '?') . 'sesion_expirada=1';
+        return $url.(str_contains($url, '?') ? '&' : '?').'sesion_expirada=1';
     }
 }

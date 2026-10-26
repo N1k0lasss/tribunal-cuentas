@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Feriados extends Model
 {
     use LogsActivity;
+
     protected $table = 'feriados';
+
     protected $fillable = [
         'nombre',
         'fecha_inicio',
@@ -20,8 +21,9 @@ class Feriados extends Model
         'trasladable',
         'recurrente',
     ];
+
     protected $casts = [
-        'fecha_inicio' => 'datetime', 
+        'fecha_inicio' => 'datetime',
         'fecha_fin' => 'datetime',
         'todo_el_dia' => 'boolean',
     ];
@@ -34,4 +36,3 @@ class Feriados extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

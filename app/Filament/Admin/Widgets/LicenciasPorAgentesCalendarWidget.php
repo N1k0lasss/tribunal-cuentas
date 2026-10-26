@@ -14,7 +14,7 @@ class LicenciasPorAgentesCalendarWidget extends FullCalendarWidget
 
     protected static ?int $sort = 10;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public ?array $selectedEventDetails = null;
 
@@ -93,7 +93,7 @@ class LicenciasPorAgentesCalendarWidget extends FullCalendarWidget
     }
 
     /**
-     * @param Collection<int, Solicitud> $solicitudes
+     * @param  Collection<int, Solicitud>  $solicitudes
      * @return array<int, string>
      */
     private function mapAgentes(Collection $solicitudes): array

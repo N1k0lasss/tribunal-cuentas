@@ -4,14 +4,13 @@ namespace App\Policies;
 
 use App\Models\Aprobacion;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class AprobacionPolicy
 {
     /**
      * Administradores tienen acceso total al recurso.
      */
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->hasRole('administrador')) {
             return true;

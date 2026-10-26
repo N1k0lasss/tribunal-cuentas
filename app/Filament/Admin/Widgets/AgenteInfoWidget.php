@@ -11,7 +11,7 @@ class AgenteInfoWidget extends Widget
 
     protected string $view = 'filament.admin.widgets.agente-info-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool
     {

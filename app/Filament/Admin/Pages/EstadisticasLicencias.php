@@ -5,8 +5,8 @@ namespace App\Filament\Admin\Pages;
 use App\Models\Agente;
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -185,7 +185,7 @@ class EstadisticasLicencias extends Page
                     $nombreArchivo .= '.pdf';
 
                     return response()->streamDownload(
-                        fn () => print($pdf->output()),
+                        fn () => print ($pdf->output()),
                         $nombreArchivo
                     );
                 }),

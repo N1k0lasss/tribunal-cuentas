@@ -2,20 +2,16 @@
 
 namespace App\Filament\Admin\Resources\Agentes;
 
-
 use App\Filament\Admin\Resources\Agentes\Pages\ListAgentes;
 use App\Filament\Admin\Resources\Agentes\Pages\ViewAgente;
 use App\Filament\Admin\Resources\Agentes\Schemas\AgenteForm;
 use App\Filament\Admin\Resources\Agentes\Schemas\AgenteInfolist;
 use App\Filament\Admin\Resources\Agentes\Tables\AgentesTable;
 use App\Models\Agente;
-use Filament\Schemas\Schema;
-use Filament\Infolists\Infolist;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Support\Icons\Heroicon;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Support\Htmlable;
 
 class AgenteResource extends Resource
@@ -26,7 +22,7 @@ class AgenteResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'apellido';
 
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return 'heroicon-o-rectangle-stack';
     }

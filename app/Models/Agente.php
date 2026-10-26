@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\AgenteFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,10 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
- * @property int|null $user_id 
- * @property-read User|null $user 
+ * @property int|null $user_id
+ * @property-read User|null $user
  * @property int $id
  * @property string $nombre
  * @property string $apellido
@@ -38,9 +37,10 @@ use Illuminate\Support\Carbon;
  */
 class Agente extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<AgenteFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -138,4 +138,3 @@ class Agente extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

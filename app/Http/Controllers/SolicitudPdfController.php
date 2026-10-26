@@ -112,7 +112,7 @@ class SolicitudPdfController extends Controller
 
     private function nombreArchivo(Solicitud $solicitud, string $sufijo = ''): string
     {
-        return 'solicitud_' . str_pad((string) $solicitud->id, 6, '0', STR_PAD_LEFT) . $sufijo . '.pdf';
+        return 'solicitud_'.str_pad((string) $solicitud->id, 6, '0', STR_PAD_LEFT).$sufijo.'.pdf';
     }
 
     private function normalizarNumero(mixed $numero): ?string

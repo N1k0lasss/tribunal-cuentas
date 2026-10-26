@@ -14,7 +14,7 @@ class LicenciasPorSectorCalendarWidget extends FullCalendarWidget
 
     protected static ?int $sort = 11;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool
     {
@@ -97,7 +97,7 @@ class LicenciasPorSectorCalendarWidget extends FullCalendarWidget
     }
 
     /**
-     * @param Collection<int, Solicitud> $solicitudes
+     * @param  Collection<int, Solicitud>  $solicitudes
      * @return array<string, array<int, string>>
      */
     private function agruparPorArea(Collection $solicitudes): array

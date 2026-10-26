@@ -2,17 +2,18 @@
 
 namespace App\Filament\Admin\Widgets;
 
+use App\Models\Feriados;
 use Filament\Widgets\Widget;
 
 class FeriadosListWidget extends Widget
 {
     protected string $view = 'filament.widgets.feriados-list-widget';
 
-    protected int | string | array $columnSpan = 1;
+    protected int|string|array $columnSpan = 1;
 
     public function getFeriadosProperty()
     {
-        return \App\Models\Feriados::orderBy('fecha_inicio', 'asc')->get()->map(function($feriado) {
+        return Feriados::orderBy('fecha_inicio', 'asc')->get()->map(function ($feriado) {
             return [
                 'id' => $feriado->id,
                 'nombre' => $feriado->nombre,

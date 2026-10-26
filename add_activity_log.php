@@ -4,7 +4,7 @@ $models = glob('app/Models/*.php');
 
 foreach ($models as $file) {
     $content = file_get_contents($file);
-    
+
     if (strpos($content, 'LogsActivity') !== false) {
         continue;
     }
@@ -16,7 +16,7 @@ foreach ($models as $file) {
     $content = preg_replace('/(class [a-zA-Z0-9_]+ extends [^{]+\{)/', "$1\n    use LogsActivity;", $content);
 
     // Add getActivitylogOptions method
-    $method = <<<METHOD
+    $method = <<<'METHOD'
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -28,7 +28,7 @@ foreach ($models as $file) {
 METHOD;
 
     // insert before last closing brace
-    $content = preg_replace('/}(?=\s*$)/', $method . "\n}\n", $content);
+    $content = preg_replace('/}(?=\s*$)/', $method."\n}\n", $content);
 
     file_put_contents($file, $content);
     echo "Updated $file\n";

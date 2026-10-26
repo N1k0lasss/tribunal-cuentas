@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Documento;
 use App\Models\Solicitud;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,10 @@ class SolicitudObserver
             $solicitud->loadMissing('tipoSolicitud', 'agente.user', 'documentos');
 
             // Si el tipo de solicitud requiere adjunto y el apartado de documentos sigue vacío
-            if ($solicitud->tipoSolicitud?->requiere_adjunto && $solicitud->documentos->isEmpty()) {
+            $tieneDocumentoReal = $solicitud->documentos
+                ->contains(fn (Documento $documento): bool => $documento->archivoExiste());
+
+            if ($solicitud->tipoSolicitud?->requiere_adjunto && ! $tieneDocumentoReal) {
                 $user = $solicitud->agente?->user;
 
                 if ($user) {

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Aprobacion;
+use App\Models\Documento;
 use App\Models\Solicitud;
 use App\Models\User;
 use App\Notifications\SolicitudResueltaNotification;
@@ -34,17 +35,19 @@ class CheckExpiredDocuments extends Command
     {
         // 1. Enviar advertencias de 24 horas restantes (solicitudes entre 48 y 72 horas sin adjuntos)
         $solicitudesAdvertencia = Solicitud::whereHas('tipoSolicitud', function ($query) {
-                $query->where('requiere_adjunto', true);
-            })
+            $query->where('requiere_adjunto', true);
+        })
             ->whereIn('estado', [Solicitud::ESTADO_PENDIENTE, Solicitud::ESTADO_EN_REVISION])
             ->where('created_at', '<=', now()->subHours(48))
             ->where('created_at', '>', now()->subHours(72))
-            ->whereDoesntHave('documentos')
-            ->get();
+            ->with('documentos')
+            ->get()
+            ->filter(fn (Solicitud $solicitud): bool => ! $solicitud->documentos
+                ->contains(fn (Documento $documento): bool => $documento->archivoExiste()));
 
         foreach ($solicitudesAdvertencia as $solicitud) {
             $user = $solicitud->agente?->user;
-            if (!$user) {
+            if (! $user) {
                 continue;
             }
 
@@ -56,7 +59,7 @@ class CheckExpiredDocuments extends Command
                 ->whereJsonContains('data->body', $bodyText)
                 ->exists();
 
-            if (!$alreadyNotified) {
+            if (! $alreadyNotified) {
                 \Filament\Notifications\Notification::make()
                     ->title('Plazo próximo a vencer')
                     ->warning()
@@ -70,32 +73,37 @@ class CheckExpiredDocuments extends Command
 
         // 2. Obtener solicitudes en estado pendiente o en revisión que requieren adjuntos y no tienen documentos (más de 72 horas)
         $solicitudes = Solicitud::whereHas('tipoSolicitud', function ($query) {
-                $query->where('requiere_adjunto', true);
-            })
+            $query->where('requiere_adjunto', true);
+        })
             ->whereIn('estado', [Solicitud::ESTADO_PENDIENTE, Solicitud::ESTADO_EN_REVISION])
             ->where('created_at', '<=', now()->subHours(72))
-            ->whereDoesntHave('documentos')
-            ->get();
+            ->with('documentos')
+            ->get()
+            ->filter(fn (Solicitud $solicitud): bool => ! $solicitud->documentos
+                ->contains(fn (Documento $documento): bool => $documento->archivoExiste()));
 
         if ($solicitudes->isEmpty()) {
             $this->info('No se encontraron solicitudes con documentación vencida.');
+
             return Command::SUCCESS;
         }
 
         // Buscar un usuario administrador para asociarlo al rechazo del sistema
         $adminUser = User::role('administrador')->first();
-        if (!$adminUser) {
+        if (! $adminUser) {
             $this->error('No se encontró un usuario administrador para procesar el rechazo automático.');
+
             return Command::FAILURE;
         }
 
         $adminAgenteId = $adminUser->agente?->id;
-        if (!$adminAgenteId) {
+        if (! $adminAgenteId) {
             $this->error('El usuario administrador encontrado no tiene un agente asociado.');
+
             return Command::FAILURE;
         }
 
-        $this->info("Procesando " . $solicitudes->count() . " solicitudes vencidas...");
+        $this->info('Procesando '.$solicitudes->count().' solicitudes vencidas...');
 
         foreach ($solicitudes as $solicitud) {
             DB::transaction(function () use ($solicitud, $adminUser, $adminAgenteId, $auditoriaService) {

@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\SaldoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -24,9 +23,10 @@ use Illuminate\Support\Carbon;
  */
 class Saldo extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<SaldoFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -73,4 +73,3 @@ class Saldo extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

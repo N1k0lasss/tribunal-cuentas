@@ -5,10 +5,9 @@ namespace App\Filament\Admin\Resources\Areas;
 use App\Filament\Admin\Resources\Areas\Pages\ListAreas;
 use App\Filament\Admin\Resources\Areas\Tables\AreasTable;
 use App\Models\Area;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
-use BackedEnum;
 use Illuminate\Contracts\Support\Htmlable;
 
 class AreaResource extends Resource
@@ -17,7 +16,7 @@ class AreaResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return 'heroicon-o-rectangle-stack';
     }
@@ -31,7 +30,6 @@ class AreaResource extends Resource
     protected static ?string $pluralModelLabel = 'Áreas';
 
     protected static ?string $modelLabel = 'Área';
-
 
     public static function table(Table $table): Table
     {

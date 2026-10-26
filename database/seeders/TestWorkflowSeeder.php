@@ -4,20 +4,24 @@ namespace Database\Seeders;
 
 use App\Models\Agente;
 use App\Models\Area;
-use App\Models\Solicitud;
-use App\Models\Aprobacion;
 use App\Models\Documento;
+use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Models\User;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 class TestWorkflowSeeder extends Seeder
 {
     public function run(): void
     {
+        Storage::disk('local')->put(
+            'documentos/demo.pdf',
+            "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n",
+        );
+
         $roles = ['administrador', 'agente', 'jefatura', 'secretaria_general', 'presidencia', 'personal'];
         foreach ($roles as $role) {
             Role::findOrCreate($role, 'web');
@@ -142,11 +146,11 @@ class TestWorkflowSeeder extends Seeder
             unset($userData['role'], $userData['agente_data']);
 
             $user = User::firstOrCreate(['email' => $userData['email']], $userData);
-            if (!$user->hasRole($roleName)) {
+            if (! $user->hasRole($roleName)) {
                 $user->assignRole($roleName);
             }
 
-            if (!$user->agente) {
+            if (! $user->agente) {
                 $agenteData['user_id'] = $user->id;
                 $agente = Agente::create($agenteData);
             } else {
@@ -161,7 +165,7 @@ class TestWorkflowSeeder extends Seeder
         $tipoLicenciaOrdinaria = TipoSolicitud::where('nombre', 'Licencia Anual Ordinaria')->first();
         $tipoEnfermedad = TipoSolicitud::where('nombre', 'Enfermedad Común')->first();
 
-        if (!$tipoLicenciaOrdinaria || !$tipoEnfermedad) {
+        if (! $tipoLicenciaOrdinaria || ! $tipoEnfermedad) {
             return;
         }
 
@@ -196,7 +200,7 @@ class TestWorkflowSeeder extends Seeder
             'estado' => Solicitud::ESTADO_PENDIENTE,
             'motivo' => 'Gripe fuerte',
         ]);
-        
+
         $sol2->aprobaciones()->create([
             'etapa' => Solicitud::ETAPA_JEFATURA,
             'estado' => 'pendiente',
@@ -224,7 +228,7 @@ class TestWorkflowSeeder extends Seeder
             ['etapa' => Solicitud::ETAPA_JEFATURA, 'usuario_id' => $users['jefatura']->id, 'estado' => 'aprobado', 'fecha' => Carbon::now()->subDays(1)],
             ['etapa' => Solicitud::ETAPA_SECRETARIA, 'estado' => 'pendiente'],
         ]);
-        
+
         // 4. Agente Lucía Fernández EN REVISIÓN por Presidencia (Secretaría ya aprobó)
         $sol4 = Solicitud::create([
             'agente_id' => $agente2->id,

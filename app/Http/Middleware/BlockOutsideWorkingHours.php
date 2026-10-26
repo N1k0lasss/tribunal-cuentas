@@ -18,12 +18,12 @@ class BlockOutsideWorkingHours
         $user = Auth::user();
 
         // 1. If not authenticated, let general auth middleware handle it.
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
         // Bypass working hours restriction in unit tests unless a test time is explicitly set.
-        if (app()->runningUnitTests() && !Carbon::hasTestNow()) {
+        if (app()->runningUnitTests() && ! Carbon::hasTestNow()) {
             return $next($request);
         }
 
@@ -57,6 +57,7 @@ class BlockOutsideWorkingHours
         }
 
         $time = $date->format('H:i');
+
         return $time < '07:00' || $time > '13:10';
     }
 
@@ -67,10 +68,11 @@ class BlockOutsideWorkingHours
     {
         $filamentPath = env('FILAMENT_PATH', 'sistema');
         $criticalPaths = [
-            $filamentPath . '/solicituds',
-            $filamentPath . '/aprobacions',
-            $filamentPath . '/saldos',
-            $filamentPath . '/documentos',
+            $filamentPath.'/solicituds',
+            $filamentPath.'/aprobacions',
+            $filamentPath.'/saldos',
+            $filamentPath.'/documentos',
+            'documentos',
         ];
 
         $path = ltrim($request->path(), '/');
@@ -112,10 +114,10 @@ class BlockOutsideWorkingHours
                     }
 
                     if ($class) {
-                        if (str_contains($class, 'Solicitud') || 
-                            str_contains($class, 'Aprobacion') || 
-                            str_contains($class, 'Saldo') || 
-                            str_contains($class, 'Documento') || 
+                        if (str_contains($class, 'Solicitud') ||
+                            str_contains($class, 'Aprobacion') ||
+                            str_contains($class, 'Saldo') ||
+                            str_contains($class, 'Documento') ||
                             str_contains($class, 'SolicitudesPendientesWidget')) {
                             return true;
                         }
@@ -126,10 +128,10 @@ class BlockOutsideWorkingHours
             // 3. Body text search fallback for maximum resilience.
             $content = $request->getContent();
             if ($content && (
-                str_contains($content, 'Solicitud') || 
-                str_contains($content, 'Aprobacion') || 
-                str_contains($content, 'Saldo') || 
-                str_contains($content, 'Documento') || 
+                str_contains($content, 'Solicitud') ||
+                str_contains($content, 'Aprobacion') ||
+                str_contains($content, 'Saldo') ||
+                str_contains($content, 'Documento') ||
                 str_contains($content, 'SolicitudesPendientesWidget')
             )) {
                 return true;

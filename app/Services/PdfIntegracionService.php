@@ -24,8 +24,8 @@ class PdfIntegracionService
      * estampado en la parte superior de la primera página.
      *
      * @param  string  $contenidoPdf  Bytes del PDF firmado que se quiere completar.
-     * @param  string  $numero        Número de resolución a estampar.
-     * @param  string|null  $fecha    Fecha de emisión ya formateada (d/m/Y), opcional.
+     * @param  string  $numero  Número de resolución a estampar.
+     * @param  string|null  $fecha  Fecha de emisión ya formateada (d/m/Y), opcional.
      *
      * @throws Throwable Si el PDF de origen no puede importarse.
      */
@@ -40,7 +40,7 @@ class PdfIntegracionService
         file_put_contents($rutaOrigen, $contenidoPdf);
 
         try {
-            $pdf = new Fpdi();
+            $pdf = new Fpdi;
             $totalPaginas = $pdf->setSourceFile($rutaOrigen);
 
             $etiqueta = 'Resolución N° '.$numero;

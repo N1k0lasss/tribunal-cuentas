@@ -4,8 +4,8 @@ namespace App\Filament\Admin\Pages;
 
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Pages\Page;
 
 class ReporteAnual extends Page
 {
@@ -70,6 +70,7 @@ class ReporteAnual extends Page
             ->map(function ($group) use ($totalSolicitudes) {
                 $first = $group->first();
                 $cantidad = $group->count();
+
                 return [
                     'nombre' => $first->tipoSolicitud->nombre ?? 'Desconocido',
                     'cantidad' => $cantidad,
@@ -83,12 +84,13 @@ class ReporteAnual extends Page
 
         // Solicitudes por Área
         $areas = $solicitudes->groupBy(function ($solicitud) {
-                return $solicitud->agente?->area_id ?? 0;
-            })
+            return $solicitud->agente?->area_id ?? 0;
+        })
             ->map(function ($group) use ($totalSolicitudes) {
                 $first = $group->first();
                 $areaNombre = $first->agente?->area?->nombre ?? 'Sin Área';
                 $cantidad = $group->count();
+
                 return [
                     'nombre' => $areaNombre,
                     'cantidad' => $cantidad,
@@ -125,8 +127,8 @@ class ReporteAnual extends Page
         ]);
 
         return response()->streamDownload(
-            fn () => print($pdf->output()),
-            'reporte_anual_licencias_' . $this->anio . '.pdf'
+            fn () => print ($pdf->output()),
+            'reporte_anual_licencias_'.$this->anio.'.pdf'
         );
     }
 

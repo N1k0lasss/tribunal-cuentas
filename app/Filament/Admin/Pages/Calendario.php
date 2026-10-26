@@ -33,7 +33,7 @@ class Calendario extends Page
         return [];
     }
 
-    public function getHeaderWidgetsColumns(): int | array
+    public function getHeaderWidgetsColumns(): int|array
     {
         return 1;
     }

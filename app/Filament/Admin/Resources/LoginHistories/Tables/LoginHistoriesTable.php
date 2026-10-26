@@ -2,10 +2,10 @@
 
 namespace App\Filament\Admin\Resources\LoginHistories\Tables;
 
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
 
 class LoginHistoriesTable
 {

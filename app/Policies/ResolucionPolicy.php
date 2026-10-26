@@ -15,7 +15,7 @@ class ResolucionPolicy
             return false;
         }
 
-        if ($user->hasRole('administrador')) {
+        if ($user->hasRole('administrador') && $ability !== 'update') {
             return true;
         }
 
@@ -33,7 +33,11 @@ class ResolucionPolicy
             return true;
         }
 
-        return $user->agente?->id === $resolucion->solicitud->agente_id;
+        if ($resolucion->solicitud_id === null) {
+            return false;
+        }
+
+        return $user->agente?->id === $resolucion->solicitud?->agente_id;
     }
 
     public function create(User $user): bool
@@ -43,24 +47,26 @@ class ResolucionPolicy
 
     public function update(User $user, Resolucion $resolucion): bool
     {
-        return $user->hasAnyRole(['secretaria_general']);
+        if ($resolucion->tienePdfFirmado()) {
+            return false;
+        }
+
+        return $user->hasAnyRole(['secretaria_general', 'administrador']);
+    }
+
+    public function subirPdfFirmadoDelDia(User $user): bool
+    {
+        return $user->hasRole('secretaria_general');
+    }
+
+    public function reemplazarPdfFirmadoDelDia(User $user): bool
+    {
+        return $user->hasRole('administrador');
     }
 
     public function delete(User $user, Resolucion $resolucion): bool
     {
         return false;
-    }
-
-    /**
-     * Permite adjuntar el PDF firmado de la resolución.
-     *
-     * No se reutiliza DocumentoPolicy::create porque ese permiso solo contempla
-     * a Secretaría General y Administración, y acá también deben poder subirlo
-     * Jefatura y Presidencia.
-     */
-    public function subirPdfFirmado(User $user, Resolucion $resolucion): bool
-    {
-        return $user->hasAnyRole(['jefatura', 'secretaria_general', 'presidencia']);
     }
 
     public function restore(User $user, Resolucion $resolucion): bool

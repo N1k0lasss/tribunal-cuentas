@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\AprobacionFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -29,9 +28,10 @@ use Illuminate\Support\Carbon;
  */
 class Aprobacion extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<AprobacionFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $table = 'aprobacions';
 
@@ -99,4 +99,3 @@ class Aprobacion extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

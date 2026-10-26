@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Admin\Resources\Areas\AreaResource;
-use App\Models\Area;
 use App\Models\User;
 
 beforeEach(function () {

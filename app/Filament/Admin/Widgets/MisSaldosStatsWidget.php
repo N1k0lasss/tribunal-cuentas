@@ -36,7 +36,7 @@ class MisSaldosStatsWidget extends BaseWidget
             ->where('anio', $anioActual)
             ->get();
 
-        $diasDisponibles = $saldos->sum(fn($saldo) => $saldo->dias_otorgados - $saldo->dias_usados);
+        $diasDisponibles = $saldos->sum(fn ($saldo) => $saldo->dias_otorgados - $saldo->dias_usados);
 
         // Solicitudes aprobadas del año
         /** @var int $solicitudesAprobadas */
@@ -56,8 +56,8 @@ class MisSaldosStatsWidget extends BaseWidget
         $chartPendientes = $this->getMonthlyChart($agenteId, ['pendiente', 'en_revision']);
 
         return [
-            Stat::make('Días Disponibles', max(0, $diasDisponibles) . ' días')
-                ->description('Saldo para el año ' . $anioActual . ' (Clica para ver desglose)')
+            Stat::make('Días Disponibles', max(0, $diasDisponibles).' días')
+                ->description('Saldo para el año '.$anioActual.' (Clica para ver desglose)')
                 ->descriptionIcon('heroicon-m-chevron-down')
                 ->color('success')
                 ->chart([max(0, $diasDisponibles), max(0, $diasDisponibles)])
@@ -68,7 +68,7 @@ class MisSaldosStatsWidget extends BaseWidget
                 ]),
 
             Stat::make('Solicitudes Aprobadas', $solicitudesAprobadas)
-                ->description('Licencias finalizadas ' . $anioActual . ' (Clica para ver detalle)')
+                ->description('Licencias finalizadas '.$anioActual.' (Clica para ver detalle)')
                 ->descriptionIcon('heroicon-m-chevron-down')
                 ->color('info')
                 ->chart($chartAprobadas)
@@ -106,9 +106,9 @@ class MisSaldosStatsWidget extends BaseWidget
             ->where('anio', (int) date('Y'))
             ->get()
             ->map(fn ($saldo) => [
-                'tipo'        => $saldo->tipo_saldo,
-                'otorgados'   => $saldo->dias_otorgados,
-                'usados'      => $saldo->dias_usados,
+                'tipo' => $saldo->tipo_saldo,
+                'otorgados' => $saldo->dias_otorgados,
+                'usados' => $saldo->dias_usados,
                 'disponibles' => max(0, $saldo->dias_otorgados - $saldo->dias_usados),
             ])
             ->sortByDesc('disponibles')
@@ -144,10 +144,10 @@ class MisSaldosStatsWidget extends BaseWidget
             ->orderByDesc('fecha_inicio')
             ->get()
             ->map(fn ($s) => [
-                'tipo'         => $s->tipoSolicitud?->nombre ?? 'Sin tipo',
+                'tipo' => $s->tipoSolicitud?->nombre ?? 'Sin tipo',
                 'fecha_inicio' => $s->fecha_inicio?->format('d/m/Y') ?? '-',
-                'fecha_fin'    => $s->fecha_fin?->format('d/m/Y') ?? '-',
-                'dias'         => $s->dias_solicitados,
+                'fecha_fin' => $s->fecha_fin?->format('d/m/Y') ?? '-',
+                'dias' => $s->dias_solicitados,
             ])
             ->toArray();
     }
@@ -172,13 +172,11 @@ class MisSaldosStatsWidget extends BaseWidget
     /**
      * Genera datos para mini-chart mensual (últimos 6 meses).
      *
-     * @param int $agenteId
-     * @param string|array $estado
      * @return array<int>
      */
     private function getMonthlyChart(int $agenteId, string|array $estado): array
     {
-        $cacheKey = 'monthly_chart_' . $agenteId . '_' . (is_array($estado) ? implode('_', $estado) : $estado);
+        $cacheKey = 'monthly_chart_'.$agenteId.'_'.(is_array($estado) ? implode('_', $estado) : $estado);
 
         return Cache::remember($cacheKey, 300, function () use ($agenteId, $estado) {
             $data = [];

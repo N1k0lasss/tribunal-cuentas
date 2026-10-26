@@ -27,6 +27,6 @@ class LoginAttemptListener
 
     public static function throttleKey(string $email): string
     {
-        return 'auth:login:' . strtolower($email);
+        return 'auth:login:'.strtolower($email);
     }
 }
