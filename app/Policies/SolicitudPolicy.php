@@ -9,11 +9,16 @@ use Illuminate\Auth\Access\Response;
 class SolicitudPolicy
 {
     /**
-     * Administradores tienen acceso total al recurso.
+     * Administradores tienen acceso total al recurso, excepto crear solicitudes,
+     * aprobar o rechazar.
      */
     public function before(User $user, string $ability): bool|null
     {
         if ($user->hasRole('administrador')) {
+            if (in_array($ability, ['create', 'aprobar', 'rechazar'])) {
+                return false;
+            }
+
             return true;
         }
 
