@@ -5,28 +5,29 @@ namespace App\Filament\Admin\Resources\Solicituds;
 use App\Filament\Admin\Resources\Solicituds\Pages\CreateSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\EditSolicitud;
 use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
-use App\Models\Resolucion;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Services\WorkflowSolicitudesService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\FileUpload;
+use Illuminate\Support\HtmlString;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -38,7 +39,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\HtmlString;
+
 
 class SolicitudResource extends Resource
 {
@@ -60,82 +61,82 @@ class SolicitudResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $user = Auth::user();
+        $user     = Auth::user();
         $esAgente = $user?->hasRole('agente');
 
         return $schema
             ->columns(1)
             ->components([
 
-                // ═══════════════════════════════════════════════════════════
-                // SECCIÓN 1 — Identificación de la Solicitud
-                // Los campos que definen QUÉ se solicita. Van primero.
-                // ═══════════════════════════════════════════════════════════
-                Section::make('Identificación')
-                    ->extraAttributes(['class' => 'custom-section-header'])
-                    ->description('Seleccioná el agente y el tipo de licencia que se tramitará.')
-                    ->icon('heroicon-o-identification')
-                    ->columns(3)
-                    ->schema([
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 1 — Identificación de la Solicitud
+            // Los campos que definen QUÉ se solicita. Van primero.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Identificación')
+                ->extraAttributes(['class' => 'custom-section-header'])
+                ->description('Seleccioná el agente y el tipo de licencia que se tramitará.')
+                ->icon('heroicon-o-identification')
+                ->columns(3)
+                ->schema([
 
-                        Select::make('agente_id')
-                            ->label('Agente')
-                            ->relationship('agente', 'apellido')
-                            ->getOptionLabelFromRecordUsing(
-                                fn ($record) => "{$record->apellido}, {$record->nombre}"
-                            )
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->default(fn () => $esAgente ? $user->agente?->id : null)
-                            ->disabled(fn () => $esAgente)
-                            ->dehydrated()
-                            ->columnSpan(1),
+                    Select::make('agente_id')
+                        ->label('Agente')
+                        ->relationship('agente', 'apellido')
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record) => "{$record->apellido}, {$record->nombre}"
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->default(fn () => $esAgente ? $user->agente?->id : null)
+                        ->disabled(fn () => $esAgente)
+                        ->dehydrated()
+                        ->columnSpan(1),
 
-                        Select::make('categoria')
-                            ->label('Categoría')
-                            ->options([
-                                'Receso' => 'Receso',
-                                'Salud y Maternidad' => 'Salud y Maternidad',
-                                'Extraordinaria' => 'Licencia Extraordinaria',
-                                'Justificación' => 'Justificación',
-                                'Franquicia' => 'Franquicia',
-                                'Falta/Tardanza' => 'Falta/Tardanza',
-                            ])
-                            ->live()
-                            ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
-                            ->dehydrated(false) // Campo de UI auxiliar; no persiste en DB
-                            ->columnSpan(1),
+                    Select::make('categoria')
+                        ->label('Categoría')
+                        ->options([
+                            'Receso'             => 'Receso',
+                            'Salud y Maternidad' => 'Salud y Maternidad',
+                            'Extraordinaria'     => 'Licencia Extraordinaria',
+                            'Justificación'      => 'Justificación',
+                            'Franquicia'         => 'Franquicia',
+                            'Falta/Tardanza'     => 'Falta/Tardanza',
+                        ])
+                        ->live()
+                        ->afterStateUpdated(fn ($set) => $set('tipo_solicitud_id', null))
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->dehydrated(false) // Campo de UI auxiliar; no persiste en DB
+                        ->columnSpan(1),
 
-                        Select::make('tipo_solicitud_id')
-                            ->label('Tipo de Licencia')
-                            ->helperText('El régimen legal determina el cálculo de días y los requisitos.')
-                            ->options(
-                                fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))
-                                    ->pluck('nombre', 'id')
-                            )
-                            ->live()
-                            ->required()
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
-                            ->columnSpan(1),
-                    ]),
+                    Select::make('tipo_solicitud_id')
+                        ->label('Tipo de Licencia')
+                        ->helperText('El régimen legal determina el cálculo de días y los requisitos.')
+                        ->options(
+                            fn ($get) => TipoSolicitud::where('categoria', $get('categoria'))
+                                ->pluck('nombre', 'id')
+                        )
+                        ->live()
+                        ->required()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpan(1),
+                ]),
 
-                // ═══════════════════════════════════════════════════════════
-                // SECCIÓN 2 — Aviso de Documentación Obligatoria (Poka-Yoke)
-                // Aparece ANTES de las fechas para que el operador lo lea
-                // ANTES de continuar, no después de completar todo el form.
-                // ═══════════════════════════════════════════════════════════
-                Section::make('')
-                    ->visible(
-                        fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->requiere_adjunto === true
-                    )
-                    ->schema([
-                        Placeholder::make('requiere_adjunto_info')
-                            ->label('')
-                            ->content(
-                                new HtmlString(
-                                    '<div class="flex items-start gap-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:border-amber-500 dark:bg-amber-950">
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 2 — Aviso de Documentación Obligatoria (Poka-Yoke)
+            // Aparece ANTES de las fechas para que el operador lo lea
+            // ANTES de continuar, no después de completar todo el form.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('')
+                ->visible(
+                    fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->requiere_adjunto === true
+                )
+                ->schema([
+                    Placeholder::make('requiere_adjunto_info')
+                        ->label('')
+                        ->content(
+                            new HtmlString(
+                                '<div class="flex items-start gap-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:border-amber-500 dark:bg-amber-950">
                                     <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.25rem; height: 1.25rem; margin-top: 0.125rem; flex-shrink: 0;" class="text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                                     </svg>
@@ -146,187 +147,184 @@ class SolicitudResource extends Resource
                                         </p>
                                     </div>
                                 </div>'
-                                )
-                            ),
-                        Repeater::make('documentos')
-                            ->relationship('documentos')
-                            ->label('Documentos Adjuntos')
-                            ->schema([
-                                TextInput::make('nombre_archivo')
-                                    ->label('Nombre del Documento')
-                                    ->required()
-                                    ->maxLength(100),
-                                Select::make('tipo_documento')
-                                    ->label('Tipo de Documento')
-                                    ->options([
-                                        'certificado_medico' => 'Certificado Médico',
-                                        'constancia' => 'Constancia / Recibo',
-                                        'historia_clinica' => 'Historia Clínica',
-                                        'otro' => 'Otro',
-                                    ])
-                                    ->required(),
-                                FileUpload::make('ruta')
-                                    ->label('Archivo (PDF o Imagen)')
-                                    ->disk('local')
-                                    ->directory('documentos')
-                                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
-                                    ->maxSize(10240)
-                                    ->required()
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->defaultItems(0)
-                            ->addActionLabel('Añadir Otro Documento'),
-                    ]),
-
-                // ═══════════════════════════════════════════════════════════
-                // SECCIÓN 3 — Período y Duración
-                // Layout de 2 columnas para pares lógicos de campos.
-                // ═══════════════════════════════════════════════════════════
-                Section::make('Período Solicitado')
-                    ->extraAttributes(['class' => 'custom-section-header'])
-                    ->description('Ingresá las fechas y/o horas del período de licencia.')
-                    ->icon('heroicon-o-calendar-days')
-                    ->columns(2)
-                    ->schema([
-
-                        DatePicker::make('fecha_inicio')
-                            ->label(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
-                                    ? 'Fecha de la Franquicia'
-                                    : 'Fecha de Inicio'
                             )
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->required()
-                            ->live()
-                            ->afterStateUpdated(function ($set, $get, $state) {
-                                $set('dias_solicitados', static::calcularDias(
-                                    $get('tipo_solicitud_id'), $state, $get('fecha_fin')
-                                ));
-                            })
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                        ),
+                    Repeater::make('documentos')
+                        ->relationship('documentos')
+                        ->label('Documentos Adjuntos')
+                        ->schema([
+                            TextInput::make('nombre_archivo')
+                                ->label('Nombre del Documento')
+                                ->required(),
+                            Select::make('tipo_documento')
+                                ->label('Tipo de Documento')
+                                ->options([
+                                    'certificado_medico' => 'Certificado Médico',
+                                    'constancia' => 'Constancia / Recibo',
+                                    'historia_clinica' => 'Historia Clínica',
+                                    'otro' => 'Otro',
+                                ])
+                                ->required(),
+                            FileUpload::make('ruta')
+                                ->label('Archivo (PDF o Imagen)')
+                                ->directory('documentos')
+                                ->acceptedFileTypes(['application/pdf', 'image/*'])
+                                ->required()
+                                ->columnSpanFull(),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(0)
+                        ->addActionLabel('Añadir Otro Documento'),
+                ]),
 
-                        DatePicker::make('fecha_fin')
-                            ->label('Fecha de Fin')
-                            ->required(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
-                            )
-                            ->visible(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
-                                    || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
-                            )
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn ($get) => $get('fecha_inicio')) // Poka-Yoke: impide fecha_fin < fecha_inicio
-                            ->live()
-                            ->afterStateUpdated(function ($set, $get, $state) {
-                                $set('dias_solicitados', static::calcularDias(
-                                    $get('tipo_solicitud_id'), $get('fecha_inicio'), $state
-                                ));
-                            })
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 3 — Período y Duración
+            // Layout de 2 columnas para pares lógicos de campos.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Período Solicitado')
+                ->extraAttributes(['class' => 'custom-section-header'])
+                ->description('Ingresá las fechas y/o horas del período de licencia.')
+                ->icon('heroicon-o-calendar-days')
+                ->columns(2)
+                ->schema([
 
-                        // Franquicias: par de horas en 2 columnas
-                        TimePicker::make('hora_inicio')
-                            ->label('Hora de Salida')
-                            ->required(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
-                            )
-                            ->visible(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
-                            )
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    DatePicker::make('fecha_inicio')
+                        ->label(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                                ? 'Fecha de la Franquicia'
+                                : 'Fecha de Inicio'
+                        )
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($set, $get, $state) {
+                            $set('dias_solicitados', static::calcularDias(
+                                $get('tipo_solicitud_id'), $state, $get('fecha_fin')
+                            ));
+                        })
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                        TimePicker::make('hora_fin')
-                            ->label('Hora de Regreso')
-                            ->required(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
-                            )
-                            ->visible(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
-                            )
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
-                        // Campo calculado — diferenciado visualmente del resto
-                        TextInput::make('dias_solicitados')
-                            ->label('Días Solicitados')
-                            ->numeric()
-                            ->readOnly()
-                            ->suffix('días')
-                            ->helperText('Calculado automáticamente según el régimen legal seleccionado.')
-                            ->extraInputAttributes(['class' => 'bg-gray-100 dark:bg-white/5 cursor-not-allowed'])
-                            ->visible(
-                                fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
-                                    || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
-                            ),
-                    ]),
+                    DatePicker::make('fecha_fin')
+                        ->label('Fecha de Fin')
+                        ->required(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                        )
+                        ->visible(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
+                        )
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->minDate(fn ($get) => $get('fecha_inicio')) // Poka-Yoke: impide fecha_fin < fecha_inicio
+                        ->live()
+                        ->afterStateUpdated(function ($set, $get, $state) {
+                            $set('dias_solicitados', static::calcularDias(
+                                $get('tipo_solicitud_id'), $get('fecha_inicio'), $state
+                            ));
+                        })
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                // ═══════════════════════════════════════════════════════════
-                // SECCIÓN 4 — Datos Administrativos
-                // Estado, prórroga y observaciones. Sección de menor urgencia.
-                // ═══════════════════════════════════════════════════════════
-                Section::make('Datos Administrativos')
-                    ->extraAttributes(['class' => 'custom-section-header'])
-                    ->description('Estado del trámite, prórroga y observaciones.')
-                    ->icon('heroicon-o-clipboard-document-list')
-                    ->columns(2)
-                    ->schema([
+                    // Franquicias: par de horas en 2 columnas
+                    TimePicker::make('hora_inicio')
+                        ->label('Hora de Salida')
+                        ->required(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->visible(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                        DatePicker::make('fecha_solicitud')
-                            ->label('Fecha de Solicitud')
-                            ->default(now())
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->required()
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    TimePicker::make('hora_fin')
+                        ->label('Hora de Regreso')
+                        ->required(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->visible(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'horas'
+                        )
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+                    // Campo calculado — diferenciado visualmente del resto
+                    TextInput::make('dias_solicitados')
+                        ->label('Días Solicitados')
+                        ->numeric()
+                        ->readOnly()
+                        ->suffix('días')
+                        ->helperText('Calculado automáticamente según el régimen legal seleccionado.')
+                        ->extraInputAttributes(['class' => 'bg-gray-100 dark:bg-white/5 cursor-not-allowed'])
+                        ->visible(
+                            fn ($get) => static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))?->unidad_medida === 'dias'
+                                || ! static::getTipoSolicitudMemoized($get('tipo_solicitud_id'))
+                        ),
+                ]),
 
-                        // El estado se oculta para agentes; siempre pendiente al crear
-                        Select::make('estado')
-                            ->label('Estado')
-                            ->options([
-                                'pendiente' => 'Pendiente',
-                                'en_revision' => 'En Revisión',
-                                'aprobado' => 'Aprobado',
-                                'rechazado' => 'Rechazado',
-                            ])
-                            ->default('pendiente')
-                            ->required()
-                            ->visible(fn () => ! $esAgente)
-                            // Poka-Yoke: bloquear cambio manual si el flujo ya comenzó
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
+            // ═══════════════════════════════════════════════════════════
+            // SECCIÓN 4 — Datos Administrativos
+            // Estado, prórroga y observaciones. Sección de menor urgencia.
+            // ═══════════════════════════════════════════════════════════
+            Section::make('Datos Administrativos')
+                ->extraAttributes(['class' => 'custom-section-header'])
+                ->description('Estado del trámite, prórroga y observaciones.')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->columns(2)
+                ->schema([
 
-                        // Toggle booleano (reemplaza Select 0/1 que era confuso)
-                        Toggle::make('es_prorroga')
-                            ->label('¿Es prórroga de una solicitud anterior?')
-                            ->default(false)
-                            ->live()
-                            ->dehydrated() // Necesario para que el cast :boolean funcione
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
-                            ->columnSpanFull(),
+                    DatePicker::make('fecha_solicitud')
+                        ->label('Fecha de Solicitud')
+                        ->default(now())
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->required()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                        Select::make('solicitud_origen_id')
-                            ->label('Solicitud Origen (prórroga)')
-                            ->helperText('Seleccioná la solicitud original que se está prorrogando.')
-                            ->relationship('solicitudOrigen', 'id')
-                            ->getOptionLabelFromRecordUsing(
-                                fn (Solicitud $record) => "#{$record->id} — {$record->fecha_inicio?->format('d/m/Y')} al {$record->fecha_fin?->format('d/m/Y')}"
-                            )
-                            ->required(fn ($get) => (bool) $get('es_prorroga'))
-                            ->visible(fn ($get) => (bool) $get('es_prorroga'))
-                            ->searchable()
-                            ->preload()
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
-                            ->columnSpanFull(),
+                    // El estado se oculta para agentes; siempre pendiente al crear
+                    Select::make('estado')
+                        ->label('Estado')
+                        ->options([
+                            'pendiente'   => 'Pendiente',
+                            'en_revision' => 'En Revisión',
+                            'aprobado'    => 'Aprobado',
+                            'rechazado'   => 'Rechazado',
+                        ])
+                        ->default('pendiente')
+                        ->required()
+                        ->visible(fn () => ! $esAgente)
+                        // Poka-Yoke: bloquear cambio manual si el flujo ya comenzó
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo()),
 
-                        Textarea::make('motivo')
-                            ->label('Motivo / Observaciones')
-                            ->helperText('Opcional. Máximo 100 caracteres.')
-                            ->maxLength(100)
-                            ->rows(3)
-                            ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
-                            ->columnSpanFull(),
-                    ]),
-            ]);
+                    // Toggle booleano (reemplaza Select 0/1 que era confuso)
+                    Toggle::make('es_prorroga')
+                        ->label('¿Es prórroga de una solicitud anterior?')
+                        ->default(false)
+                        ->live()
+                        ->dehydrated() // Necesario para que el cast :boolean funcione
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+
+                    Select::make('solicitud_origen_id')
+                        ->label('Solicitud Origen (prórroga)')
+                        ->helperText('Seleccioná la solicitud original que se está prorrogando.')
+                        ->relationship('solicitudOrigen', 'id')
+                        ->getOptionLabelFromRecordUsing(
+                            fn (Solicitud $record) => "#{$record->id} — {$record->fecha_inicio?->format('d/m/Y')} al {$record->fecha_fin?->format('d/m/Y')}"
+                        )
+                        ->required(fn ($get) => (bool) $get('es_prorroga'))
+                        ->visible(fn ($get)  => (bool) $get('es_prorroga'))
+                        ->searchable()
+                        ->preload()
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+
+                    Textarea::make('motivo')
+                        ->label('Motivo / Observaciones')
+                        ->helperText('Opcional. Máximo 100 caracteres.')
+                        ->maxLength(100)
+                        ->rows(3)
+                        ->disabled(fn (?Solicitud $record) => $record?->estaEnFlujo())
+                        ->columnSpanFull(),
+                ]),
+        ]);
     }
 
     // ── Cálculo de días ────────────────────────────────────────
@@ -485,47 +483,6 @@ class SolicitudResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                // ── Sección 2b: Resolución del día ────────────────
-                Section::make('Resolución del día')
-                    ->icon('heroicon-o-document-check')
-                    ->visible(fn (?Solicitud $record): bool => $record !== null
-                        && auth()->user()?->can('viewAny', Resolucion::class)
-                        && $record->resolucionesDiarias()->exists())
-                    ->components([
-                        RepeatableEntry::make('resolucionesDiarias')
-                            ->label('')
-                            ->columns(3)
-                            ->components([
-                                TextEntry::make('numero')
-                                    ->label('Número')
-                                    ->weight('bold')
-                                    ->color('success')
-                                    ->copyable(),
-
-                                TextEntry::make('fecha_emision')
-                                    ->label('Fecha de Emisión')
-                                    ->date('d/m/Y'),
-
-                                TextEntry::make('detalle')
-                                    ->label('Detalle')
-                                    ->default('—'),
-
-                                TextEntry::make('pdf')
-                                    ->label('Resolución')
-                                    ->state('Ver resolución')
-                                    ->url(fn (Resolucion $record): string => route('resolucion.pdf', $record))
-                                    ->openUrlInNewTab(),
-
-                                TextEntry::make('pdf_firmado')
-                                    ->label('PDF firmado')
-                                    ->state(fn (Resolucion $record): string => $record->pdfFirmado ? 'Ver PDF firmado' : 'Pendiente')
-                                    ->url(fn (Resolucion $record): ?string => $record->pdfFirmado
-                                        ? route('documento.ver', $record->pdfFirmado)
-                                        : null)
-                                    ->openUrlInNewTab(),
-                            ]),
-                    ]),
-
                 // ── Sección 3: Documentos Adjuntos ────────────────
                 Section::make('Documentos Adjuntos')
                     ->icon('heroicon-o-paper-clip')
@@ -550,14 +507,10 @@ class SolicitudResource extends Resource
                                     ->label('Previsualización / Archivo')
                                     ->columnSpanFull()
                                     ->icon('heroicon-m-arrow-top-right-on-square')
-                                    ->color(fn ($record): string => $record->archivoExiste() ? 'primary' : 'gray')
+                                    ->color('primary')
                                     ->weight('bold')
-                                    ->formatStateUsing(fn ($record): string => $record->archivoExiste()
-                                        ? 'Abrir Documento Adjunto'
-                                        : 'Archivo no disponible')
-                                    ->url(fn ($record): ?string => $record->archivoExiste()
-                                        ? route('documento.ver', $record->id)
-                                        : null)
+                                    ->formatStateUsing(fn () => 'Abrir Documento Adjunto')
+                                    ->url(fn ($record) => route('documento.ver', $record->id))
                                     ->openUrlInNewTab(),
                             ])
                             ->placeholder('No hay documentos adjuntos.'),
@@ -651,7 +604,6 @@ class SolicitudResource extends Resource
                     ->getStateUsing(function ($record) {
                         $inicio = $record->fecha_inicio ? $record->fecha_inicio->format('d/m/Y') : '-';
                         $fin = $record->fecha_fin ? $record->fecha_fin->format('d/m/Y') : '-';
-
                         return "{$inicio} - {$fin}";
                     })
                     ->description(fn ($record) => $record->dias_solicitados ? "{$record->dias_solicitados} días" : null)
@@ -749,12 +701,6 @@ class SolicitudResource extends Resource
                     ->iconButton()
                     ->tooltip('Editar Solicitud')
                     ->visible(fn (Solicitud $record) => $record->puedeSerEditada()),
-                DeleteAction::make()
-                    ->iconButton()
-                    ->tooltip('Eliminar Solicitud')
-                    ->visible(fn (Solicitud $record): bool => $record->puedeSerEditada()
-                        && ! $record->documentos()->exists()
-                        && Auth::user()?->can('delete', $record)),
 
                 // ── Action: Aprobar ────────────────────────────────
                 Action::make('aprobar')
@@ -767,12 +713,17 @@ class SolicitudResource extends Resource
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
                     ->modalSubmitActionLabel('Confirmar Aprobación')
-                    ->form(static::getAprobarFormSchema())
+                    ->modalSubmitAction(static::modalSubmitActionDocumentoFirmado())
+                    ->modalCancelActionLabel('Cancelar')
+                    ->form(fn (Solicitud $record) => static::getAprobarFormSchema($record))
                     ->action(function (Solicitud $record, array $data) {
                         static::procesarAprobacion(
                             $record,
                             'aprobado',
                             $data['observacion'] ?? null,
+                            $data['numero_resolucion'] ?? null,
+                            $data['documento_firmado'] ?? null,
+                            (bool) ($data['confirmo_documento_integrado'] ?? false),
                         );
 
                         Notification::make()
@@ -809,22 +760,223 @@ class SolicitudResource extends Resource
                             ->send();
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('rechazar', $record)),
+
+                // ── Action: Agregar Resolución ──────────────────────
+                Action::make('agregar_resolucion')
+                    ->label('Agregar Resolución')
+                    ->icon('heroicon-o-document-plus')
+                    ->color('info')
+                    ->iconButton()
+                    ->tooltip('Agregar Resolución')
+                    ->modalHeading('Crear Resolución')
+                    ->form([
+                        TextInput::make('numero')
+                            ->label('Número de Resolución')
+                            ->required()
+                            ->maxLength(255),
+                        DatePicker::make('fecha_emision')
+                            ->label('Fecha de Emisión')
+                            ->default(now())
+                            ->required(),
+                        Textarea::make('detalle')
+                            ->label('Detalle')
+                            ->maxLength(65535)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Solicitud $record, array $data) {
+                        $record->resolucion()->create([
+                            'numero' => $data['numero'],
+                            'fecha_emision' => $data['fecha_emision'],
+                            'detalle' => $data['detalle'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Resolución creada')
+                            ->body("Se ha asociado la resolución N° {$data['numero']} a la solicitud #{$record->id}.")
+                            ->send();
+                    })
+                    ->visible(fn (Solicitud $record) => 
+                        (Auth::user()?->hasRole('secretaria_general') || Auth::user()?->hasRole('administrador'))
+                        && in_array($record->estado, ['aprobado', 'en_revision'])
+                        && ! $record->resolucion()->exists()
+                    ),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->authorizeIndividualRecords('delete'),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
 
-    public static function getAprobarFormSchema(): array
+    public static function getAprobarFormSchema(?Solicitud $record = null): array
     {
-        return [
-            Textarea::make('observacion')
-                ->label('Observación (opcional)')
-                ->maxLength(500),
-        ];
+        $form = [];
+
+        // Se usa un único criterio (la etapa actual) para decidir qué campos de
+        // Secretaría General mostrar, igual que el candado del servidor, de modo
+        // que la interfaz y la validación no puedan quedar desincronizadas.
+        $esSecretaria = $record?->etapaActual() === Solicitud::ETAPA_SECRETARIA;
+
+        // 0) Número de resolución (Secretaría General). Se ubica primero para que
+        //    el número quede incluido en el PDF que la entidad descarga y firma.
+        //
+        //    El número se PERSISTE al salir del campo (onBlur), no al confirmar la
+        //    aprobación: así el PDF se arma siempre desde la base (completo) y no
+        //    desde el estado de Livewire, que podía quedar desincronizado y cortar
+        //    el número (causa del bug "no muestra el número completo").
+        //    Se usa un valor inicial desde la resolución ya guardada, si existe.
+        if ($esSecretaria) {
+            $form[] = TextInput::make('numero_resolucion')
+                ->label('Número de Resolución')
+                ->placeholder('Ej: RESOL-2026-100')
+                ->helperText('Se guarda automáticamente y quedará incluido en el PDF que descargue y firme.')
+                ->required()
+                ->maxLength(255)
+                ->default(fn () => $record?->resolucion?->numero)
+                ->live(onBlur: true)
+                ->afterStateUpdated(function (?string $state, ?Solicitud $record): void {
+                    if ($record === null) {
+                        return;
+                    }
+
+                    $numero = trim((string) $state);
+
+                    if ($numero === '') {
+                        return;
+                    }
+
+                    $record->resolucion()->updateOrCreate(
+                        ['solicitud_id' => $record->id],
+                        [
+                            'numero' => $numero,
+                            'fecha_emision' => $record->resolucion?->fecha_emision ?? now(),
+                            'detalle' => $record->resolucion?->detalle,
+                        ],
+                    );
+
+                    $record->load('resolucion');
+                })
+                ->columnSpanFull();
+        }
+
+        // 1) Documento de la solicitud para descargar y firmar externamente.
+        if ($record !== null) {
+            $form[] = Placeholder::make('solicitud_documento')
+                ->label($esSecretaria ? 'Documento para firmar' : 'Documento de la solicitud')
+                ->columnSpanFull()
+                ->content(function () use ($record, $esSecretaria): HtmlString {
+                    $documentoAnterior = $record->documentoFirmadoVigente();
+
+                    // El número se lee desde la resolución YA PERSISTIDA (no desde el
+                    // estado de Livewire): así el PDF siempre lo trae completo, sin
+                    // depender de la sincronización del formulario.
+                    $numeroResolucion = $record->resolucion?->numero;
+
+                    $query = array_filter([
+                        'solicitud' => $record,
+                        'numero' => filled($numeroResolucion) ? $numeroResolucion : null,
+                    ]);
+
+                    // En Secretaría General se firma un único documento: el PDF de
+                    // la etapa anterior con el número de resolución integrado, de
+                    // modo que el archivo firmado lleve la firma y el número juntos.
+                    if ($esSecretaria) {
+                        return new HtmlString(
+                            '<div style="display:flex;flex-direction:column;gap:10px;">'
+                            .'<span style="font-size:12px;color:#6b7280;">Descargue este documento (ya incluye el número de resolución y la firma de la etapa anterior), fírmelo digitalmente y adjúntelo abajo.</span>'
+                            .sprintf(
+                                '<a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#16a34a;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar documento para firmar (con número integrado)</a>',
+                                e(route('solicitud.pdf.integrado', $query))
+                            )
+                            .'</div>'
+                        );
+                    }
+
+                    $urlSolicitud = route('solicitud.pdf', $query);
+
+                    $boton = <<<'HTML'
+                        <a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#4f46e5;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar solicitud (PDF)</a>
+                    HTML;
+
+                    $html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+                    $html .= '<span style="font-size:12px;color:#6b7280;">Descargue este documento, fírmelo digitalmente en el organismo correspondiente y adjúntelo abajo.</span>';
+                    $html .= sprintf($boton, e($urlSolicitud));
+
+                    if ($documentoAnterior !== null) {
+                        $html .= '<span style="font-size:12px;color:#6b7280;">O descargue la última versión firmada (etapa anterior) si necesita continuar sobre ella:</span>';
+                        $html .= sprintf(
+                            '<a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#0f766e;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar documento firmado anterior</a>',
+                            e(route('documento.ver', $documentoAnterior))
+                        );
+                    }
+
+                    $html .= '</div>';
+
+                    return new HtmlString($html);
+                });
+        }
+
+        // 2) Confirmación explícita de Secretaría General: debe haber descargado
+        //    el documento integrado (con el número de resolución) antes de firmarlo
+        //    y adjuntarlo, para garantizar que el archivo firmado lleve el número.
+        if ($esSecretaria) {
+            $form[] = Checkbox::make('confirmo_documento_integrado')
+                ->label('Confirmo que descargué el documento integrado con el número de resolución, lo firmé digitalmente y lo adjunto abajo.')
+                ->accepted()
+                ->validationMessages([
+                    'accepted' => 'Debe confirmar que descargó el documento integrado con el número de resolución y lo firmó antes de aprobar.',
+                ])
+                ->columnSpanFull();
+        }
+
+        $form[] = FileUpload::make('documento_firmado')
+            ->label('Documento firmado digitalmente')
+            ->helperText('Adjunte el PDF de la solicitud con la firma digital de la entidad correspondiente. Es obligatorio para poder aprobar.')
+            ->required()
+            ->acceptedFileTypes(['application/pdf', 'image/*'])
+            ->directory('documentos/firmados')
+            ->disk('local')
+            ->live()
+            ->columnSpanFull();
+
+        $form[] = Textarea::make('observacion')
+            ->label('Observación (opcional)')
+            ->maxLength(500);
+
+        return $form;
+    }
+
+    /**
+     * Configuración del botón "Confirmar" del modal de aprobación:
+     * permanece deshabilitado hasta que se adjunte el documento firmado y,
+     * en Secretaría General, hasta confirmar la descarga del documento integrado.
+     */
+    public static function modalSubmitActionDocumentoFirmado(): \Closure
+    {
+        return function (Action $action, $livewire): Action {
+            return $action->disabled(function () use ($livewire): bool {
+                // Los datos del formulario del modal se persisten en
+                // mountedActions.{index}.data, propiedad pública del componente Livewire.
+                $mountedAction = collect($livewire?->mountedActions ?? [])->last();
+                $data = data_get($mountedAction, 'data');
+                $data = is_array($data) ? $data : [];
+
+                // Siempre se exige el documento firmado.
+                if (blank($data['documento_firmado'] ?? null)) {
+                    return true;
+                }
+
+                // En Secretaría General el formulario incluye la confirmación de
+                // descarga del documento integrado: también debe estar marcada.
+                if (array_key_exists('confirmo_documento_integrado', $data)
+                    && ! ($data['confirmo_documento_integrado'] ?? false)) {
+                    return true;
+                }
+
+                return false;
+            });
+        };
     }
 
     // ── Lógica de Aprobación / Rechazo ─────────────────────────
@@ -832,9 +984,11 @@ class SolicitudResource extends Resource
     /**
      * Adaptador de la capa Filament: resuelve el usuario autenticado y delega el
      * procesamiento de la aprobación en WorkflowSolicitudesService, donde vive la
-     * lógica de negocio (validaciones y resolución de la etapa).
+     * lógica de negocio (validaciones, resolución y documento firmado).
+     *
+     * @param  string|array<int, string>|null  $documentoFirmado
      */
-    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion = null): void
+    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion = null, ?string $numeroResolucion = null, string|array|null $documentoFirmado = null, bool $confirmoDocumentoIntegrado = false): void
     {
         $user = Auth::user();
 
@@ -847,6 +1001,9 @@ class SolicitudResource extends Resource
             $user,
             $estado,
             $observacion,
+            $numeroResolucion,
+            $documentoFirmado,
+            $confirmoDocumentoIntegrado,
         );
     }
 
@@ -963,7 +1120,6 @@ class SolicitudResource extends Resource
         if ($id && ! isset($cache[$id])) {
             $cache[$id] = TipoSolicitud::find($id);
         }
-
         return $cache[$id] ?? null;
     }
 }
