@@ -43,6 +43,19 @@ class AgentesTable
                 TextColumn::make('situacion_revista')
                     ->label('Situación de Revista')
                     ->searchable(),
+                TextColumn::make('estado_legajo')
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => match (true) {
+                        $state === null => 'Sin datos',
+                        (int) $state === 1 => 'Activo',
+                        default => 'Baja',
+                    })
+                    ->color(fn ($state): string => match (true) {
+                        $state === null => 'gray',
+                        (int) $state === 1 => 'success',
+                        default => 'danger',
+                    }),
                 TextColumn::make('area.nombre')
                     ->label('Área')
                     ->icon('heroicon-o-building-office')
@@ -54,6 +67,7 @@ class AgentesTable
                     ->date('d/m/Y')
                     ->sortable()
                     ->description(fn($record) => $record->fecha_ingreso?->diffForHumans() ?? null)
+                    ->placeholder('—')
                     ->color('gray'),
                 TextColumn::make('created_at')
                     ->label('Creado')
@@ -82,6 +96,12 @@ class AgentesTable
                     ->relationship('area', 'nombre')
                     ->searchable()
                     ->preload(),
+                SelectFilter::make('estado_legajo')
+                    ->label('Estado del legajo')
+                    ->options([
+                        1 => 'Activo',
+                        0 => 'Baja',
+                    ]),
             ])
             ->defaultSort('apellido', 'asc')
             ->recordActions([

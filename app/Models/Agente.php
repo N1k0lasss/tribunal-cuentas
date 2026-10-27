@@ -22,6 +22,9 @@ use Illuminate\Support\Carbon;
  * @property string $dni
  * @property string|null $cargo
  * @property string|null $situacion_revista
+ * @property int|null $estado_legajo
+ * @property Carbon|null $fecha_baja
+ * @property string|null $motivo_baja
  * @property int $area_id
  * @property Carbon $fecha_ingreso
  * @property Carbon|null $created_at
@@ -53,6 +56,9 @@ class Agente extends Model
         'dni',
         'cargo',
         'situacion_revista',
+        'estado_legajo',
+        'fecha_baja',
+        'motivo_baja',
         'area_id',
         'fecha_ingreso',
         'user_id',
@@ -67,6 +73,8 @@ class Agente extends Model
     {
         return [
             'fecha_ingreso' => 'date',
+            'fecha_baja' => 'date',
+            'estado_legajo' => 'integer',
         ];
     }
 
@@ -130,6 +138,16 @@ class Agente extends Model
         return $this->hasMany(InformeDiarioDetalle::class, 'agente_id');
     }
 
+    /**
+     * Indica si el legajo del agente figura dado de baja en el Sistema de
+     * Legajos (`estado_legajo` = 0). Devuelve `false` cuando todavía no se
+     * importó el estado (`null`), para no marcar como baja a quien no se sabe.
+     */
+    public function estaDeBaja(): bool
+    {
+        return $this->estado_legajo === 0;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -138,4 +156,3 @@ class Agente extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

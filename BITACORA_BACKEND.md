@@ -187,9 +187,12 @@ Mockery               → Mocking en tests
 │ apellido                         │
 │ dni (único)                      │
 │ cargo                            │
-│ tipo_contrato                    │
+│ situacion_revista                │
 │ area_id (FK)                     │
 │ fecha_ingreso                    │
+│ estado_legajo                    │
+│ fecha_baja                       │
+│ motivo_baja                      │
 │ created_at / updated_at          │
 └──────────────────────────────────┘
     │ OneToMany    OneToMany
@@ -1206,6 +1209,84 @@ Cache::remember("saldo_agente_{$agente_id}",
 3. **Mobile App:** Aprobaciones desde teléfono
 4. **Analytics Avanzado:** Dashboard de tendencias
 5. **Machine Learning:** Predicción de congestión de solicitudes
+
+---
+
+## 🔌 INTEGRACIÓN API DE LEGAJOS (Fase 1: solo lectura)
+
+**Fecha:** 7 de octubre de 2026 — ver `integracion-legajos-api.md`
+
+### Endpoints verificados en vivo (`https://10.0.7.6`)
+
+| Prueba | Resultado |
+|---|---|
+| `GET /api/personas` | 200 — listado completo de personas |
+| `GET /api/legajos/por-dni/{dni}` (con legajo) | 200 — `persona` + `legajo[]` |
+| `GET /api/legajos/por-dni/{dni}` (persona inexistente) | 404 `Persona no encontrado.` |
+| Token inválido o ausente | 401 `Unauthenticated.` |
+
+**Configuración:** `.env` → `LEGAJOS_API_URL`, `LEGAJOS_API_TOKEN`, `LEGAJOS_API_VERIFY_SSL=false` (certificado autofirmado), `LEGAJOS_API_TIMEOUT=10` (respuesta colgada) y `LEGAJOS_API_CONNECT_TIMEOUT=3` (host caído); expuesto en `config/services.php → legajos`.
+
+### Desviaciones respecto del documento (todas normalizadas en el servicio)
+
+1. **`apellido`**: el documento original indicaba que `por-dni` no lo traía; desde el 13/10/2026 la API **sí lo devuelve**, así que se usa directamente (si faltara, cae al apellido del listado `GET /api/personas`).
+2. **`legajo` llega como lista**, no como objeto → se toma el primer elemento.
+3. **Sin legajo activo responde 200 con `"legajo": []`** en vez del 404 documentado → se maneja como `con_legajo_activo: false`.
+4. **`fecha_de_ingreso` llega con hora** (`2015-03-01 00:00:00`) → se normaliza a `Y-m-d`.
+5. **`tipo_contrato` pasó de código (0/1/2) a texto** (`"Funcionario"`, `"Locación"`, `"Permanente"`) → el sync acepta ambas formas.
+6. **`baja`**: `{motivo, fecha_baja}` o `null` (no documentado). `estado` 1/0 es el estado del legajo (0 = baja).
+7. **`GET /api/personas` devuelve `is_active: false`** de significado desconocido (ignora `per_page`, `page`, `updated_since`, `dni`) → pendiente de preguntar a Legajos.
+8. El `POST /api/legajos/{id}/licencias` (§3.2) **no existe aún**: es la fase 2 (no se envían licencias).
+
+### Archivos de la integración
+
+- `app/Services/LegajoApiService.php` — cliente GET con memoria corta (30 s las respuestas, 10 s los errores) y `connectTimeout`/`timeout` separados + reintentos; manejo de 404/401; expone `datosBasicos()`, `fechaIngreso()`, `antiguedadEnMeses()/antiguedadEnAnios()` y `listarPersonas()` (`GET /api/personas`, usada por el sync; es la única que trae `apellido`). Los fallos de red se traducen a un mensaje genérico y el detalle técnico (URL/curl) queda en `laravel.log` y en `LegajoApiException::detalle()`.
+- `app/Exceptions/LegajoApiException.php` — `getMessage()` apto para el usuario (sin datos internos) + `detalle()` con la información técnica para logs y el comando `legajos:sync`.
+- `app/Filament/.../AgenteInfolist.php` — sección "Datos del Legajo (en vivo)" de solo lectura (n° legajo, categoría, cargo, área, fecha de ingreso, antigüedad, estado, baja, CUIL, email).
+- `app/Services/CumplimientoLegalService.php` — `validarAntiguedad()` ahora toma la fecha de ingreso **del legajo por API** (fuente de verdad) y cae a la fecha local de `agentes` si la API está caída, el DNI no existe o no hay legajo activo. También se corrigió el mensaje de error: Carbon 3 devuelve `diffInMonths()` como `float` y se mostraba `139.21245774047 meses` (ahora se trunca a meses enteros). Se agregó `validarEstadoLegajo()` (API primero, `estado_legajo` local como respaldo; si no se puede determinar, **no bloquea**), todavía **dormido** (ver más abajo).
+- `phpunit.xml` — `LEGAJOS_API_URL`/`TOKEN` vacíos en testing: los validadores caen al respaldo local al instante, sin llamadas de red.
+- `tests/Feature/CumplimientoLegalAntiguedadTest.php` — 5 tests: API caída → local; API manda sobre lo local (ambos sentidos); 404 → local; `legajo: []` → local.
+
+### Carga inicial de agentes: `php artisan legajos:sync`
+
+**Problema detectado (07/10/2026):** la lista de Agentes lee de la tabla local `agentes`, que solo tenía 6 registros (5 de `TestWorkflowSeeder` + 1 real). **29 de las 30 personas de la API no aparecían** — incluida la de DNI 22456700 — porque nunca se hizo la carga inicial: la integración solo consultaba la API "en vivo" al abrir la ficha, y para abrir una ficha el agente tiene que existir localmente.
+
+**Solución:** comando idempotente `legajos:sync` (`app/Console/Commands/SyncLegajosCommand.php`) que trae `GET /api/personas` + `GET /api/legajos/por-dni/{dni}` por cada persona y hace `updateOrCreate` por DNI:
+
+- Importa `nombre`, `apellido` (del listado: por-dni no lo trae), `cargo`, `area_id`, `fecha_ingreso`, `situacion_revista`, `estado_legajo`, `fecha_baja` y `motivo_baja`.
+- **Áreas mapeadas por nombre** (`Area::firstOrCreate`); sin legajo activo va a un área placeholder **"Sin asignar"**. No hay tabla de equivalencias entre áreas locales y del legajo.
+- **`situacion_revista`** se importa de `tipo_contrato`: la API lo envía como **texto** (`"Funcionario"`, `"Locación"`, `"Permanente"`); se admite también el código numérico viejo (0/1/2). Un valor desconocido deja la situación vacía y el comando lo avisa.
+- **Nombre del campo vs. valor (aclaración explícita):** `tipo_contrato` es el nombre que usa el Sistema de Legajos y **no se usa como tal** del lado local; nosotros ya representamos ese dato como `situacion_revista`. El valor se persiste **tal cual lo envía la API** (`"Permanente"`, `"Locación"`, `"Funcionario"`), **sin traducirlo** a las etiquetas que aparecen en seeders/factories (`"Planta Permanente"`, `"Contrato de Locación"`, etc.). Es decir, `etiquetaTipoContrato()` funciona como un **pasamanos** del texto de la API, no como un traductor a un catálogo local.
+- **Bajas:** `estado` 0 = dado de baja. Esos agentes **se importan igual** (para poder verlos) pero marcados con `estado_legajo = 0`, `fecha_baja` y `motivo_baja`; en la tabla de Agentes se distinguen con un badge **Activo/Baja** y hay un filtro por estado.
+- Opción `--dni=` para sincronizar un solo DNI.
+- Migración `2026_10_07_100000_make_fecha_ingreso_nullable_in_agentes_table`: `agentes.fecha_ingreso` pasa a **nullable** porque las personas sin legajo activo no traen fecha (quedan como simple referencia de identidad, §2.1). En consecuencia, `fecha_ingreso` dejó de ser obligatoria en `AgenteForm`.
+- Migración `2026_06_02_000001_rename_tipo_contrato_to_situacion_revista_in_agentes_table`: renombra la columna `agentes.tipo_contrato` → `agentes.situacion_revista`. Es la base de esquema sobre la que escribe el mapeo de arriba (el `tipo_contrato` de la API se persiste en `situacion_revista`); está fechada 2026_06_02, **previa a la integración**, que la aprovecha.
+- Migración `2026_10_13_100000_add_estado_legajo_to_agentes_table`: agrega `estado_legajo`, `fecha_baja` y `motivo_baja` (ver correcciones del 13/10 más abajo).
+
+**Resultado de la primera corrida (07/10/2026):** 30 personas → **29 creados, 1 actualizado, 0 errores**; 6 sin legajo activo (22456700, 26345678, 23456789, 22987321, 24123890, 21345678). Total local: 35 agentes, 15 áreas, **0 DNIs de la API faltantes**. Tests: `tests/Feature/LegajosSyncCommandTest.php`.
+
+### Correcciones del 13/10/2026 (mapeo, bajas y cuelgue de la ficha)
+
+1. **Bug de mapeo arreglado:** la API pasó a enviar `tipo_contrato` como texto, pero el comando lo casteaba con `(int)` → **todos quedaban como "Funcionario"**. Ahora acepta texto (y el código numérico viejo como respaldo).
+2. **Bajas respetadas:** se agregaron las columnas `estado_legajo`, `fecha_baja` y `motivo_baja` (migración `2026_10_13_100000_add_estado_legajo_to_agentes_table`). El sync marca las bajas en vez de tratarlas como activas. Distribución local tras la corrida: 25 activos y **5 bajas** (26345678 Coronel Jorge Luis / Despido, 23456789 Acuña Ricardo Daniel / Vencimiento, 22987321 Romano Yolanda del Valle / Renuncia, 24123890 Ibarra Rosa Mabel / Traslado, 21345678 Herrera Ramón Alberto / Jubilación). Los 5 agentes de seed (`11111111`, `22222222`, `33333333`, `44444444`, `99999999`) no vienen de la API y quedan con estado vacío.
+3. **Cuelgue de la ficha (30 s) corregido:** con la API caída, la ficha consultaba **una vez por campo** (10+ llamadas), cada una con reintentos × timeout, y PHP cortaba a los 30 s. Ahora el servicio **memoriza también los errores** durante 10 s (así la ficha golpea la API una sola vez por render) y el cliente usa `connectTimeout = 3` + `timeout = 10`.
+4. **`validarEstadoLegajo()`** agregado a `CumplimientoLegalService` (consulta el estado en vivo, cae a `agente.estado_legajo`, y **no bloquea** si no se puede determinar). Sigue **dormido**: no se cableó `InteractsWithWorkflowRules` en `Solicitud` (misma decisión del 07/10).
+5. Tests nuevos: `tests/Feature/CumplimientoLegalEstadoLegajoTest.php` (5) y un caso de baja en `LegajosSyncCommandTest` (7 en total).
+6. **Mensaje de error saneado (no filtra infraestructura):** cuando la API no responde, el aviso de la ficha mostraba el mensaje crudo de la excepción de red, que incluye la URL interna, la IP `10.0.7.6` y el DNI consultado (p. ej. `cURL error 28 ... for https://10.0.7.6/api/legajos/por-dni/30111222`). Ahora:
+   - `LegajoApiException::getMessage()` entrega un texto apto para el usuario: *"No se pudo consultar la API de Legajos. Vuelva a intentar en unos minutos."* (sin URL, sin IP, sin DNI); los mensajes de 401 y 5xx también se reformularon.
+   - El detalle técnico (URL, error de curl, código HTTP) se guarda en `LegajoApiException::detalle()`, **se registra en `laravel.log`** (`Log::warning`) y lo muestra el comando `legajos:sync` (uso admin). La ficha, en cambio, muestra solo el mensaje limpio.
+   - `AgenteInfolist` ya no antepone el prefijo "No se pudo consultar la API de Legajos:" (evitaba la duplicación del texto).
+   - Tests nuevos: `tests/Feature/LegajoApiServiceTest.php` (2) que verifican que el mensaje **no** contiene `https://`, el host ni el DNI, y que el detalle queda a salvo.
+
+> Pendiente (decisión conjunta del §2.1): definir si el `legajos:sync` corre periódicamente (cron) o solo cargas manuales puntuales.
+
+### ⚠️ Hallazgo: validaciones de creación sin cablear
+
+El trait `app/Models/Concerns/InteractsWithWorkflowRules` invoca `CumplimientoLegalService::validarCreacion()` (rango de fechas, duración máxima, saldo, prórroga, **antigüedad**) desde el evento `creating` de `Solicitud`, pero **el trait no está aplicado en el modelo `Solicitud`**: hoy esas validaciones no se ejecutan en ningún flujo. **Decisión (07/10/2026): se deja sin cablear por ahora** para no activar de golpe toda la cadena (afectaría solicitudes de prueba y tests existentes). Queda documentado para una fase posterior.
+
+### Estado de la suite (13/10/2026)
+
+57 tests en verde (los 48 previos + 6 tests de la integración de estado/baja + 2 de saneo del mensaje de error + 1 preexistente). **14 fallos preexistentes y ajenos a la integración**: todos devuelven 403 en tests de páginas Filament (`AgenteResource`, `AreaResource`, `DocumentoResource`, `ResolucionResource`, `SaldoResource`, `TipoSolicitudResource`) porque `User::factory()` no asigna rol y las policies exigen `administrador`/`secretaria_general`/`presidencia`.
 
 ---
 

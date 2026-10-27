@@ -26,8 +26,10 @@ class AgenteForm
                     ->searchable()
                     ->preload()
                     ->required(),
+                // Nullable: los agentes sincronizados sin legajo activo en la
+                // API de Legajos no tienen fecha de ingreso que traer.
                 DatePicker::make('fecha_ingreso')
-                    ->required(),
+                    ->helperText('Vacío si el agente no tiene legajo activo en el Sistema de Legajos.'),
             ]);
     }
 }

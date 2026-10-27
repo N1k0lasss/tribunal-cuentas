@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    /*
+    | API del Sistema de Legajos (fuente de verdad de los datos del agente).
+    | Ver integracion-legajos-api.md.
+    */
+    'legajos' => [
+        'url' => env('LEGAJOS_API_URL'),
+        'token' => env('LEGAJOS_API_TOKEN'),
+        // false: el servidor de Legajos usa certificado autofirmado.
+        'verify' => env('LEGAJOS_API_VERIFY_SSL', true),
+        'timeout' => env('LEGAJOS_API_TIMEOUT', 10),
+        // Acota el caso "host caído" (no llega a establecer conexión).
+        'connect_timeout' => env('LEGAJOS_API_CONNECT_TIMEOUT', 3),
+    ],
+
 ];
