@@ -14,6 +14,10 @@ class AprobacionPolicy
     public function before(User $user, string $ability): bool|null
     {
         if ($user->hasRole('administrador')) {
+            if (in_array($ability, ['create'])) {
+                return false;
+            }
+
             return true;
         }
 
