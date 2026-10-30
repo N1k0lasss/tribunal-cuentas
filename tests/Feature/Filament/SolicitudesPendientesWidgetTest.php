@@ -42,7 +42,7 @@ it('carga el widget de pendientes y aprueba desde la acción rápida', function 
         ->mountAction(TestAction::make('aprobar')->table($solicitud))
         ->setActionData([
             'observacion' => 'Aprobado desde el dashboard',
-            'documento_firmado' => 'documentos/firmados/test.pdf',
+            'documento_firmado' => ['documentos/firmados/test.pdf'],
         ])
         ->callMountedAction();
 
