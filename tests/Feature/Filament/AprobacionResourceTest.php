@@ -20,8 +20,8 @@ it('can render Aprobacions list page', function () {
 });
 
 it('cannot access Aprobacions create page', function () {
-    get(AprobacionResource::getUrl('create'))
-        ->assertForbidden();
+    get(AprobacionResource::getUrl('index').'/create')
+        ->assertNotFound();
 });
 
 it('cannot access Aprobacions edit page for unowned record', function () {
