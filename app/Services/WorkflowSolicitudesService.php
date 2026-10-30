@@ -205,14 +205,16 @@ class WorkflowSolicitudesService
             default => $aprobacion->etapa,
         };
 
-        $solicitud->documentos()->create([
-            'aprobacion_id' => $aprobacion->id,
-            'agente_id' => $actor->agente?->id,
-            'tipo_documento' => Documento::TIPO_SOLICITUD_FIRMADA,
-            'nombre_archivo' => "Solicitud {$solicitud->id} firmada - {$etapaLabel}",
-            'ruta' => $ruta,
-            'descripcion' => "Documento firmado digitalmente en la etapa {$etapaLabel}.",
-        ]);
+        Documento::conPermisoDocumentoSistema(function () use ($solicitud, $aprobacion, $ruta, $actor, $etapaLabel): void {
+            $solicitud->documentos()->create([
+                'aprobacion_id' => $aprobacion->id,
+                'agente_id' => $actor->agente?->id,
+                'tipo_documento' => Documento::TIPO_SOLICITUD_FIRMADA,
+                'nombre_archivo' => "Solicitud {$solicitud->id} firmada - {$etapaLabel}",
+                'ruta' => $ruta,
+                'descripcion' => "Documento firmado digitalmente en la etapa {$etapaLabel}.",
+            ]);
+        });
     }
 
     private function notificarAprobacionSaludYMaternidad(Solicitud $solicitud): void
