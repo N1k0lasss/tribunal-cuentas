@@ -41,6 +41,12 @@ class InformeDiarioPage extends Page
 
     public ?string $filtroNovedad = null;
 
+    public ?string $ultimaSincronizacion = null;
+
+    public bool $mostrarModalExportar = false;
+
+    public array $resumenExportacion = [];
+
     public function mount(): void
     {
         $this->fecha = date('Y-m-d');
@@ -60,6 +66,11 @@ class InformeDiarioPage extends Page
         $this->cargarInforme();
     }
 
+    public function esFechaFutura(): bool
+    {
+        return Carbon::parse($this->fecha)->isAfter(Carbon::today());
+    }
+
     public function cargarInforme(): void
     {
         if (empty($this->fecha)) {
@@ -73,6 +84,7 @@ class InformeDiarioPage extends Page
         if ($informe) {
             $this->observacionesGenerales = $informe->observaciones_generales ?? '';
             $this->destinatario = $informe->destinatario ?? 'Secretaría General';
+            $this->ultimaSincronizacion = $informe->updated_at?->format('d/m/Y H:i');
 
             $existingDetalles = $informe->detalles->keyBy('agente_id');
             $allAgentes = Agente::with('area')->orderBy('apellido')->orderBy('nombre')->get();
@@ -103,12 +115,23 @@ class InformeDiarioPage extends Page
         } else {
             $this->observacionesGenerales = '';
             $this->destinatario = 'Secretaría General';
+            $this->ultimaSincronizacion = null;
             $this->sincronizarAgentesYLicencias();
         }
     }
 
     public function sincronizarAgentesYLicencias(): void
     {
+        if ($this->esFechaFutura()) {
+            Notification::make()
+                ->title('Acceso denegado')
+                ->body('No es posible sincronizar licencias para fechas futuras.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $allAgentes = Agente::with('area')->orderBy('apellido')->orderBy('nombre')->get();
         $fechaCarbon = Carbon::parse($this->fecha);
 
@@ -211,6 +234,16 @@ class InformeDiarioPage extends Page
 
     public function guardarInforme(): void
     {
+        if ($this->esFechaFutura()) {
+            Notification::make()
+                ->title('Acceso denegado')
+                ->body('No es posible guardar o modificar el informe para fechas futuras.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         if (! $this->esAdmin()) {
             Notification::make()
                 ->title('Acceso denegado')
@@ -247,11 +280,98 @@ class InformeDiarioPage extends Page
             );
         }
 
+        $informeRefrescado = InformeDiario::whereDate('fecha', $this->fecha)->first();
+        $this->ultimaSincronizacion = $informeRefrescado?->updated_at?->format('d/m/Y H:i');
+
         Notification::make()
             ->title('Informe Diario Guardado')
             ->body('Las novedades del '.Carbon::parse($this->fecha)->format('d/m/Y').' se guardaron correctamente.')
             ->success()
             ->send();
+    }
+
+    public function prepararExportacion(): void
+    {
+        $cantidades = [
+            'presente' => 0,
+            'licencia' => 0,
+            'falta_justificada' => 0,
+            'ausente_sin_aviso' => 0,
+            'tardanza' => 0,
+        ];
+
+        foreach ($this->detalles as $det) {
+            $tipo = $det['tipo_novedad'] ?? 'presente';
+            if (isset($cantidades[$tipo])) {
+                $cantidades[$tipo]++;
+            }
+        }
+
+        $this->resumenExportacion = $cantidades;
+        $this->mostrarModalExportar = true;
+    }
+
+    public function confirmarExportarPdf()
+    {
+        $this->mostrarModalExportar = false;
+
+        if ($this->esFechaFutura()) {
+            Notification::make()
+                ->title('Acceso denegado')
+                ->body('No es posible generar o modificar el informe para fechas futuras.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if ($this->esAdmin()) {
+            $this->guardarInforme();
+        }
+
+        $cantidades = [
+            'presente' => 0,
+            'licencia' => 0,
+            'falta_justificada' => 0,
+            'ausente_sin_aviso' => 0,
+            'tardanza' => 0,
+        ];
+
+        $labels = [
+            'presente' => 'Presente',
+            'licencia' => 'Licencia',
+            'falta_justificada' => 'Falta Justificada',
+            'ausente_sin_aviso' => 'Ausente sin Aviso',
+            'tardanza' => 'Tardanza',
+        ];
+
+        $detallesProcesados = [];
+        foreach ($this->detalles as $det) {
+            $tipo = $det['tipo_novedad'] ?? 'presente';
+            if (isset($cantidades[$tipo])) {
+                $cantidades[$tipo]++;
+            }
+
+            $detallesProcesados[] = array_merge($det, [
+                'tipo_novedad_label' => $labels[$tipo] ?? $tipo,
+            ]);
+        }
+
+        $pdf = Pdf::loadView('filament.admin.pages.informe-diario-pdf', [
+            'fecha' => $this->fecha,
+            'fechaFormatted' => Carbon::parse($this->fecha)->format('d/m/Y'),
+            'usuarioNombre' => auth()->user()?->name ?? 'Administrador',
+            'destinatario' => $this->destinatario,
+            'observacionesGenerales' => $this->observacionesGenerales,
+            'totalAgentes' => count($this->detalles),
+            'cantidades' => $cantidades,
+            'detalles' => $detallesProcesados,
+        ]);
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            'Informe_Diario_Novedades_'.$this->fecha.'.pdf'
+        );
     }
 
     public function exportarPdf()
@@ -327,33 +447,6 @@ class InformeDiarioPage extends Page
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('sincronizar')
-                ->label('Sincronizar Licencias')
-                ->icon('heroicon-o-arrow-path')
-                ->color('info')
-                ->visible(fn () => $this->esAdmin())
-                ->action(function () {
-                    $this->sincronizarAgentesYLicencias();
-                    Notification::make()
-                        ->title('Licencias Sincronizadas')
-                        ->body('Se cargaron las licencias aprobadas del día '.Carbon::parse($this->fecha)->format('d/m/Y'))
-                        ->info()
-                        ->send();
-                }),
-
-            Action::make('guardar')
-                ->label('Guardar Informe')
-                ->icon('heroicon-o-check')
-                ->color('success')
-                ->visible(fn () => $this->esAdmin())
-                ->action(fn () => $this->guardarInforme()),
-
-            Action::make('exportar_pdf')
-                ->label('Exportar PDF (Sec. General)')
-                ->icon('heroicon-o-arrow-down-tray')
-                ->color('primary')
-                ->action(fn () => $this->exportarPdf()),
-        ];
+        return [];
     }
 }

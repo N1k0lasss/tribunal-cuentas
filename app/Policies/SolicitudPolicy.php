@@ -8,11 +8,16 @@ use App\Models\User;
 class SolicitudPolicy
 {
     /**
-     * Administradores tienen acceso total al recurso.
+     * Administradores tienen acceso total al recurso, excepto crear solicitudes,
+     * aprobar o rechazar.
      */
     public function before(User $user, string $ability, Solicitud|string|null $solicitud = null): ?bool
     {
         if ($user->hasRole('administrador')) {
+            if (in_array($ability, ['create', 'aprobar', 'rechazar'], true)) {
+                return false;
+            }
+
             if (in_array($ability, ['delete', 'forceDelete'], true)
                 && $solicitud instanceof Solicitud
                 && $solicitud->documentos()->exists()) {

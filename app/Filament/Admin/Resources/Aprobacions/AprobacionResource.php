@@ -154,7 +154,6 @@ class AprobacionResource extends Resource
     {
         return [
             'index' => Pages\ListAprobacions::route('/'),
-            'create' => Pages\CreateAprobacion::route('/create'),
             'edit' => Pages\EditAprobacion::route('/{record}/edit'),
         ];
     }
