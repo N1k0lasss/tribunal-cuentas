@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\SolicitudFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property int $dias_solicitados
  * @property string|null $motivo
  * @property string $estado
+ * @property Carbon|null $fecha_aprobacion
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Agente $agente
@@ -36,20 +37,26 @@ use Illuminate\Support\Carbon;
  */
 class Solicitud extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<SolicitudFactory> */
     use HasFactory;
 
+    use LogsActivity;
+
     // ── Estados del workflow ────────────────────────────────────
     public const ESTADO_PENDIENTE = 'pendiente';
+
     public const ESTADO_EN_REVISION = 'en_revision';
+
     public const ESTADO_APROBADO = 'aprobado';
+
     public const ESTADO_RECHAZADO = 'rechazado';
 
     // ── Etapas de aprobación (valores del enum en la DB) ───────
     // Nota: 'direccion' en la DB representa "Presidencia" en el negocio.
     public const ETAPA_JEFATURA = 'jefatura';
+
     public const ETAPA_SECRETARIA = 'secretaria';
+
     public const ETAPA_DIRECCION = 'direccion'; // = Presidencia
 
     /**
@@ -172,6 +179,7 @@ class Solicitud extends Model
         'horas_solicitadas',
         'motivo',
         'estado',
+        'fecha_aprobacion',
     ];
 
     /**
@@ -186,6 +194,7 @@ class Solicitud extends Model
             'fecha_inicio' => 'date',
             'fecha_fin' => 'date',
             'dias_solicitados' => 'integer',
+            'fecha_aprobacion' => 'date',
         ];
     }
 
@@ -235,6 +244,18 @@ class Solicitud extends Model
     }
 
     /**
+     * Resoluciones diarias que incluyen esta solicitud.
+     *
+     * @return BelongsToMany<Resolucion, $this>
+     */
+    public function resolucionesDiarias(): BelongsToMany
+    {
+        return $this->belongsToMany(Resolucion::class, 'resolucion_solicitud')
+            ->withTimestamps()
+            ->with('pdfFirmado');
+    }
+
+    /**
      * Get the documentos for the solicitud.
      *
      * @return HasMany<Documento, $this>
@@ -242,6 +263,37 @@ class Solicitud extends Model
     public function documentos(): HasMany
     {
         return $this->hasMany(Documento::class);
+    }
+
+    /**
+     * Documento de la solicitud firmado digitalmente más reciente.
+     *
+     * En el circuito acumulativo, cada entidad descarga la última versión
+     * firmada (la de la etapa anterior), la firma y sube la nueva versión.
+     */
+    public function documentoFirmadoVigente(): ?Documento
+    {
+        return $this->documentos()
+            ->where('tipo_documento', Documento::TIPO_SOLICITUD_FIRMADA)
+            ->latest('id')
+            ->first();
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Solicitud $solicitud): void {
+            if ($solicitud->isDirty('estado')
+                && $solicitud->estado === self::ESTADO_APROBADO
+                && $solicitud->fecha_aprobacion === null) {
+                $solicitud->fecha_aprobacion = now(config('app.business_timezone'))->toDateString();
+            }
+        });
+
+        static::deleting(function (Solicitud $solicitud): void {
+            if ($solicitud->documentos()->exists()) {
+                throw new \DomainException('No se puede eliminar una solicitud con documentos adjuntos.');
+            }
+        });
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -252,4 +304,3 @@ class Solicitud extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

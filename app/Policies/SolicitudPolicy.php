@@ -4,16 +4,26 @@ namespace App\Policies;
 
 use App\Models\Solicitud;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class SolicitudPolicy
 {
     /**
-     * Administradores tienen acceso total al recurso.
+     * Administradores tienen acceso total al recurso, excepto crear solicitudes,
+     * aprobar o rechazar.
      */
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability, Solicitud|string|null $solicitud = null): ?bool
     {
         if ($user->hasRole('administrador')) {
+            if (in_array($ability, ['create', 'aprobar', 'rechazar'], true)) {
+                return false;
+            }
+
+            if (in_array($ability, ['delete', 'forceDelete'], true)
+                && $solicitud instanceof Solicitud
+                && $solicitud->documentos()->exists()) {
+                return false;
+            }
+
             return true;
         }
 
@@ -50,6 +60,7 @@ class SolicitudPolicy
     {
         return $user->hasRole('agente');
     }
+
     /**
      * Un agente solo puede editar su solicitud si todavía está en estado "pendiente".
      * Una vez que entra al flujo de aprobación, nadie puede editar la solicitud.
@@ -69,6 +80,10 @@ class SolicitudPolicy
     public function delete(User $user, Solicitud $solicitud): bool
     {
         if (! $solicitud->puedeSerEditada()) {
+            return false;
+        }
+
+        if ($solicitud->documentos()->exists()) {
             return false;
         }
 

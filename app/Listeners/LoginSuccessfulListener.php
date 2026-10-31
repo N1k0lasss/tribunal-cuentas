@@ -2,7 +2,6 @@
 
 namespace App\Listeners;
 
-use App\Listeners\LoginAttemptListener;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiter;
 

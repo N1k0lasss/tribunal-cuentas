@@ -25,4 +25,15 @@ class ResolucionFactory extends Factory
             'solicitud_id' => Solicitud::factory(),
         ];
     }
+
+    /**
+     * Resolución diaria que agrupa varias licencias.
+     */
+    public function daily(): static
+    {
+        return $this->state(fn (): array => [
+            'solicitud_id' => null,
+            'fecha_emision' => today(config('app.business_timezone'))->toDateString(),
+        ]);
+    }
 }

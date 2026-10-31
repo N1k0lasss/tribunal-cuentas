@@ -36,5 +36,6 @@
         <env name="LEGAJOS_API_TOKEN" value="token-de-prueba"/>
         <env name="LEGAJOS_API_VERIFY_SSL" value="false"/>
         <env name="LEGAJOS_API_RETRIES" value="1"/>
+        <env name="LEGAJOS_API_CONNECT_TIMEOUT" value="3"/>
     </php>
 </phpunit>

@@ -12,7 +12,7 @@ class ProximaFechaWidget extends Widget
 
     protected string $view = 'filament.admin.widgets.proxima-fecha-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function getNextHoliday()
     {
@@ -30,6 +30,7 @@ class ProximaFechaWidget extends Widget
                     $fechaProxima->addYear();
                 }
                 $f->computed_proxima_fecha = $fechaProxima;
+
                 return $f;
             })
             ->filter(fn ($f) => $f->computed_proxima_fecha->gte($today))

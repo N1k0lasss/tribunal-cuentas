@@ -1,9 +1,13 @@
 <?php
 
+use App\Filament\Admin\Resources\Solicituds\Pages\ListSolicituds;
 use App\Filament\Admin\Resources\Solicituds\SolicitudResource;
 use App\Models\Agente;
+use App\Models\Resolucion;
 use App\Models\Solicitud;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -72,4 +76,25 @@ it('blocks create page for non-agente role', function () {
     $this->actingAs($user)
         ->get(SolicitudResource::getUrl('create'))
         ->assertForbidden();
+});
+
+it('muestra la resolución del día en el detalle de la solicitud', function () {
+    $user = User::factory()->create();
+    $user->assignRole('administrador');
+
+    $this->actingAs($user);
+
+    $resolucion = Resolucion::factory()->daily()->create([
+        'numero' => 'RES-DIA-001',
+    ]);
+
+    $solicitud = Solicitud::factory()->create([
+        'estado' => Solicitud::ESTADO_APROBADO,
+    ]);
+
+    $resolucion->solicitudes()->attach($solicitud);
+
+    Livewire::test(ListSolicituds::class)
+        ->mountAction(TestAction::make('view')->table($solicitud))
+        ->assertMountedActionModalSee('RES-DIA-001');
 });

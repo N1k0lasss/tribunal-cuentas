@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\TipoSolicitudFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -26,9 +25,10 @@ use Illuminate\Support\Carbon;
  */
 class TipoSolicitud extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<TipoSolicitudFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $table = 'tipo_solicituds';
 
@@ -48,7 +48,7 @@ class TipoSolicitud extends Model
         'requiere_intervencion_medica',
         'limite_mensual_dias_horas',
         'antiguedad_minima_meses',
-        'requiere_adjunto'
+        'requiere_adjunto',
     ];
 
     /**
@@ -86,4 +86,3 @@ class TipoSolicitud extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

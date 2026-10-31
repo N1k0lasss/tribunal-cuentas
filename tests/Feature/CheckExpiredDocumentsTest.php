@@ -5,7 +5,6 @@ use App\Models\Documento;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Models\User;
-use App\Models\WorkflowEvento;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -41,10 +40,10 @@ it('sends database notification on creation of solicitud without required docume
         ->first();
 
     expect($notification)->not->toBeNull();
-    
+
     $notificationData = json_decode($notification->data, true);
     expect($notificationData['title'])->toBe('Documentación pendiente');
-    expect($notificationData['body'])->toContain("Dispone de un plazo de 72 horas para adjuntar la documentación");
+    expect($notificationData['body'])->toContain('Dispone de un plazo de 72 horas para adjuntar la documentación');
 });
 
 it('sends warning notification when 24h remain and rejects when 72h pass', function () {
@@ -107,7 +106,7 @@ it('sends warning notification when 24h remain and rejects when 72h pass', funct
 
     expect($notification24h)->not->toBeNull();
     $notifData = json_decode($notification24h->data, true);
-    expect($notifData['body'])->toContain("Le quedan menos de 24 horas para adjuntar la documentación");
+    expect($notifData['body'])->toContain('Le quedan menos de 24 horas para adjuntar la documentación');
 
     // Verificar que no envíe notificación duplicada al volver a correr
     $this->artisan('app:check-expired-documents')
@@ -120,4 +119,34 @@ it('sends warning notification when 24h remain and rejects when 72h pass', funct
         ->count();
 
     expect($notifCount)->toBe(1); // Mantiene solo una notificación
+});
+
+it('rechaza solicitudes cuyos documentos no tienen archivo físico', function () {
+    $adminUser = User::factory()->create();
+    $adminUser->assignRole('administrador');
+    Agente::factory()->create(['user_id' => $adminUser->id]);
+
+    $tipoConAdjunto = TipoSolicitud::factory()->create([
+        'requiere_adjunto' => true,
+    ]);
+
+    $agenteSolicitante = Agente::factory()->create();
+
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agenteSolicitante->id,
+        'tipo_solicitud_id' => $tipoConAdjunto->id,
+        'estado' => Solicitud::ESTADO_PENDIENTE,
+    ]);
+
+    Documento::factory()->create([
+        'solicitud_id' => $solicitud->id,
+        'ruta' => 'documentos/no-existe.pdf',
+    ]);
+
+    $solicitud->forceFill(['created_at' => now()->subHours(73)])->saveQuietly();
+
+    $this->artisan('app:check-expired-documents')
+        ->assertSuccessful();
+
+    expect($solicitud->refresh()->estado)->toBe(Solicitud::ESTADO_RECHAZADO);
 });

@@ -50,9 +50,9 @@
         border-bottom: none !important;
     }
     .fi-topbar > nav {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-        min-height: 6rem !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+        min-height: 5rem !important;
     }
     
     /* Asegurar que los íconos y texto del header sean blancos o legibles */
@@ -80,12 +80,84 @@
     html.dark .fi-theme-switcher-btn:hover svg {
         color: #e5e7eb !important;
     }
-    /* Menú lateral (Sidebar) - Hover en tono azul */
-    .fi-sidebar-item-button:hover {
-        background-color: rgba(26, 54, 93, 0.08) !important; /* Tono Navy claro */
+    /* Menú lateral (Sidebar) - Azul Marino (#1A365D) con texto, íconos y logo en blanco */
+    .fi-sidebar,
+    .fi-sidebar .fi-sidebar-nav,
+    .fi-sidebar .fi-sidebar-header,
+    .fi-sidebar-nav-groups {
+        background-color: #1A365D !important;
     }
-    .dark .fi-sidebar-item-button:hover {
-        background-color: rgba(26, 54, 93, 0.3) !important; /* Tono Navy para modo oscuro */
+
+    .fi-sidebar {
+        border-right: none !important;
+        border-radius: 0 1rem 1rem 0 !important;
+        overflow: hidden;
+        margin: 0.75rem 0 0.75rem 0 !important;
+        height: calc(100vh - 1.5rem) !important;
+    }
+
+    .fi-layout {
+        padding-left: 0 !important;
+    }
+
+    .fi-sidebar-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 0 1rem 0 0 !important;
+    }
+
+    .fi-sidebar-nav {
+        border-radius: 0 0 1rem 0 !important;
+    }
+
+    .fi-sidebar-group-label {
+        color: rgba(255, 255, 255, 0.75) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+    }
+
+    .fi-sidebar-item-button {
+        color: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .fi-sidebar-item-icon,
+    .fi-sidebar-item-label {
+        color: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .fi-sidebar-item-button:hover {
+        background-color: rgba(255, 255, 255, 0.14) !important;
+    }
+
+    .fi-sidebar-item-button:hover .fi-sidebar-item-icon,
+    .fi-sidebar-item-button:hover .fi-sidebar-item-label {
+        color: #ffffff !important;
+    }
+
+    .fi-sidebar-item.fi-active .fi-sidebar-item-button {
+        background-color: rgba(209, 213, 219, 0.95) !important;
+        box-shadow: inset 3px 0 0 #1A365D;
+    }
+
+    .fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+    .fi-sidebar-item.fi-active .fi-sidebar-item-label {
+        color: #1f2937 !important;
+        font-weight: 600;
+    }
+
+    .fi-sidebar-toggle,
+    .fi-sidebar-close-button {
+        color: #ffffff !important;
+    }
+
+    .fi-sidebar-toggle:hover,
+    .fi-sidebar-close-button:hover {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    .fi-sidebar-header .fi-logo img,
+    .fi-sidebar .fi-logo img {
+        filter: brightness(0) invert(1);
     }
 
     /* Agrandar el avatar/círculo de perfil del usuario en el header */
@@ -96,8 +168,8 @@
 
     /* Asegurar que la imagen del logo no se desborde y mantenga la proporción */
     .fi-logo img {
-        height: 6rem !important;
-        max-height: 6rem !important;
+        height: 4.5rem !important;
+        max-height: 4.5rem !important;
         width: auto !important;
         object-fit: contain !important;
     }

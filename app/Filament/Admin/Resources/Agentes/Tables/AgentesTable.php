@@ -2,9 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Agentes\Tables;
 
-use Filament\Actions\BulkActionGroup;
+use App\Models\Agente;
 use Filament\Actions\DeleteBulkAction;
-
 use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
@@ -25,7 +24,7 @@ class AgentesTable
                     ->weight(FontWeight::SemiBold),
                 TextColumn::make('apellido')
                     ->label('Agente')
-                    ->formatStateUsing(fn($record) => "{$record->nombre} {$record->apellido}")
+                    ->formatStateUsing(fn ($record) => "{$record->nombre} {$record->apellido}")
                     ->searchable(['apellido', 'nombre'])
                     ->sortable()
                     ->weight(FontWeight::SemiBold)
@@ -36,6 +35,7 @@ class AgentesTable
                         if (! $state) {
                             return '—';
                         }
+
                         return number_format((int) $state, 0, '', '.');
                     })
                     ->searchable()
@@ -49,6 +49,19 @@ class AgentesTable
                 TextColumn::make('situacion_revista')
                     ->label('Situación de Revista')
                     ->searchable(),
+                TextColumn::make('estado_legajo')
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => match (true) {
+                        $state === null => 'Sin datos',
+                        (int) $state === 1 => 'Activo',
+                        default => 'Baja',
+                    })
+                    ->color(fn ($state): string => match (true) {
+                        $state === null => 'gray',
+                        (int) $state === 1 => 'success',
+                        default => 'danger',
+                    }),
                 TextColumn::make('area.nombre')
                     ->label('Área')
                     ->icon('heroicon-o-building-office')
@@ -60,6 +73,7 @@ class AgentesTable
                     ->date('d/m/Y')
                     ->sortable()
                     ->description(fn($record) => $record->fecha_ingreso?->diffForHumans() ?? null)
+                    ->placeholder('—')
                     ->color('gray'),
                 TextColumn::make('created_at')
                     ->label('Creado')
@@ -76,7 +90,7 @@ class AgentesTable
                 SelectFilter::make('situacion_revista')
                     ->label('Situación de Revista')
                     ->options(function () {
-                        return \App\Models\Agente::query()
+                        return Agente::query()
                             ->distinct()
                             /** @phpstan-ignore-next-line */
                             ->whereNotNull('situacion_revista')
@@ -88,6 +102,12 @@ class AgentesTable
                     ->relationship('area', 'nombre')
                     ->searchable()
                     ->preload(),
+                SelectFilter::make('estado_legajo')
+                    ->label('Estado del legajo')
+                    ->options([
+                        1 => 'Activo',
+                        0 => 'Baja',
+                    ]),
             ])
             ->defaultSort('apellido', 'asc')
             ->recordActions([

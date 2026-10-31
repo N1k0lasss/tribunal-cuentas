@@ -3,12 +3,17 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\ActivityResource\Pages;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\User;
+use Carbon\Carbon;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Schemas\Schema;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityResource extends Resource
 {
@@ -17,9 +22,9 @@ class ActivityResource extends Resource
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?string $navigationLabel = 'Auditoría';
-    
+
     protected static ?string $modelLabel = 'Registro de Auditoría';
-    
+
     protected static ?string $pluralModelLabel = 'Registros de Auditoría';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
@@ -83,18 +88,19 @@ class ActivityResource extends Resource
                     ]),
                 Tables\Filters\SelectFilter::make('causer_id')
                     ->label('Usuario')
-                    ->options(fn () => \App\Models\User::pluck('name', 'id')->toArray())
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->options(fn () => User::pluck('name', 'id')->toArray())
+                    ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
                             return $query;
                         }
-                        return $query->where('causer_type', \App\Models\User::class)
-                                     ->where('causer_id', $data['value']);
+
+                        return $query->where('causer_type', User::class)
+                            ->where('causer_id', $data['value']);
                     })
                     ->searchable(),
                 Tables\Filters\SelectFilter::make('description')
                     ->label('Acción')
-                    ->options(fn () => \Spatie\Activitylog\Models\Activity::query()
+                    ->options(fn () => Activity::query()
                         ->select('description')
                         ->distinct()
                         ->pluck('description', 'description')
@@ -103,35 +109,36 @@ class ActivityResource extends Resource
                     ->searchable(),
                 Tables\Filters\Filter::make('created_at')
                     ->form([
-                        \Filament\Forms\Components\DatePicker::make('desde')
+                        DatePicker::make('desde')
                             ->label('Desde'),
-                        \Filament\Forms\Components\DatePicker::make('hasta')
+                        DatePicker::make('hasta')
                             ->label('Hasta'),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['desde'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             )
                             ->when(
                                 $data['hasta'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['desde'] ?? null) {
-                            $indicators[] = 'Desde: ' . \Carbon\Carbon::parse($data['desde'])->format('d/m/Y');
+                            $indicators[] = 'Desde: '.Carbon::parse($data['desde'])->format('d/m/Y');
                         }
                         if ($data['hasta'] ?? null) {
-                            $indicators[] = 'Hasta: ' . \Carbon\Carbon::parse($data['hasta'])->format('d/m/Y');
+                            $indicators[] = 'Hasta: '.Carbon::parse($data['hasta'])->format('d/m/Y');
                         }
+
                         return $indicators;
                     }),
             ])
             ->actions([
-                \Filament\Actions\ViewAction::make(),
+                ViewAction::make(),
             ])
             ->bulkActions([
                 // \Filament\Actions\DeleteBulkAction::make(), // No delete for audit logs

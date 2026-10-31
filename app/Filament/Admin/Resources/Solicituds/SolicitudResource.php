@@ -14,6 +14,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -38,6 +39,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+
 
 class SolicitudResource extends Resource
 {
@@ -454,7 +456,34 @@ class SolicitudResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                // ── Sección 2: Documentos Adjuntos ────────────────
+                // ── Sección 2: Resolución ─────────────────────────
+                Section::make('Resolución')
+                    ->icon('heroicon-o-document-check')
+                    ->visible(fn (?Solicitud $record): bool => (bool) $record?->resolucion()?->exists())
+                    ->components([
+                        Grid::make(2)
+                            ->components([
+                                TextEntry::make('resolucion.numero')
+                                    ->label('Número de Resolución')
+                                    ->icon('heroicon-m-document-check')
+                                    ->weight('bold')
+                                    ->color('success')
+                                    ->copyable()
+                                    ->default('—'),
+
+                                TextEntry::make('resolucion.fecha_emision')
+                                    ->label('Fecha de Emisión')
+                                    ->icon('heroicon-m-calendar')
+                                    ->date('d/m/Y')
+                                    ->default('—'),
+                            ]),
+                        TextEntry::make('resolucion.detalle')
+                            ->label('Detalle')
+                            ->default('—')
+                            ->columnSpanFull(),
+                    ]),
+
+                // ── Sección 3: Documentos Adjuntos ────────────────
                 Section::make('Documentos Adjuntos')
                     ->icon('heroicon-o-paper-clip')
                     ->collapsible()
@@ -487,7 +516,7 @@ class SolicitudResource extends Resource
                             ->placeholder('No hay documentos adjuntos.'),
                     ]),
 
-                // ── Sección 3: Historial de Aprobaciones ──────────
+                // ── Sección 4: Historial de Aprobaciones ──────────
                 Section::make('Historial de Aprobaciones')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->collapsible()
@@ -684,6 +713,7 @@ class SolicitudResource extends Resource
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription(fn (Solicitud $record) => 'Está a punto de aprobar esta solicitud en la etapa de '.($etapaLabels[$record->etapaActual()] ?? 'desconocida').'.')
                     ->modalSubmitActionLabel('Confirmar Aprobación')
+                    ->modalSubmitAction(static::modalSubmitActionDocumentoFirmado())
                     ->modalCancelActionLabel('Cancelar')
                     ->form(fn (Solicitud $record) => static::getAprobarFormSchema($record))
                     ->action(function (Solicitud $record, array $data) {
@@ -691,7 +721,9 @@ class SolicitudResource extends Resource
                             $record,
                             'aprobado',
                             $data['observacion'] ?? null,
-                            $data['numero_resolucion'] ?? null
+                            $data['numero_resolucion'] ?? null,
+                            $data['documento_firmado'] ?? null,
+                            (bool) ($data['confirmo_documento_integrado'] ?? false),
                         );
 
                         Notification::make()
@@ -780,16 +812,133 @@ class SolicitudResource extends Resource
     public static function getAprobarFormSchema(?Solicitud $record = null): array
     {
         $form = [];
-        $user = Auth::user();
-        $isSecretariaStage = $record?->etapaActual() === 'secretaria';
 
-        if ($user?->hasRole('secretaria_general') || ($isSecretariaStage && $user?->hasRole('administrador'))) {
+        // Se usa un único criterio (la etapa actual) para decidir qué campos de
+        // Secretaría General mostrar, igual que el candado del servidor, de modo
+        // que la interfaz y la validación no puedan quedar desincronizadas.
+        $esSecretaria = $record?->etapaActual() === Solicitud::ETAPA_SECRETARIA;
+
+        // 0) Número de resolución (Secretaría General). Se ubica primero para que
+        //    el número quede incluido en el PDF que la entidad descarga y firma.
+        //
+        //    El número se PERSISTE al salir del campo (onBlur), no al confirmar la
+        //    aprobación: así el PDF se arma siempre desde la base (completo) y no
+        //    desde el estado de Livewire, que podía quedar desincronizado y cortar
+        //    el número (causa del bug "no muestra el número completo").
+        //    Se usa un valor inicial desde la resolución ya guardada, si existe.
+        if ($esSecretaria) {
             $form[] = TextInput::make('numero_resolucion')
                 ->label('Número de Resolución')
                 ->placeholder('Ej: RESOL-2026-100')
+                ->helperText('Se guarda automáticamente y quedará incluido en el PDF que descargue y firme.')
                 ->required()
-                ->maxLength(255);
+                ->maxLength(255)
+                ->default(fn () => $record?->resolucion?->numero)
+                ->live(onBlur: true)
+                ->afterStateUpdated(function (?string $state, ?Solicitud $record): void {
+                    if ($record === null) {
+                        return;
+                    }
+
+                    $numero = trim((string) $state);
+
+                    if ($numero === '') {
+                        return;
+                    }
+
+                    $record->resolucion()->updateOrCreate(
+                        ['solicitud_id' => $record->id],
+                        [
+                            'numero' => $numero,
+                            'fecha_emision' => $record->resolucion?->fecha_emision ?? now(),
+                            'detalle' => $record->resolucion?->detalle,
+                        ],
+                    );
+
+                    $record->load('resolucion');
+                })
+                ->columnSpanFull();
         }
+
+        // 1) Documento de la solicitud para descargar y firmar externamente.
+        if ($record !== null) {
+            $form[] = Placeholder::make('solicitud_documento')
+                ->label($esSecretaria ? 'Documento para firmar' : 'Documento de la solicitud')
+                ->columnSpanFull()
+                ->content(function () use ($record, $esSecretaria): HtmlString {
+                    $documentoAnterior = $record->documentoFirmadoVigente();
+
+                    // El número se lee desde la resolución YA PERSISTIDA (no desde el
+                    // estado de Livewire): así el PDF siempre lo trae completo, sin
+                    // depender de la sincronización del formulario.
+                    $numeroResolucion = $record->resolucion?->numero;
+
+                    $query = array_filter([
+                        'solicitud' => $record,
+                        'numero' => filled($numeroResolucion) ? $numeroResolucion : null,
+                    ]);
+
+                    // En Secretaría General se firma un único documento: el PDF de
+                    // la etapa anterior con el número de resolución integrado, de
+                    // modo que el archivo firmado lleve la firma y el número juntos.
+                    if ($esSecretaria) {
+                        return new HtmlString(
+                            '<div style="display:flex;flex-direction:column;gap:10px;">'
+                            .'<span style="font-size:12px;color:#6b7280;">Descargue este documento (ya incluye el número de resolución y la firma de la etapa anterior), fírmelo digitalmente y adjúntelo abajo.</span>'
+                            .sprintf(
+                                '<a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#16a34a;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar documento para firmar (con número integrado)</a>',
+                                e(route('solicitud.pdf.integrado', $query))
+                            )
+                            .'</div>'
+                        );
+                    }
+
+                    $urlSolicitud = route('solicitud.pdf', $query);
+
+                    $boton = <<<'HTML'
+                        <a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#4f46e5;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar solicitud (PDF)</a>
+                    HTML;
+
+                    $html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+                    $html .= '<span style="font-size:12px;color:#6b7280;">Descargue este documento, fírmelo digitalmente en el organismo correspondiente y adjúntelo abajo.</span>';
+                    $html .= sprintf($boton, e($urlSolicitud));
+
+                    if ($documentoAnterior !== null) {
+                        $html .= '<span style="font-size:12px;color:#6b7280;">O descargue la última versión firmada (etapa anterior) si necesita continuar sobre ella:</span>';
+                        $html .= sprintf(
+                            '<a href="%s" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:#0f766e;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;">&#8681; Descargar documento firmado anterior</a>',
+                            e(route('documento.ver', $documentoAnterior))
+                        );
+                    }
+
+                    $html .= '</div>';
+
+                    return new HtmlString($html);
+                });
+        }
+
+        // 2) Confirmación explícita de Secretaría General: debe haber descargado
+        //    el documento integrado (con el número de resolución) antes de firmarlo
+        //    y adjuntarlo, para garantizar que el archivo firmado lleve el número.
+        if ($esSecretaria) {
+            $form[] = Checkbox::make('confirmo_documento_integrado')
+                ->label('Confirmo que descargué el documento integrado con el número de resolución, lo firmé digitalmente y lo adjunto abajo.')
+                ->accepted()
+                ->validationMessages([
+                    'accepted' => 'Debe confirmar que descargó el documento integrado con el número de resolución y lo firmó antes de aprobar.',
+                ])
+                ->columnSpanFull();
+        }
+
+        $form[] = FileUpload::make('documento_firmado')
+            ->label('Documento firmado digitalmente')
+            ->helperText('Adjunte el PDF de la solicitud con la firma digital de la entidad correspondiente. Es obligatorio para poder aprobar.')
+            ->required()
+            ->acceptedFileTypes(['application/pdf', 'image/*'])
+            ->directory('documentos/firmados')
+            ->disk('local')
+            ->live()
+            ->columnSpanFull();
 
         $form[] = Textarea::make('observacion')
             ->label('Observación (opcional)')
@@ -798,9 +947,48 @@ class SolicitudResource extends Resource
         return $form;
     }
 
+    /**
+     * Configuración del botón "Confirmar" del modal de aprobación:
+     * permanece deshabilitado hasta que se adjunte el documento firmado y,
+     * en Secretaría General, hasta confirmar la descarga del documento integrado.
+     */
+    public static function modalSubmitActionDocumentoFirmado(): \Closure
+    {
+        return function (Action $action, $livewire): Action {
+            return $action->disabled(function () use ($livewire): bool {
+                // Los datos del formulario del modal se persisten en
+                // mountedActions.{index}.data, propiedad pública del componente Livewire.
+                $mountedAction = collect($livewire?->mountedActions ?? [])->last();
+                $data = data_get($mountedAction, 'data');
+                $data = is_array($data) ? $data : [];
+
+                // Siempre se exige el documento firmado.
+                if (blank($data['documento_firmado'] ?? null)) {
+                    return true;
+                }
+
+                // En Secretaría General el formulario incluye la confirmación de
+                // descarga del documento integrado: también debe estar marcada.
+                if (array_key_exists('confirmo_documento_integrado', $data)
+                    && ! ($data['confirmo_documento_integrado'] ?? false)) {
+                    return true;
+                }
+
+                return false;
+            });
+        };
+    }
+
     // ── Lógica de Aprobación / Rechazo ─────────────────────────
 
-    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion, ?string $numeroResolucion = null): void
+    /**
+     * Adaptador de la capa Filament: resuelve el usuario autenticado y delega el
+     * procesamiento de la aprobación en WorkflowSolicitudesService, donde vive la
+     * lógica de negocio (validaciones, resolución y documento firmado).
+     *
+     * @param  string|array<int, string>|null  $documentoFirmado
+     */
+    public static function procesarAprobacion(Solicitud $record, string $estado, ?string $observacion = null, ?string $numeroResolucion = null, string|array|null $documentoFirmado = null, bool $confirmoDocumentoIntegrado = false): void
     {
         $user = Auth::user();
 
@@ -808,22 +996,15 @@ class SolicitudResource extends Resource
             return;
         }
 
-        /** @var WorkflowSolicitudesService $workflow */
-        $workflow = app(WorkflowSolicitudesService::class);
-        $workflow->resolver($record, $user, $estado, $observacion);
-
-        if ($numeroResolucion) {
-            $record->resolucion()->updateOrCreate(
-                ['solicitud_id' => $record->id],
-                [
-                    'numero' => $numeroResolucion,
-                    'fecha_emision' => now(),
-                    'detalle' => 'Creada automáticamente al aprobar la solicitud.',
-                ]
-            );
-        }
-
-        $record->load('aprobaciones');
+        app(WorkflowSolicitudesService::class)->procesarAprobacion(
+            $record,
+            $user,
+            $estado,
+            $observacion,
+            $numeroResolucion,
+            $documentoFirmado,
+            $confirmoDocumentoIntegrado,
+        );
     }
 
     private static function etapaLabel(Solicitud $record): string

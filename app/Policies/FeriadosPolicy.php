@@ -4,11 +4,10 @@ namespace App\Policies;
 
 use App\Models\Feriados;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class FeriadosPolicy
 {
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->hasRole('administrador')) {
             return true;

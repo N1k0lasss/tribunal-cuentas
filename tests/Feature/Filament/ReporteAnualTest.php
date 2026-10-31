@@ -2,8 +2,8 @@
 
 use App\Filament\Admin\Pages\ReporteAnual;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     // Asegurar que los roles existen

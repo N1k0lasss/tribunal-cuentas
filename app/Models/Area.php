@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Database\Factories\AreaFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -22,9 +21,10 @@ use Illuminate\Support\Carbon;
  */
 class Area extends Model
 {
-    use LogsActivity;
     /** @use HasFactory<AreaFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -53,4 +53,3 @@ class Area extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

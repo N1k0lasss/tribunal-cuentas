@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -30,8 +29,8 @@ use Illuminate\Support\Carbon;
  */
 class FirmaDigital extends Model
 {
-    use LogsActivity;
     use HasFactory;
+    use LogsActivity;
 
     protected $table = 'firmas_digitales';
 
@@ -119,4 +118,3 @@ class FirmaDigital extends Model
             ->dontSubmitEmptyLogs();
     }
 }
-

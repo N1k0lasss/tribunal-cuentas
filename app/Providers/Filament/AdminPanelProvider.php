@@ -2,25 +2,32 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Widgets\AgenteInfoWidget;
+use App\Filament\Admin\Widgets\LicenseStatsWidget;
+use App\Filament\Admin\Widgets\MisSaldosStatsWidget;
+use App\Filament\Admin\Widgets\ProximaFechaWidget;
+use App\Filament\Admin\Widgets\SolicitudesPendientesWidget;
+use App\Filament\Admin\Widgets\UsoLicenciasChartWidget;
+use App\Http\Middleware\BlockOutsideWorkingHours;
+use App\Http\Middleware\SessionTimeout;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
+// use Filament\Widgets\AccountWidget;
+// use Filament\Widgets\FilamentInfoWidget;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Widgets\AccountWidget;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\Widget;
-use Filament\Widgets\FilamentInfoWidget;
-use Filament\Support\Facades\FilamentColor;
 use Filament\View\PanelsRenderHook;
-//use Filament\Widgets\AccountWidget;
-//use Filament\Widgets\FilamentInfoWidget;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
@@ -42,7 +49,8 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => view('filament.admin.logo'))
             ->brandLogoHeight('6rem')
             ->sidebarCollapsibleOnDesktop()
-            ->databaseNotifications()
+            ->globalSearch(false)
+            // ->databaseNotifications()
             ->colors([
                 'primary' => Color::Hex('#1A365D'), // Navy
                 'secondary' => Color::Hex('#6B1C5E'), // Bordeaux
@@ -75,14 +83,14 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                \App\Filament\Admin\Widgets\AgenteInfoWidget::class,
-                \App\Filament\Admin\Widgets\MisSaldosStatsWidget::class,
-                \App\Filament\Admin\Widgets\LicenseStatsWidget::class,
-                \App\Filament\Admin\Widgets\SolicitudesPendientesWidget::class,
-                \App\Filament\Admin\Widgets\UsoLicenciasChartWidget::class,
-                \App\Filament\Admin\Widgets\ProximaFechaWidget::class,
-                //AccountWidget::class,
-                //FilamentInfoWidget::class,
+                AgenteInfoWidget::class,
+                MisSaldosStatsWidget::class,
+                LicenseStatsWidget::class,
+                SolicitudesPendientesWidget::class,
+                UsoLicenciasChartWidget::class,
+                ProximaFechaWidget::class,
+                // AccountWidget::class,
+                // FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -94,8 +102,11 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\SessionTimeout::class,
-                \Illuminate\Routing\Middleware\ThrottleRequests::class . ':20,1',
+                // Necesario acá además del grupo web de bootstrap/app.php: las
+                // rutas del panel usan esta lista propia de Filament, no el
+                // grupo web (que sí cubre /livewire/update).
+                SessionTimeout::class,
+                ThrottleRequests::class.':20,1',
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,

@@ -3,29 +3,25 @@
 namespace App\Filament\Admin\Resources\Aprobacions;
 
 use App\Models\Aprobacion;
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
-use Filament\Actions\BulkAction;
-use Filament\Tables\Grouping\Group;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 use Illuminate\Contracts\Support\Htmlable;
-use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
+
 class AprobacionResource extends Resource
 {
     protected static ?string $model = Aprobacion::class;
@@ -40,7 +36,7 @@ class AprobacionResource extends Resource
 
     protected static ?string $modelLabel = 'Aprobación';
 
-    public static function getNavigationIcon(): string | BackedEnum | Htmlable | null
+    public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return 'heroicon-o-check-badge';
     }
@@ -158,7 +154,6 @@ class AprobacionResource extends Resource
     {
         return [
             'index' => Pages\ListAprobacions::route('/'),
-            'create' => Pages\CreateAprobacion::route('/create'),
             'edit' => Pages\EditAprobacion::route('/{record}/edit'),
         ];
     }

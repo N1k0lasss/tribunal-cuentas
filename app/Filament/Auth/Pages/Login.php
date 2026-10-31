@@ -3,6 +3,7 @@
 namespace App\Filament\Auth\Pages;
 
 use App\Listeners\LoginAttemptListener;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Contracts\Support\Htmlable;
@@ -20,7 +21,7 @@ class Login extends BaseLogin
         return 'Tribunal de Cuentas de Santiago del Estero';
     }
 
-    public function authenticate(): ?\Filament\Auth\Http\Responses\Contracts\LoginResponse
+    public function authenticate(): ?LoginResponse
     {
         $data = $this->form->getState();
         $email = $data['email'] ?? '';

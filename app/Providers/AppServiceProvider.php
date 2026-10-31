@@ -2,16 +2,23 @@
 
 namespace App\Providers;
 
+use App\Hashing\Sha256Hasher;
+use App\Listeners\LogSuccessfulLogin;
+use App\Models\Solicitud;
+use App\Observers\SolicitudObserver;
+use App\Services\LegajoApiService;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
-use App\Hashing\Sha256Hasher;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Singleton: la memoria corta de la API (30 s por DNI) debe compartirse
+        // entre todas las entradas de una misma pantalla.
+        $this->app->singleton(LegajoApiService::class);
     }
 
     /**
@@ -29,28 +38,57 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Hash::extend('sha256', function () {
-            return new Sha256Hasher();
+            return new Sha256Hasher;
         });
 
         $this->configureDefaults();
 
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Login::class,
-            \App\Listeners\LogSuccessfulLogin::class
+        Event::listen(
+            Login::class,
+            LogSuccessfulLogin::class
         );
 
-        \App\Models\Solicitud::observe(\App\Observers\SolicitudObserver::class);
+        Solicitud::observe(SolicitudObserver::class);
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,
-            fn (): string => View::make('components.session-timeout-script')->render(),
+            // El script de inactividad solo aplica con sesión iniciada: en el
+            // login (layout simple) no debe inyectarse.
+            fn (): string => auth()->check()
+                ? View::make('components.session-timeout-script')->render()
+                : '',
         );
 
-        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+        Event::listen(Login::class, function ($event) {
             activity('auth')
                 ->causedBy($event->user)
                 ->log('Usuario inició sesión');
         });
+    }
+
+    /**
+     * La sesión del servidor debe durar más que la inactividad que aplica la app.
+     *
+     * Si no, Laravel (driver database) puede descartar la sesión antes de que
+     * App\Http\Middleware\SessionTimeout alcance a mostrar el aviso, y el usuario
+     * terminaría en el login sin ninguna explicación.
+     *
+     * La invariante la define config/session.php (`lifetime` = `inactivity_lifetime` + 5)
+     * y se verifica en SessionTimeout (única fuente de verdad).
+     */
+    public static function ensureSessionOutlivesInactivity(): void
+    {
+        if (SessionTimeout::sesionDelServidorSobreviveALaInactividad()) {
+            return;
+        }
+
+        Log::warning(
+            'config/session.php: "lifetime" debe ser mayor que "inactivity_lifetime", si no el aviso de sesión expirada podría no mostrarse.',
+            [
+                'lifetime' => (int) config('session.lifetime'),
+                'inactivity_lifetime' => SessionTimeout::minutosDeInactividad(),
+            ],
+        );
     }
 
     /**

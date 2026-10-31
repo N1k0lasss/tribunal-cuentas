@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Filament\Admin\Widgets\CalendarWidget;
+use App\Filament\Admin\Widgets\FeriadosListWidget;
 use Filament\Pages\Page;
 
 class FeriadosCalendario extends Page
@@ -26,12 +28,12 @@ class FeriadosCalendario extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\CalendarWidget::class,
-            \App\Filament\Admin\Widgets\FeriadosListWidget::class,
+            CalendarWidget::class,
+            FeriadosListWidget::class,
         ];
     }
 
-    public function getHeaderWidgetsColumns(): int | array
+    public function getHeaderWidgetsColumns(): int|array
     {
         return [
             'default' => 1,

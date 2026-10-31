@@ -4,10 +4,10 @@ namespace App\Filament\Admin\Widgets;
 
 use App\Filament\Admin\Resources\Solicituds\SolicitudResource;
 use App\Models\Solicitud;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables;
-use Filament\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Auth;
 class SolicitudesPendientesWidget extends BaseWidget
 {
     protected static ?int $sort = 2; // Debajo de las métricas principales
-    
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Acción Rápida: Solicitudes Pendientes';
 
@@ -63,8 +63,8 @@ class SolicitudesPendientesWidget extends BaseWidget
 
                 if ($user->hasRole('presidencia')) {
                     // Presidencia: tiene aprobación de secretaría pero no de presidencia (dirección)
-                    return $query->whereHas('aprobaciones', fn($q) => $q->where('etapa', 'secretaria')->where('estado', 'aprobado'))
-                                 ->whereDoesntHave('aprobaciones', fn($q) => $q->where('etapa', 'direccion'));
+                    return $query->whereHas('aprobaciones', fn ($q) => $q->where('etapa', 'secretaria')->where('estado', 'aprobado'))
+                        ->whereDoesntHave('aprobaciones', fn ($q) => $q->where('etapa', 'direccion'));
                 }
 
                 return $query;
@@ -75,27 +75,27 @@ class SolicitudesPendientesWidget extends BaseWidget
                     ->formatStateUsing(fn ($record) => "{$record->agente->nombre} {$record->agente->apellido}")
                     ->description(fn ($record) => $record->agente->legajo ? "Legajo: {$record->agente->legajo}" : null)
                     ->searchable(['nombre', 'apellido']),
-                
+
                 Tables\Columns\TextColumn::make('agente.area.nombre')
                     ->label('Área')
                     ->sortable()
                     ->color('gray'),
-                    
+
                 Tables\Columns\TextColumn::make('tipoSolicitud.nombre')
                     ->label('Licencia')
                     ->badge()
                     ->color('gray'),
-                
+
                 Tables\Columns\TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('fecha_fin')
                     ->label('Hasta')
                     ->date('d/m/Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('dias_solicitados')
                     ->label('Días')
                     ->alignCenter()
@@ -120,13 +120,16 @@ class SolicitudesPendientesWidget extends BaseWidget
                     ->requiresConfirmation()
                     ->modalHeading('Aprobar Solicitud')
                     ->modalDescription('¿Está seguro de que desea aprobar esta licencia?')
+                    ->modalSubmitActionLabel('Confirmar Aprobación')
                     ->form(fn (Solicitud $record) => SolicitudResource::getAprobarFormSchema($record))
                     ->action(function (Solicitud $record, array $data) {
                         SolicitudResource::procesarAprobacion(
                             $record,
                             'aprobado',
                             $data['observacion'] ?? null,
-                            $data['numero_resolucion'] ?? null
+                            $data['numero_resolucion'] ?? null,
+                            $data['documento_firmado'] ?? null,
+                            (bool) ($data['confirmo_documento_integrado'] ?? false),
                         );
 
                         Notification::make()
@@ -136,7 +139,7 @@ class SolicitudesPendientesWidget extends BaseWidget
                             ->send();
                     })
                     ->visible(fn (Solicitud $record) => Auth::user()?->can('aprobar', $record)),
-                    
+
                 Action::make('rechazar')
                     ->label('Rechazar')
                     ->icon('heroicon-m-x-circle')

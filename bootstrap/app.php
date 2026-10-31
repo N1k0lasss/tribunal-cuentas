@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\BlockOutsideWorkingHours;
+use App\Http\Middleware\SessionTimeout;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

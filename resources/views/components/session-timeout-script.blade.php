@@ -1,23 +1,159 @@
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let timeoutTimer;
-        // 1 minuto en milisegundos
-        const maxInactivity = 5 * 60 * 1000;
-        let isExpired = false;
+{{--
+    Cierre automático por inactividad (lado cliente).
 
-        function resetTimer() {
-            if (isExpired) return; // Si ya expiró, no hacemos nada más
-            clearTimeout(timeoutTimer);
-            timeoutTimer = setTimeout(showExpiredModal, maxInactivity);
+    - Se inyecta solo con sesión iniciada (ver AppServiceProvider, hook BODY_END).
+    - El temporizador y el "latido" al servidor solo se reinician con
+      interacción REAL (mouse / teclado), no con el polling de Livewire.
+    - El tiempo de inactividad lo define SessionTimeout::minutosDeInactividad()
+      (que lee config/session.php → SESSION_LIFETIME). Es la MISMA fuente que usa
+      el servidor, así el reloj del navegador y el del servidor no se desincronizan.
+
+    Puntos de entrada (los tres AVISAN con el modal y esperan al usuario):
+      1. El temporizador de inactividad del navegador (a los N minutos).
+      2. El latido detecta que el servidor ya cerró la sesión (419/401/redirect).
+      3. Un request de Livewire que falla con 419/401.
+
+    El modal NO navega solo: queda hasta que el usuario apriete "Ir al login"
+    (o hasta un margen de seguridad). Recién ahí se hace el logout y se navega a
+    `irAlLoginExpirado()`, el ÚNICO lugar que navega al login. Así el aviso no se
+    lo come una petición de fondo (p. ej. el polling de Livewire cada 5s).
+--}}
+<script id="session-timeout-script">
+    (function () {
+        // Minutos de inactividad antes de cerrar la sesión.
+        // Se toma del middleware (única fuente de verdad), así el reloj del
+        // navegador y el del servidor nunca se desincronizan.
+        const maxInactivity = {{ (int) \App\Http\Middleware\SessionTimeout::minutosDeInactividad() }} * 60 * 1000;
+
+        const actividadUrl = @json(route('session.actividad'));
+        const estadoUrl = @json(route('session.estado'));
+        const loginUrl = @json(filament()->getLoginUrl());
+        const loginExpiradaUrl = loginUrl + (loginUrl.indexOf('?') === -1 ? '?' : '&') + 'sesion_expirada=1';
+        const logoutUrl = @json(filament()->getLogoutUrl());
+
+        // Los avisos de diagnóstico solo se emiten con la app en modo debug:
+        // en producción no ensuciamos la consola del usuario.
+        const debug = @json((bool) config('app.debug'));
+
+        function log(motivo) {
+            if (debug) {
+                console.warn('[sesión] ' + motivo);
+            }
         }
 
-        function showExpiredModal() {
-            isExpired = true;
+        let timeoutTimer = null; // Dispara el modal.
+        let cierreTimer = null; // Margen de seguridad para cerrar sesión y navegar.
+        let ultimoLatido = 0; // Momento del último latido enviado al servidor.
+        let expirado = false; // El modal ya se mostró.
+        let redirigiendo = false; // Ya vamos camino al login: no navegar dos veces.
+
+        function csrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        // Intervalo mínimo entre latidos: 1 minuto, pero nunca más de un tercio
+        // del tiempo de inactividad configurado (por si se baja SESSION_LIFETIME
+        // a menos de 3 minutos, el latido sigue llegando a tiempo).
+        const latidoMs = Math.min(60000, Math.floor(maxInactivity / 3));
+
+        // ÚNICO punto de salida hacia el login con el aviso de inactividad.
+        // Idempotente: la primera llamada gana, las demás no hacen nada.
+        function irAlLoginExpirado() {
+            if (redirigiendo) return;
+            redirigiendo = true;
+            expirado = true;
             clearTimeout(timeoutTimer);
+            clearTimeout(cierreTimer);
+            window.location.href = loginExpiradaUrl;
+        }
+
+        // Verifica contra el servidor si la sesión sigue viva antes de avisar.
+        // Un 419 aislado (token CSRF viejo, petición concurrente) NO significa
+        // que la sesión se cerró: solo eso lo confirma `estadoUrl`.
+        // Devuelve 'expirada', 'viva' o null (no se pudo determinar).
+        function verificarSesion() {
+            return fetch(estadoUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' },
+            }).then(function (res) {
+                if (! res.ok) return null;
+                return res.json().then(function (datos) {
+                    return datos && datos.authenticated ? 'viva' : 'expirada';
+                });
+            }).catch(function () { return null; });
+        }
+
+        // Punto único para reaccionar a un 419/401 (de Livewire o del latido):
+        // primero confirma el estado real y recién avisa si la sesión murió.
+        function avisarTrasFallo(origen) {
+            if (redirigiendo || expirado) return;
+
+            verificarSesion().then(function (estado) {
+                // La sesión está viva: el 419 fue por un token viejo, no por
+                // inactividad. No expulsamos al usuario.
+                if (estado === 'viva') {
+                    log('Fallo 419/401 desde ' + origen + ' pero la sesión sigue viva: se ignora.');
+                    return;
+                }
+
+                // 'expirada' o indeterminado: ante la duda se conserva el aviso
+                // previo (nunca dejar al usuario con una sesión muerta y sin aviso).
+                showExpiredModal(origen);
+            });
+        }
+
+        // Avisa al servidor que hubo actividad REAL. El polling de Livewire no
+        // cuenta: esto solo se llama con eventos de mouse/teclado.
+        function enviarLatido(forzar) {
+            if (redirigiendo) return;
+
+            const ahora = Date.now();
+            if (! forzar && (ahora - ultimoLatido) < latidoMs) return;
+            ultimoLatido = ahora;
+
+            fetch(actividadUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                keepalive: true,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+            }).then(function (res) {
+                // El servidor ya cerró la sesión (419 / 401) o nos redirigió al
+                // login: NO navegamos de una; confirmamos el estado y avisamos
+                // desde ahí. Así el aviso no se lo "come" una petición de fondo
+                // ni lo dispara un 419 que no implica sesión cerrada.
+                if (res.status === 419 || res.status === 401 || res.redirected) {
+                    avisarTrasFallo('latido (' + res.status + (res.redirected ? ', redirect' : '') + ')');
+                }
+            }).catch(function () { /* Silencioso: no rompemos la UI por un latido. */ });
+        }
+
+        function resetTimer() {
+            if (redirigiendo || expirado) return;
+            clearTimeout(timeoutTimer);
+            timeoutTimer = setTimeout(function () { showExpiredModal('inactividad'); }, maxInactivity);
+            enviarLatido(false);
+        }
+
+        // Muestra el aviso (modal) y ESPERA al usuario. Idempotente: si ya se
+        // mostró, no hace nada. Es el punto único de aviso; lo llaman el
+        // temporizador de inactividad, el latido y el hook 419 de Livewire.
+        // `motivo` es solo para diagnóstico (queda en consola).
+        function showExpiredModal(motivo) {
+            if (redirigiendo || expirado) return;
+            expirado = true;
+            clearTimeout(timeoutTimer);
+
+            log('Aviso de sesión terminada. Motivo: ' + (motivo || 'inactividad'));
 
             // Crear el cartel (modal)
             const modalHtml = `
-                <div id="session-timeout-modal" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px);">
+                <div id="session-timeout-modal" role="alertdialog" aria-modal="true" aria-labelledby="session-timeout-modal-title" aria-describedby="session-timeout-modal-desc" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px);">
                     <div style="background-color: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 24rem; width: 100%; text-align: center; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
                         <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
                             <div style="border-radius: 9999px; background-color: #fee2e2; padding: 0.75rem;">
@@ -26,59 +162,108 @@
                                 </svg>
                             </div>
                         </div>
-                        <h2 style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; margin-top: 0;">
+                        <h2 id="session-timeout-modal-title" style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; margin-top: 0;">
                             Tu sesión terminó
                         </h2>
-                        <p style="color: #6b7280; margin-bottom: 1rem;">
+                        <p id="session-timeout-modal-desc" style="color: #6b7280; margin-bottom: 1rem;">
                             Por inactividad, hemos cerrado tu sesión por seguridad.
                         </p>
-                        <p style="color: #2563eb; font-weight: 500; font-size: 0.875rem;">
-                            Redirigiendo al login automáticamente...
-                        </p>
+                        <button id="session-timeout-modal-btn" type="button" style="margin-top: 0.5rem; width: 100%; padding: 0.625rem 1rem; border: 0; border-radius: 0.5rem; background-color: #2563eb; color: white; font-size: 0.9375rem; font-weight: 600; cursor: pointer;">
+                            Ir al login
+                        </button>
                     </div>
                 </div>
             `;
-            
+
             // Insertar el cartel al final del body
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Enviar petición POST a /admin/logout para destruir la sesión obligatoriamente
-            setTimeout(function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ filament()->getLogoutUrl() }}';
-                const csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = '{{ csrf_token() }}';
-                form.appendChild(csrf);
-                document.body.appendChild(form);
-                form.submit();
-            }, 3000);
+
+            // El modal queda visible hasta que el usuario confirme. Así el aviso
+            // no se "pierde": antes se cerraba solo a los 3s y era fácil no verlo.
+            const boton = document.getElementById('session-timeout-modal-btn');
+            if (boton) {
+                boton.addEventListener('click', cerrarSesionYNavegar);
+                boton.focus();
+            }
+
+            // Margen de seguridad: si el usuario abandona la pestaña, igual lo
+            // llevamos al login (no dejamos el modal colgado con la sesión muerta).
+            cierreTimer = setTimeout(cerrarSesionYNavegar, 120000);
+        }
+
+        // Destruye la sesión en el servidor y navega SIEMPRE al login con el aviso.
+        // Usa fetch + keepalive (en lugar de un <form>.submit()) para que la petición
+        // sobreviva a la navegación y para que el destino no dependa de a dónde
+        // redirija el servidor.
+        function cerrarSesionYNavegar() {
+            if (redirigiendo) return;
+            clearTimeout(cierreTimer);
+
+            try {
+                const datos = new FormData();
+                datos.append('_token', csrfToken());
+                fetch(logoutUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    keepalive: true,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: datos,
+                }).catch(function () { /* Silencioso. */ });
+            } catch (e) { /* Silencioso: igual navegamos al login. */ }
+
+            irAlLoginExpirado();
         }
 
         const events = [
-            'mousemove', 'keydown', 'wheel', 'DOMMouseScroll', 'mousewheel', 
-            'mousedown', 'touchstart', 'touchmove', 'MSPointerDown', 'MSPointerMove'
+            'mousemove', 'keydown', 'wheel', 'DOMMouseScroll', 'mousewheel',
+            'mousedown', 'touchstart', 'touchmove', 'MSPointerDown', 'MSPointerMove',
+            'scroll', 'click'
         ];
-        
-        events.forEach(function(event) {
-            document.addEventListener(event, resetTimer, false);
+
+        events.forEach(function (event) {
+            document.addEventListener(event, resetTimer, { passive: true });
         });
 
-        // Iniciar el temporizador al cargar
+        // Latido inicial: una carga de página cuenta como actividad. Va antes de
+        // resetTimer() para no duplicar la petición (el throttle de resetTimer
+        // reutiliza este mismo latido).
+        enviarLatido(true);
         resetTimer();
-    });
 
-    // Interceptar el error 419 (Página expirada) de Livewire para evitar el molesto popup del navegador
-    document.addEventListener('livewire:init', () => {
-        Livewire.hook('request', ({ fail }) => {
-            fail(({ status, preventDefault }) => {
-                if (status === 419) {
-                    preventDefault();
-                    window.location.href = '{{ filament()->getLoginUrl() }}';
+        // Interceptar el error 419 (Página expirada) de Livewire para avisar con
+        // el modal (sin el popup del navegador "This page has expired...").
+        // No navegamos de una: el modal espera al usuario, así el aviso no se
+        // pierde cuando el polling de Livewire detecta la sesión vencida.
+        //
+        // OJO: los scripts de Filament/Livewire son bloqueantes (sin defer) y van
+        // en el <head>, así que Livewire YA está inicializado cuando corre este
+        // script y el evento `livewire:init` ya se disparó. Por eso registramos el
+        // hook de inmediato y, además, por las dudas, escuchamos `livewire:init`.
+        (function () {
+            let registrado = false;
+
+            function interceptar419() {
+                if (registrado || typeof Livewire === 'undefined' || typeof Livewire.hook !== 'function') {
+                    return;
                 }
-            });
-        });
-    });
+                registrado = true;
+
+                Livewire.hook('request', ({ fail }) => {
+                    fail(({ status, preventDefault }) => {
+                        if (status === 419 || status === 401) {
+                            preventDefault();
+                            avisarTrasFallo('livewire (' + status + ')');
+                        }
+                    });
+                });
+            }
+
+            document.addEventListener('livewire:init', interceptar419);
+            interceptar419();
+        })();
+    })();
 </script>
