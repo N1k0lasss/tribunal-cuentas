@@ -75,7 +75,7 @@ it('muestra las acciones de generar y subir firmado en el encabezado para secret
         ->assertActionVisible('subir_resolucion_firmada_dia');
 });
 
-it('genera la resolución del día con las licencias aprobadas hoy y la descarga', function () {
+it('genera la resolución del día con todas las solicitudes registradas hoy y la descarga', function () {
     Storage::fake('local');
 
     $area = Area::factory()->create();
@@ -86,6 +86,7 @@ it('genera la resolución del día con las licencias aprobadas hoy y la descarga
         'agente_id' => $agente->id,
         'tipo_solicitud_id' => $tipo->id,
         'estado' => Solicitud::ESTADO_APROBADO,
+        'fecha_solicitud' => ResolucionDiariaService::hoy(),
         'fecha_inicio' => ResolucionDiariaService::hoy()->addMonth(),
         'fecha_fin' => ResolucionDiariaService::hoy()->addMonth()->addDays(2),
     ]);
@@ -106,21 +107,27 @@ it('genera la resolución del día con las licencias aprobadas hoy y la descarga
         ->and($resolucion->solicitudes->first()->id)->toBe($solicitud->id);
 });
 
-it('no incluye licencias aprobadas en otra fecha aunque estén vigentes hoy', function () {
+it('incluye todas las solicitudes registradas hoy sin importar su estado', function () {
     Storage::fake('local');
 
-    $aprobadaAyer = Solicitud::factory()->create([
+    $solicitudAyer = Solicitud::factory()->create([
         'estado' => Solicitud::ESTADO_APROBADO,
-        'fecha_aprobacion' => ResolucionDiariaService::hoy()->subDay(),
-        'fecha_inicio' => ResolucionDiariaService::hoy(),
-        'fecha_fin' => ResolucionDiariaService::hoy(),
+        'fecha_solicitud' => ResolucionDiariaService::hoy()->subDay(),
     ]);
 
-    $aprobadaHoy = Solicitud::factory()->create([
+    $solicitudAprobadaHoy = Solicitud::factory()->create([
         'estado' => Solicitud::ESTADO_APROBADO,
-        'fecha_aprobacion' => ResolucionDiariaService::hoy(),
-        'fecha_inicio' => ResolucionDiariaService::hoy()->addMonth(),
-        'fecha_fin' => ResolucionDiariaService::hoy()->addMonth()->addDay(),
+        'fecha_solicitud' => ResolucionDiariaService::hoy(),
+    ]);
+
+    $solicitudPendienteHoy = Solicitud::factory()->create([
+        'estado' => Solicitud::ESTADO_PENDIENTE,
+        'fecha_solicitud' => ResolucionDiariaService::hoy(),
+    ]);
+
+    $solicitudRechazadaHoy = Solicitud::factory()->create([
+        'estado' => Solicitud::ESTADO_RECHAZADO,
+        'fecha_solicitud' => ResolucionDiariaService::hoy(),
     ]);
 
     Livewire::test(ListResolucions::class)
@@ -131,8 +138,10 @@ it('no incluye licencias aprobadas en otra fecha aunque estén vigentes hoy', fu
     $resolucion = Resolucion::query()->diarias()->firstOrFail();
 
     expect($resolucion->solicitudes->pluck('id')->all())
-        ->toBe([$aprobadaHoy->id])
-        ->not->toContain($aprobadaAyer->id);
+        ->toContain($solicitudAprobadaHoy->id)
+        ->toContain($solicitudPendienteHoy->id)
+        ->toContain($solicitudRechazadaHoy->id)
+        ->not->toContain($solicitudAyer->id);
 });
 
 it('registra la fecha de aprobación al aprobar una solicitud', function () {
@@ -146,7 +155,7 @@ it('registra la fecha de aprobación al aprobar una solicitud', function () {
         ->toBe(ResolucionDiariaService::hoy()->toDateString());
 });
 
-it('no genera la resolución si no hay licencias aprobadas para el día', function () {
+it('no genera la resolución si no hay solicitudes registradas para el día', function () {
     Livewire::test(ListResolucions::class)
         ->mountAction(TestAction::make('generar_resolucion_dia'))
         ->setActionData([
@@ -294,6 +303,27 @@ it('el pdf de la resolución solo incluye la firma de secretaría general', func
         ->toContain('Secretaría General')
         ->not->toContain('Jefatura')
         ->not->toContain('Presidencia');
+});
+
+it('previsualiza el pdf de la resolución inline', function () {
+    $resolucion = Resolucion::factory()->daily()->create();
+
+    $response = $this->get(route('resolucion.pdf', $resolucion));
+
+    $response->assertSuccessful();
+
+    expect($response->headers->get('Content-Type'))->toContain('application/pdf')
+        ->and($response->headers->get('Content-Disposition'))->toContain('inline');
+});
+
+it('descarga el pdf de la resolución como adjunto', function () {
+    $resolucion = Resolucion::factory()->daily()->create();
+
+    $response = $this->get(route('resolucion.pdf.descargar', $resolucion));
+
+    $response->assertSuccessful();
+
+    expect($response->headers->get('Content-Disposition'))->toContain('attachment');
 });
 
 it('prohíbe borrar resoluciones incluso al administrador', function () {

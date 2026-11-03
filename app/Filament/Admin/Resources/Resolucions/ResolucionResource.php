@@ -8,7 +8,6 @@ use App\Models\Resolucion;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -101,13 +100,17 @@ class ResolucionResource extends Resource
                 //
             ])
             ->actions([
-                ViewAction::make(),
+                Action::make('ver_resolucion')
+                    ->label('Ver resolución')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Resolucion $record): string => route('resolucion.pdf', $record))
+                    ->openUrlInNewTab(),
                 EditAction::make()
                     ->visible(fn (Resolucion $record): bool => $record->pdfFirmado === null),
                 Action::make('descargar_pdf_resolucion')
                     ->label('Descargar PDF')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn (Resolucion $record) => route('resolucion.pdf', $record))
+                    ->url(fn (Resolucion $record): string => route('resolucion.pdf.descargar', $record))
                     ->openUrlInNewTab(),
                 Action::make('descargar_pdf_firmado')
                     ->label('Ver PDF firmado')

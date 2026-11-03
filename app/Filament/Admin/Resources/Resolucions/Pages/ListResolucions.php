@@ -55,8 +55,8 @@ class ListResolucions extends ListRecords
                     if ($solicitudes->isEmpty()) {
                         Notification::make()
                             ->warning()
-                            ->title('Sin licencias aprobadas hoy')
-                            ->body('No hay licencias con aprobación final registrada en la fecha de hoy.')
+                            ->title('Sin solicitudes registradas hoy')
+                            ->body('No hay solicitudes registradas para la fecha de hoy.')
                             ->send();
 
                         return null;
@@ -103,7 +103,7 @@ class ListResolucions extends ListRecords
                     Notification::make()
                         ->success()
                         ->title('Resolución del día generada')
-                        ->body('Se generó la resolución con '.$solicitudes->count().' licencia(s).')
+                        ->body('Se generó la resolución con '.$solicitudes->count().' solicitud(es).')
                         ->send();
 
                     return app(ResolucionDiariaService::class)->descargar($resolucion);
