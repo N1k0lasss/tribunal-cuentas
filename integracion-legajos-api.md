@@ -19,6 +19,8 @@ Se elige **API** en lugar de conexión directa a la base de datos porque cada ba
 
 ## 2. Consideraciones generales
 
+- **Administración del token:** un usuario con rol `administrador` puede actualizar la credencial desde «Configuración → API de Legajos» en el panel. Se guarda cifrada en la base de datos; la pantalla muestra el momento de carga y estima el vencimiento a las 24 horas, sin volver a mostrar el token. `LEGAJOS_API_TOKEN` en `.env` se conserva como respaldo hasta que se cargue una credencial desde el panel. La actualización debe hacerse cuando Legajos entregue el nuevo token; no hay renovación automática. El vencimiento mostrado es estimado desde la carga y puede diferir si Legajos emitió el token antes.
+
 - **Formato:** REST + JSON.
 - **Autenticación:** token por API key enviado en el header `Authorization: Bearer <token>` (o `X-API-KEY: <token>`, a definir).
 - **Identificación del agente:** el punto de unión entre ambos sistemas es el **DNI** de la persona (campo `dni`, único en `personas`). El Sistema de Licencias guarda el `dni` de cada agente en su tabla `agentes`.

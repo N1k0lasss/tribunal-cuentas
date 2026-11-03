@@ -41,6 +41,7 @@ return [
     */
     'legajos' => [
         'url' => env('LEGAJOS_API_URL'),
+        // Token legacy: la credencial administrable del panel tiene prioridad.
         'token' => env('LEGAJOS_API_TOKEN'),
         // false: el servidor de Legajos usa certificado autofirmado.
         'verify' => env('LEGAJOS_API_VERIFY_SSL', true),
