@@ -90,16 +90,32 @@ class PasswordRecoveryService
 
     public function verify(?int $recoveryId, string $code, ?string $ip): bool
     {
+        $code = trim((string) $code);
+
         if ($recoveryId === null || ! preg_match('/^\d{6}$/', $code)) {
             $this->audit('Verificación fallida de recuperación', 'unknown', 'unknown');
 
             return false;
         }
 
-        $recovery = PasswordRecoveryCode::query()->with('user')->find($recoveryId);
+        $requested = PasswordRecoveryCode::query()->with('user')->find($recoveryId);
+
+        if (! $requested) {
+            $this->audit('Verificación fallida de recuperación', 'unknown', 'unknown');
+
+            return false;
+        }
+
+        $recovery = PasswordRecoveryCode::query()
+            ->with('user')
+            ->where('user_id', $requested->user_id)
+            ->where('channel', $requested->channel)
+            ->where('identifier', $requested->identifier)
+            ->latest('id')
+            ->first();
 
         if (! $recovery) {
-            $this->audit('Verificación fallida de recuperación', 'unknown', 'unknown');
+            $this->audit('Verificación fallida de recuperación', $requested->channel, $requested->identifier, $requested->user);
 
             return false;
         }
@@ -117,10 +133,20 @@ class PasswordRecoveryService
         RateLimiter::hit($ipKey, 600);
         RateLimiter::hit($identifierKey, 600);
 
-        $verified = DB::transaction(function () use ($recoveryId, $code): bool {
-            $locked = PasswordRecoveryCode::query()->lockForUpdate()->find($recoveryId);
+        $verified = DB::transaction(function () use ($recovery, $code): bool {
+            $locked = PasswordRecoveryCode::query()
+                ->where('user_id', $recovery->user_id)
+                ->where('channel', $recovery->channel)
+                ->where('identifier', $recovery->identifier)
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
 
-            if (! $locked || $locked->used_at || $locked->verified_at || $locked->expires_at->isPast() || $locked->attempts >= self::MAX_ATTEMPTS) {
+            if (! $locked) {
+                return false;
+            }
+
+            if ($locked->used_at || $locked->verified_at || $locked->expires_at->isPast() || $locked->attempts >= self::MAX_ATTEMPTS) {
                 return false;
             }
 

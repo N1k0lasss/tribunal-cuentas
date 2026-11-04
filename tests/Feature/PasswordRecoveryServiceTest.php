@@ -103,3 +103,19 @@ it('does not send a code to an unverified email', function () {
     expect(app(PasswordRecoveryService::class)->request('email', $user->email, '192.0.2.50'))->toBeNull()
         ->and(Mail::sent(PasswordRecoveryCodeMail::class))->toHaveCount(0);
 });
+
+it('verifies the latest code and normalizes surrounding whitespace', function () {
+    Mail::fake();
+    $user = recoveryUser();
+    $service = app(PasswordRecoveryService::class);
+
+    $firstId = $service->request('email', $user->email, '192.0.2.60');
+    $firstMail = Mail::sent(PasswordRecoveryCodeMail::class)->first();
+    $secondId = $service->request('email', $user->email, '192.0.2.61');
+    $secondMail = Mail::sent(PasswordRecoveryCodeMail::class)->last();
+
+    expect($firstId)->toBeInt()
+        ->and($secondId)->toBeInt()
+        ->and($firstMail->code)->not->toBe($secondMail->code)
+        ->and($service->verify($secondId, ' '.$secondMail->code.' ', '192.0.2.61'))->toBeTrue();
+});
