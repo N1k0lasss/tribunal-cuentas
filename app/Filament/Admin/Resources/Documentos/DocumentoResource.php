@@ -36,6 +36,11 @@ class DocumentoResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return 'heroicon-o-paper-clip';

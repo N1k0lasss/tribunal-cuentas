@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\LegajoApiException;
+use App\Models\LegajoApiCredential;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
@@ -319,12 +320,12 @@ class LegajoApiService
     {
         if (! $this->configurado()) {
             throw new LegajoApiException(
-                'Falta configurar LEGAJOS_API_URL y/o LEGAJOS_API_TOKEN en el archivo .env.',
+                'Falta configurar la URL de la API de Legajos o cargar un token desde el panel de administración.',
             );
         }
 
         $client = Http::acceptJson()
-            ->withToken((string) config('services.legajos.token'))
+            ->withToken((string) LegajoApiCredential::currentToken())
             // connectTimeout acota el caso "host caído" (no llega a conectar);
             // timeout acota el caso "conecta pero no responde". Entre los dos
             // y la memoria de errores, la ficha no puede colgarse 30 s.
@@ -354,7 +355,7 @@ class LegajoApiService
      */
     private function configurado(): bool
     {
-        return filled(config('services.legajos.url')) && filled(config('services.legajos.token'));
+        return filled(config('services.legajos.url')) && filled(LegajoApiCredential::currentToken());
     }
 
     /**

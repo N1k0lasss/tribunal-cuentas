@@ -254,7 +254,7 @@
             @empty
                 <tr>
                     <td colspan="8" style="text-align: center; color: #64748b;">
-                        No hay licencias asociadas a esta resolución.
+                        No hay solicitudes asociadas a esta resolución.
                     </td>
                 </tr>
             @endforelse

@@ -114,4 +114,8 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'password_recovery' => [
+        'sms_enabled' => env('PASSWORD_RECOVERY_SMS_ENABLED', false),
+    ],
+
 ];

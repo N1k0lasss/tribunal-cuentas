@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Contracts\SmsSender;
 use App\Hashing\Sha256Hasher;
 use App\Listeners\LogSuccessfulLogin;
 use App\Models\Solicitud;
 use App\Observers\SolicitudObserver;
 use App\Services\LegajoApiService;
+use App\Services\TwilioSmsSender;
 use Carbon\CarbonImmutable;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         // Singleton: la memoria corta de la API (30 s por DNI) debe compartirse
         // entre todas las entradas de una misma pantalla.
         $this->app->singleton(LegajoApiService::class);
+        $this->app->bind(SmsSender::class, TwilioSmsSender::class);
     }
 
     /**

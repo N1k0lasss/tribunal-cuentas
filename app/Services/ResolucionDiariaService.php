@@ -6,6 +6,7 @@ use App\Models\Resolucion;
 use App\Models\Solicitud;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -20,7 +21,7 @@ class ResolucionDiariaService
     }
 
     /**
-     * Licencias cuya aprobación final se registró en la fecha indicada.
+     * Solicitudes registradas en la fecha indicada, sin importar su estado.
      *
      * @return Collection<int, Solicitud>
      */
@@ -29,8 +30,7 @@ class ResolucionDiariaService
         $fecha ??= self::hoy();
 
         return Solicitud::query()
-            ->where('estado', Solicitud::ESTADO_APROBADO)
-            ->whereDate('fecha_aprobacion', $fecha)
+            ->whereDate('fecha_solicitud', $fecha)
             ->with(['agente.area', 'tipoSolicitud'])
             ->get()
             ->sortBy(fn (Solicitud $solicitud): string => mb_strtolower(
@@ -66,6 +66,15 @@ class ResolucionDiariaService
             fn () => print $this->pdf($resolucion),
             $this->nombreArchivo($resolucion),
         );
+    }
+
+    public function ver(Resolucion $resolucion): Response
+    {
+        return response($this->pdf($resolucion), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$this->nombreArchivo($resolucion).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function nombreArchivo(Resolucion $resolucion): string

@@ -41,6 +41,7 @@ return [
         'verify_ssl' => filter_var(env('LEGAJOS_API_VERIFY_SSL', false), FILTER_VALIDATE_BOOLEAN),
         'timeout' => (int) env('LEGAJOS_API_TIMEOUT', 15),
         'retries' => (int) env('LEGAJOS_API_RETRIES', 2),
+    ],
 
     /*
     | API del Sistema de Legajos (fuente de verdad de los datos del agente).
@@ -48,6 +49,7 @@ return [
     */
     'legajos' => [
         'url' => env('LEGAJOS_API_URL'),
+        // Token legacy: la credencial administrable del panel tiene prioridad.
         'token' => env('LEGAJOS_API_TOKEN'),
         // false: el servidor de Legajos usa certificado autofirmado.
         'verify' => env('LEGAJOS_API_VERIFY_SSL', true),

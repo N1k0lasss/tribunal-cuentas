@@ -36,6 +36,11 @@ class AprobacionResource extends Resource
 
     protected static ?string $modelLabel = 'Aprobación';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return 'heroicon-o-check-badge';

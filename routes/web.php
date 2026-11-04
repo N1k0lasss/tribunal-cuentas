@@ -44,11 +44,16 @@ Route::get('/solicitudes/{solicitud}/pdf-integrado', [SolicitudPdfController::cl
     ->middleware('auth')
     ->name('solicitud.pdf.integrado');
 
-// Descarga del PDF de la resolución diaria que agrupa las licencias
-// aprobadas en la fecha de emisión.
+// Vista previa del PDF de la resolución diaria que agrupa las licencias
+// de la fecha de emisión. Se sirve inline para que el navegador lo previsualice.
 Route::get('/resoluciones/{resolucion}/pdf', [ResolucionPdfController::class, 'ver'])
     ->middleware('auth')
     ->name('resolucion.pdf');
+
+// Descarga del PDF de la resolución diaria.
+Route::get('/resoluciones/{resolucion}/pdf/descargar', [ResolucionPdfController::class, 'descargar'])
+    ->middleware('auth')
+    ->name('resolucion.pdf.descargar');
 
 // Marcador de "actividad real" del usuario (mouse / teclado). Lo dispara el JS
 // del panel y lo usa el middleware SessionTimeout para el cierre por
