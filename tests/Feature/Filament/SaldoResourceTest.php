@@ -3,9 +3,15 @@
 use App\Filament\Admin\Resources\Saldos\SaldoResource;
 use App\Models\Saldo;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    Role::findOrCreate('administrador', 'web');
+
+    $user = User::factory()->create();
+    $user->assignRole('administrador');
+
+    $this->actingAs($user);
 });
 
 it('can render Saldos list page', function () {
