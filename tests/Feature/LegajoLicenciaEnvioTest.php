@@ -598,3 +598,186 @@ it('permite al administrador consultar el estado de los envíos', function () {
         ->get('/sistema/envios-licencias-legajos')
         ->assertOk();
 });
+
+it('marca error sin llamar a Legajos cuando falta la fecha de fin', function () {
+    Storage::fake('local');
+    config([
+        'services.legajos.url' => 'https://legajos.test/api',
+        'services.legajos.token' => 'token-de-prueba',
+    ]);
+
+    $agente = Agente::factory()->create(['dni' => '12345678']);
+    $tipo = TipoSolicitud::factory()->create(['unidad_medida' => 'dias']);
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agente->id,
+        'tipo_solicitud_id' => $tipo->id,
+        'fecha_fin' => null,
+        'dias_solicitados' => null,
+    ]);
+    $rutaPdf = 'documentos/firmados/solicitud-sin-fecha-fin.pdf';
+    Storage::disk('local')->put($rutaPdf, "%PDF-1.4\nPDF de prueba\n%%EOF");
+    $documento = Documento::factory()->create([
+        'solicitud_id' => $solicitud->id,
+        'agente_id' => $agente->id,
+        'ruta' => $rutaPdf,
+    ]);
+
+    Http::fake();
+
+    $envio = app(LegajoLicenciaEnvioService::class)->programar(
+        $solicitud->load(['agente', 'tipoSolicitud']),
+        $documento,
+    );
+
+    app(LegajoLicenciaEnvioService::class)->procesarEnvio($envio->id);
+
+    $envio->refresh();
+
+    expect($envio->estado)->toBe(LegajoLicenciaEnvio::ESTADO_ERROR)
+        ->and($envio->http_status)->toBe(422)
+        ->and($envio->proximo_intento_at)->toBeNull()
+        ->and($envio->ultimo_error)->toContain('Falta fecha_fin');
+
+    Http::assertNothingSent();
+});
+
+it('marca error sin llamar a Legajos cuando dias_solicitados es cero', function () {
+    Storage::fake('local');
+    config([
+        'services.legajos.url' => 'https://legajos.test/api',
+        'services.legajos.token' => 'token-de-prueba',
+    ]);
+
+    $agente = Agente::factory()->create(['dni' => '12345678']);
+    $tipo = TipoSolicitud::factory()->create(['unidad_medida' => 'dias']);
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agente->id,
+        'tipo_solicitud_id' => $tipo->id,
+        'dias_solicitados' => 0,
+    ]);
+    $rutaPdf = 'documentos/firmados/solicitud-sin-dias.pdf';
+    Storage::disk('local')->put($rutaPdf, "%PDF-1.4\nPDF de prueba\n%%EOF");
+    $documento = Documento::factory()->create([
+        'solicitud_id' => $solicitud->id,
+        'agente_id' => $agente->id,
+        'ruta' => $rutaPdf,
+    ]);
+
+    Http::fake();
+
+    $envio = app(LegajoLicenciaEnvioService::class)->programar(
+        $solicitud->load(['agente', 'tipoSolicitud']),
+        $documento,
+    );
+
+    app(LegajoLicenciaEnvioService::class)->procesarEnvio($envio->id);
+
+    $envio->refresh();
+
+    expect($envio->estado)->toBe(LegajoLicenciaEnvio::ESTADO_ERROR)
+        ->and($envio->http_status)->toBe(422)
+        ->and($envio->ultimo_error)->toContain('dias_solicitados debe ser al menos 1');
+
+    Http::assertNothingSent();
+});
+
+it('marca error cuando la fecha de fin es anterior a la de inicio', function () {
+    Storage::fake('local');
+    config([
+        'services.legajos.url' => 'https://legajos.test/api',
+        'services.legajos.token' => 'token-de-prueba',
+    ]);
+
+    $agente = Agente::factory()->create(['dni' => '12345678']);
+    $tipo = TipoSolicitud::factory()->create(['unidad_medida' => 'dias']);
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agente->id,
+        'tipo_solicitud_id' => $tipo->id,
+    ]);
+    $rutaPdf = 'documentos/firmados/solicitud-fechas-invertidas.pdf';
+    Storage::disk('local')->put($rutaPdf, "%PDF-1.4\nPDF de prueba\n%%EOF");
+    $documento = Documento::factory()->create([
+        'solicitud_id' => $solicitud->id,
+        'agente_id' => $agente->id,
+        'ruta' => $rutaPdf,
+    ]);
+
+    Http::fake();
+
+    $envio = app(LegajoLicenciaEnvioService::class)->programar(
+        $solicitud->load(['agente', 'tipoSolicitud']),
+        $documento,
+    );
+    $envio->update([
+        'datos' => array_merge($envio->datos, [
+            'fecha_inicio' => '2026-11-10',
+            'fecha_fin' => '2026-11-01',
+        ]),
+    ]);
+
+    app(LegajoLicenciaEnvioService::class)->procesarEnvio($envio->id);
+
+    $envio->refresh();
+
+    expect($envio->estado)->toBe(LegajoLicenciaEnvio::ESTADO_ERROR)
+        ->and($envio->http_status)->toBe(422)
+        ->and($envio->ultimo_error)->toContain('anterior a fecha_inicio');
+
+    Http::assertNothingSent();
+});
+
+it('recalcula el payload al reintentar un error con datos corregidos', function () {
+    Bus::fake();
+
+    Role::findOrCreate('administrador', 'web');
+    $administrador = User::factory()->create();
+    $administrador->assignRole('administrador');
+
+    $agente = Agente::factory()->create();
+    $tipo = TipoSolicitud::factory()->create(['unidad_medida' => 'dias']);
+    $solicitud = Solicitud::factory()->create([
+        'agente_id' => $agente->id,
+        'tipo_solicitud_id' => $tipo->id,
+        'estado' => Solicitud::ESTADO_PENDIENTE,
+        'fecha_inicio' => '2026-11-10',
+        'fecha_fin' => null,
+        'dias_solicitados' => null,
+    ]);
+    $documento = Documento::factory()->create([
+        'solicitud_id' => $solicitud->id,
+        'agente_id' => $agente->id,
+    ]);
+    $envio = app(LegajoLicenciaEnvioService::class)->programar(
+        $solicitud->load(['agente', 'tipoSolicitud']),
+        $documento,
+    );
+    $envio->update([
+        'estado' => LegajoLicenciaEnvio::ESTADO_ERROR,
+        'http_status' => 422,
+        'ultimo_error' => 'Validación local: Falta fecha_fin. No se envió a Legajos.',
+    ]);
+
+    // Alguien corrigió la solicitud después del error.
+    $solicitud->update([
+        'fecha_fin' => '2026-11-14',
+        'dias_solicitados' => 5,
+    ]);
+
+    $this->actingAs($administrador);
+
+    Livewire::test(LegajoLicenciasEnvios::class)
+        ->callAction(TestAction::make('reintentar')->table($envio));
+
+    $envio->refresh();
+
+    expect($envio->estado)->toBe(LegajoLicenciaEnvio::ESTADO_PENDIENTE)
+        ->and($envio->datos['fecha_fin'])->toBe('2026-11-14')
+        ->and($envio->datos['dias_solicitados'])->toBe(5)
+        ->and($envio->intentos)->toBe(0)
+        ->and($envio->ultimo_error)->toBeNull();
+
+    Bus::assertDispatched(
+        EnviarLicenciaALegajos::class,
+        fn (EnviarLicenciaALegajos $job): bool => $job->envioId === $envio->id,
+    );
+});

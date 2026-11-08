@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Pages;
 
 use App\Jobs\EnviarLicenciaALegajos;
 use App\Models\LegajoLicenciaEnvio;
+use App\Models\User;
 use App\Services\LegajoLicenciaEnvioService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -37,7 +38,9 @@ class LegajoLicenciasEnvios extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->hasRole('administrador') ?? false;
+        $usuario = Auth::user();
+
+        return $usuario instanceof User && $usuario->hasRole('administrador');
     }
 
     public function table(Table $table): Table
@@ -125,18 +128,26 @@ class LegajoLicenciasEnvios extends Page implements HasTable
                         $estadoAnterior = $record->estado;
                         $errorAnterior = $record->ultimo_error;
 
-                        if ($estadoAnterior === LegajoLicenciaEnvio::ESTADO_NO_APLICA
+                        // Un error puede deberse a datos incompletos: se
+                        // recalcula el payload desde la solicitud actual antes
+                        // de reencolar, para no reenviar los datos viejos.
+                        $requiereRecalculo = in_array($estadoAnterior, [
+                            LegajoLicenciaEnvio::ESTADO_NO_APLICA,
+                            LegajoLicenciaEnvio::ESTADO_ERROR,
+                        ], true);
+
+                        if ($requiereRecalculo
                             && ! app(LegajoLicenciaEnvioService::class)->actualizarDesdeSolicitud($record)) {
                             Notification::make()
-                                ->title('El tipo sigue sin equivalente en Legajos')
-                                ->body('Configurá el campo «Tipo equivalente en Legajos» del régimen legal antes de reencolar.')
+                                ->title('No se puede reencolar el envío')
+                                ->body('El tipo de solicitud no tiene un equivalente configurado en Legajos.')
                                 ->warning()
                                 ->send();
 
                             return;
                         }
 
-                        if ($estadoAnterior !== LegajoLicenciaEnvio::ESTADO_NO_APLICA) {
+                        if (! $requiereRecalculo) {
                             $record->update([
                                 'estado' => LegajoLicenciaEnvio::ESTADO_PENDIENTE,
                                 'intentos' => 0,

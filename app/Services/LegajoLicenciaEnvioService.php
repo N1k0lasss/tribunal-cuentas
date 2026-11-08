@@ -96,7 +96,7 @@ class LegajoLicenciaEnvioService
             // interno: el mapeo vive en tipo_solicituds. El nombre queda solo
             // como respaldo para registros `no_aplica` (no se envían).
             'tipo_licencia' => $tipo->legajos_tipo_licencia ?? $tipo->nombre,
-            'fecha_inicio' => $solicitud->fecha_inicio->toDateString(),
+            'fecha_inicio' => $solicitud->fecha_inicio?->toDateString(),
             'fecha_fin' => $solicitud->fecha_fin?->toDateString(),
             'dias_solicitados' => $solicitud->dias_solicitados,
             'motivo' => $solicitud->motivo,
@@ -276,10 +276,58 @@ class LegajoLicenciaEnvioService
         });
     }
 
+    /**
+     * Valida localmente el payload antes de llamar a la API de Legajos.
+     *
+     * Los tipos medidos en horas (franquicias y tardanzas) no usan fecha_fin
+     * ni dias_solicitados: se miden con hora_inicio/hora_fin. Por eso la regla
+     * solo aplica a los tipos en días, para no marcarlos como error.
+     *
+     * @return string|null Motivo del error, o null si el payload es válido.
+     */
+    private function validarDatosLocales(LegajoLicenciaEnvio $envio): ?string
+    {
+        $envio->loadMissing('solicitud.tipoSolicitud');
+
+        $tipo = $envio->solicitud?->tipoSolicitud;
+
+        if ($tipo === null || $tipo->unidad_medida !== 'dias') {
+            return null;
+        }
+
+        $datos = $envio->datos ?? [];
+
+        if (blank($datos['fecha_inicio'] ?? null)) {
+            return 'Falta fecha_inicio.';
+        }
+
+        if (blank($datos['fecha_fin'] ?? null)) {
+            return 'Falta fecha_fin.';
+        }
+
+        if ($datos['fecha_fin'] < $datos['fecha_inicio']) {
+            return 'fecha_fin no puede ser anterior a fecha_inicio.';
+        }
+
+        if ((int) ($datos['dias_solicitados'] ?? 0) < 1) {
+            return 'dias_solicitados debe ser al menos 1.';
+        }
+
+        return null;
+    }
+
     private function procesar(LegajoLicenciaEnvio $envio): void
     {
         if (! $envio->documento->rutaValida() || ! $envio->documento->archivoExiste()) {
             $this->marcarError($envio, 'No se encontró el PDF firmado en el almacenamiento privado.', 422);
+
+            return;
+        }
+
+        // Se valida antes de cualquier llamada HTTP, incluida la consulta del
+        // legajo por DNI: un payload inválido no debe llegar a Legajos.
+        if (($motivo = $this->validarDatosLocales($envio)) !== null) {
+            $this->marcarError($envio, 'Validación local: '.$motivo.' No se envió a Legajos.', 422);
 
             return;
         }
