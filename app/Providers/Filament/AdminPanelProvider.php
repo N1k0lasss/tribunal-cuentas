@@ -4,7 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\AgenteInfoWidget;
 use App\Filament\Admin\Widgets\LicenseStatsWidget;
-use App\Filament\Admin\Widgets\MisSaldosStatsWidget;
+use App\Filament\Admin\Widgets\MisLicenciasStatsWidget;
 use App\Filament\Admin\Widgets\ProximaFechaWidget;
 use App\Filament\Admin\Widgets\SolicitudesPendientesWidget;
 use App\Filament\Admin\Widgets\UsoLicenciasChartWidget;
@@ -85,7 +85,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AgenteInfoWidget::class,
-                MisSaldosStatsWidget::class,
+                MisLicenciasStatsWidget::class,
                 LicenseStatsWidget::class,
                 SolicitudesPendientesWidget::class,
                 UsoLicenciasChartWidget::class,

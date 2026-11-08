@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 class CumplimientoLegalService
 {
     public function __construct(
-        private readonly SaldoLicenciaService $saldoLicenciaService,
         private readonly LegajoApiService $legajoApi,
     ) {}
 
@@ -22,7 +21,6 @@ class CumplimientoLegalService
         $this->validarRangoFechas($solicitud);
         $this->validarDuracionMaxima($solicitud);
         $this->validarEstadoLegajo($solicitud);
-        $this->validarSaldoDisponible($solicitud);
         $this->validarProrroga($solicitud);
         $this->validarAntiguedad($solicitud);
         $this->calcularVentanaJustificacion($solicitud);
@@ -56,32 +54,6 @@ class CumplimientoLegalService
         if ($solicitud->dias_solicitados > $tipo->duracion_maxima_dias) {
             throw ValidationException::withMessages([
                 'dias_solicitados' => 'La cantidad de días excede el máximo legal para este régimen.',
-            ]);
-        }
-    }
-
-    public function validarSaldoDisponible(Solicitud $solicitud): void
-    {
-        if ($solicitud->dias_solicitados === null || $solicitud->dias_solicitados <= 0) {
-            return;
-        }
-
-        $solicitud->loadMissing('agente', 'tipoSolicitud');
-
-        if ($solicitud->agente === null || $solicitud->tipoSolicitud === null) {
-            return;
-        }
-
-        $disponible = $this->saldoLicenciaService->calcularDiasDisponibles($solicitud->agente, $solicitud->tipoSolicitud);
-        $saldos = $this->saldoLicenciaService->obtenerSaldosVigentes($solicitud->agente, $solicitud->tipoSolicitud);
-
-        if ($saldos->isEmpty()) {
-            return;
-        }
-
-        if ($solicitud->dias_solicitados > $disponible) {
-            throw ValidationException::withMessages([
-                'dias_solicitados' => 'La cantidad de días solicitados supera el saldo disponible (año actual + 2 anteriores).',
             ]);
         }
     }

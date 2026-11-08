@@ -32,8 +32,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read Area $area
  * @property-read Collection<int, Solicitud> $solicitudes
  * @property-read int|null $solicitudes_count
- * @property-read Collection<int, Saldo> $saldos
- * @property-read int|null $saldos_count
  * @property-read Collection<int, Documento> $documentos
  * @property-read int|null $documentos_count
  * @property-read Collection<int, Aprobacion> $aprobaciones
@@ -98,16 +96,6 @@ class Agente extends Model
     public function solicitudes(): HasMany
     {
         return $this->hasMany(Solicitud::class);
-    }
-
-    /**
-     * Get the saldos for the agente.
-     *
-     * @return HasMany<Saldo, $this>
-     */
-    public function saldos(): HasMany
-    {
-        return $this->hasMany(Saldo::class);
     }
 
     /**

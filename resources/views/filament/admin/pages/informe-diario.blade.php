@@ -1,363 +1,270 @@
 <x-filament-panels::page>
-    <style>
-        .diario-metric-grid {
-            display: grid;
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: 1rem;
-        }
-        @media (min-width: 640px) {
-            .diario-metric-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-        @media (min-width: 1024px) {
-            .diario-metric-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-        .diario-metric-card {
-            position: relative;
-            padding: 1.25rem 1.5rem;
-            border-radius: 1rem;
-            background: white;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 110px;
-        }
-        .dark .diario-metric-card {
-            background: #0f172a;
-            border-color: #1e293b;
-        }
-        .diario-metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-        }
-        .diario-metric-card--navy::before { background: linear-gradient(90deg, #1A365D, #2B4C7E); }
-        .diario-metric-card--emerald::before { background: linear-gradient(90deg, #059669, #10b981); }
-        .diario-metric-card--rose::before { background: linear-gradient(90deg, #e11d48, #f43f5e); }
-        .diario-metric-card--purple::before { background: linear-gradient(90deg, #6B1C5E, #8A2C7E); }
-        .diario-metric-card--blue::before { background: linear-gradient(90deg, #2563eb, #3b82f6); }
-        .diario-metric-card--amber::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
-        .diario-metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
-        }
-        .diario-metric-title {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #64748b;
-        }
-        .dark .diario-metric-title { color: #94a3b8; }
-        .diario-metric-icon {
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .diario-metric-card--navy .diario-metric-icon { background: rgba(26, 54, 93, 0.1); color: #1A365D; }
-        .diario-metric-card--emerald .diario-metric-icon { background: rgba(5, 150, 105, 0.1); color: #059669; }
-        .diario-metric-card--rose .diario-metric-icon { background: rgba(225, 29, 72, 0.1); color: #e11d48; }
-        .diario-metric-card--purple .diario-metric-icon { background: rgba(107, 28, 94, 0.1); color: #6B1C5E; }
-        .diario-metric-card--blue .diario-metric-icon { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
-        .diario-metric-card--amber .diario-metric-icon { background: rgba(217, 119, 6, 0.1); color: #d97706; }
-        .dark .diario-metric-card--navy .diario-metric-icon { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-        .dark .diario-metric-card--emerald .diario-metric-icon { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .dark .diario-metric-card--rose .diario-metric-icon { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
-        .dark .diario-metric-card--purple .diario-metric-icon { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
-        .dark .diario-metric-card--blue .diario-metric-icon { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-        .dark .diario-metric-card--amber .diario-metric-icon { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-        .diario-metric-value {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #1e293b;
-            line-height: 1;
-        }
-        .dark .diario-metric-value { color: #f8fafc; }
-        .diario-metric-desc {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 0.25rem;
-        }
-        .dark .diario-metric-desc { color: #64748b; }
-    </style>
     <div class="space-y-6">
-        
-        <!-- Header Controls Card -->
-        <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                
+
+        {{-- Encabezado: fecha, destinatario y observaciones generales --}}
+        <x-filament::section icon="heroicon-o-clipboard-document-check">
+            <x-slot name="heading">Datos del informe</x-slot>
+            <x-slot name="description">
+                Fecha y destinatario del informe diario. Las observaciones generales se incluyen en la exportación a PDF.
+            </x-slot>
+
+            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        📅 Fecha del Informe Diario
+                    <label for="fecha" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Fecha del informe
                     </label>
-                    <input 
-                        type="date" 
-                        id="fecha" 
-                        wire:model.live="fecha" 
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
-                    >
+                    <x-filament::input.wrapper>
+                        <x-filament::input type="date" id="fecha" wire:model.live="fecha" />
+                    </x-filament::input.wrapper>
                 </div>
 
                 <div>
-                    <label for="destinatario" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        🏛️ Destinatario Formal
+                    <label for="destinatario" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Destinatario formal
                     </label>
-                    <input 
-                        type="text" 
-                        id="destinatario" 
-                        wire:model.defer="destinatario" 
-                        @disabled(! $this->esAdmin())
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm disabled:opacity-75 disabled:bg-gray-100 dark:disabled:bg-gray-800/80"
-                        placeholder="Secretaría General"
-                    >
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            type="text"
+                            id="destinatario"
+                            wire:model.defer="destinatario"
+                            placeholder="Secretaría General"
+                            @disabled(! $this->esAdmin())
+                        />
+                    </x-filament::input.wrapper>
                 </div>
 
-                <div class="md:col-span-1">
-                    <label for="observacionesGenerales" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        📝 Observaciones Generales del Día
+                <div>
+                    <label for="observacionesGenerales" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Observaciones generales del día
                     </label>
-                    <textarea 
-                        id="observacionesGenerales" 
-                        wire:model.defer="observacionesGenerales" 
+                    <textarea
+                        id="observacionesGenerales"
+                        wire:model.defer="observacionesGenerales"
                         @disabled(! $this->esAdmin())
-                        rows="3"
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm disabled:opacity-75 disabled:bg-gray-100 dark:disabled:bg-gray-800/80"
+                        rows="1"
                         placeholder="Notas para Secretaría General..."
+                        class="fi-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm disabled:opacity-75 disabled:bg-gray-100 dark:disabled:bg-gray-800/80"
                     ></textarea>
                 </div>
-
             </div>
+
+            @if($ultimaSincronizacion)
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    Última actualización: {{ $ultimaSincronizacion }}
+                </p>
+            @endif
+        </x-filament::section>
+
+        {{-- Resumen de novedades --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-primary-100 p-3 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                        <x-heroicon-o-users class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ count($detalles) }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Total plantilla</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Agentes registrados en el listado</p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-success-100 p-3 text-success-700 dark:bg-success-900/30 dark:text-success-300">
+                        <x-heroicon-o-check-circle class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ $this->cantidades['presente'] }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Presentes</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Sin novedades registradas</p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-danger-100 p-3 text-danger-700 dark:bg-danger-900/30 dark:text-danger-300">
+                        <x-heroicon-o-x-circle class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ $this->cantidades['ausente_sin_aviso'] }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Ausente sin aviso</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Falta sin justificación</p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-warning-100 p-3 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300">
+                        <x-heroicon-o-clock class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ $this->cantidades['tardanza'] }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Tardanza</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Ingreso con retraso</p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-info-100 p-3 text-info-700 dark:bg-info-900/30 dark:text-info-300">
+                        <x-heroicon-o-document-text class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ $this->cantidades['licencia'] }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Licencia</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Con licencia aprobada</p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <x-filament::section>
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-warning-100 p-3 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300">
+                        <x-heroicon-o-exclamation-triangle class="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold leading-none text-gray-900 dark:text-white">{{ $this->cantidades['falta_justificada'] }}</p>
+                        <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Falta justificada</p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Justificada / autorizada</p>
+                    </div>
+                </div>
+            </x-filament::section>
         </div>
 
-        <!-- Summary Cards Grid -->
-        <div class="diario-metric-grid">
-            
-            <div class="diario-metric-card diario-metric-card--navy">
+        {{-- Listado de agentes --}}
+        <x-filament::section>
+            <div class="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Total Plantilla</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ count($detalles) }}</div>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Listado de agentes y novedades del día</h3>
+                    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Asistencia y novedades registradas para la fecha seleccionada.</p>
                 </div>
-                <div class="diario-metric-desc">Agentes registrados en el listado</div>
-            </div>
-
-            <div class="diario-metric-card diario-metric-card--emerald">
-                <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Presentes</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ $this->cantidades['presente'] }}</div>
-                </div>
-                <div class="diario-metric-desc">Sin novedades registradas</div>
-            </div>
-
-            <div class="diario-metric-card diario-metric-card--rose">
-                <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Ausente sin aviso</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ $this->cantidades['ausente_sin_aviso'] }}</div>
-                </div>
-                <div class="diario-metric-desc">Falta sin justificación</div>
-            </div>
-
-            <div class="diario-metric-card diario-metric-card--purple">
-                <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Tardanza</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ $this->cantidades['tardanza'] }}</div>
-                </div>
-                <div class="diario-metric-desc">Ingreso con retraso</div>
-            </div>
-
-            <div class="diario-metric-card diario-metric-card--blue">
-                <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Licencia</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ $this->cantidades['licencia'] }}</div>
-                </div>
-                <div class="diario-metric-desc">Con licencia aprobada</div>
-            </div>
-
-            <div class="diario-metric-card diario-metric-card--amber">
-                <div>
-                    <div class="diario-metric-header">
-                        <span class="diario-metric-title">Falta justificada</span>
-                        <div class="diario-metric-icon">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="diario-metric-value">{{ $this->cantidades['falta_justificada'] }}</div>
-                </div>
-                <div class="diario-metric-desc">Justificada / autorizada</div>
-            </div>
-
-        </div>
-
-        <!-- Agent Details Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="p-4 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="font-semibold text-gray-800 dark:text-white text-base">
-                    📋 Listado de Agentes y Novedades del Día
-                </h3>
                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                    Destinado a: <strong>Secretaría General</strong>
+                    Destinado a: <strong>{{ $destinatario }}</strong>
                 </span>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold">
+                    <thead class="bg-gray-50 text-gray-700 dark:bg-gray-800 text-xs font-semibold uppercase tracking-wide dark:text-gray-200">
                         <tr>
                             <th class="px-4 py-3">Agente</th>
                             <th class="px-4 py-3">Área / Sector</th>
-                            <th class="px-4 py-3">Tipo de Novedad</th>
+                            <th class="px-4 py-3">Tipo de novedad</th>
                             <th class="px-4 py-3">Horario / Tardanza</th>
                             <th class="px-4 py-3">Observaciones / Motivo</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($detalles as $index => $det)
-                            <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-colors">
-                                
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                                 <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-900 dark:text-white">
-                                        {{ $det['agente_nombre'] }}
-                                    </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        DNI: {{ $det['agente_dni'] }}
-                                    </div>
+                                    <p class="font-medium text-gray-900 dark:text-white">{{ $det['agente_nombre'] }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">DNI: {{ $det['agente_dni'] }}</p>
                                 </td>
 
-                                <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
+                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                                     {{ $det['area_nombre'] }}
                                 </td>
 
                                 <td class="px-4 py-3">
                                     @if($this->esAdmin())
-                                        <select 
+                                        <select
                                             wire:model.live="detalles.{{ $index }}.tipo_novedad"
-                                            class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1.5 focus:ring-primary-500 focus:border-primary-500"
+                                            class="fi-input rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:border-primary-500 focus:ring-primary-500"
                                         >
-                                            <option value="presente">✅ Presente</option>
-                                            <option value="licencia">🔷 Licencia</option>
-                                            <option value="falta_justificada">⚠️ Falta Justificada</option>
-                                            <option value="ausente_sin_aviso">❌ Ausente sin aviso</option>
-                                            <option value="tardanza">⏱️ Tardanza</option>
+                                            <option value="presente">Presente</option>
+                                            <option value="licencia">Licencia</option>
+                                            <option value="falta_justificada">Falta justificada</option>
+                                            <option value="ausente_sin_aviso">Ausente sin aviso</option>
+                                            <option value="tardanza">Tardanza</option>
                                         </select>
                                     @else
                                         @php
                                             $tipo = $det['tipo_novedad'] ?? 'presente';
                                             $badgeClasses = [
-                                                'presente' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
-                                                'licencia' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-                                                'falta_justificada' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
-                                                'ausente_sin_aviso' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300',
-                                                'tardanza' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
-                                            ][$tipo] ?? 'bg-gray-100 text-gray-800';
+                                                'presente' => 'bg-success-100 text-success-800 dark:bg-success-900/40 dark:text-success-300',
+                                                'licencia' => 'bg-info-100 text-info-800 dark:bg-info-900/40 dark:text-info-300',
+                                                'falta_justificada' => 'bg-warning-100 text-warning-800 dark:bg-warning-900/40 dark:text-warning-300',
+                                                'ausente_sin_aviso' => 'bg-danger-100 text-danger-800 dark:bg-danger-900/40 dark:text-danger-300',
+                                                'tardanza' => 'bg-warning-100 text-warning-800 dark:bg-warning-900/40 dark:text-warning-300',
+                                            ][$tipo] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
 
                                             $labels = [
-                                                'presente' => '✅ Presente',
-                                                'licencia' => '🔷 Licencia',
-                                                'falta_justificada' => '⚠️ Falta Justificada',
-                                                'ausente_sin_aviso' => '❌ Ausente sin aviso',
-                                                'tardanza' => '⏱️ Tardanza',
+                                                'presente' => 'Presente',
+                                                'licencia' => 'Licencia',
+                                                'falta_justificada' => 'Falta justificada',
+                                                'ausente_sin_aviso' => 'Ausente sin aviso',
+                                                'tardanza' => 'Tardanza',
                                             ];
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClasses }}">
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClasses }}">
                                             {{ $labels[$tipo] ?? ucfirst($tipo) }}
                                         </span>
                                     @endif
 
                                     @if(!empty($det['tipo_licencia_nombre']) && $det['tipo_novedad'] === 'licencia')
-                                        <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-1">
+                                        <p class="mt-1 text-xs font-medium text-info-700 dark:text-info-400">
                                             {{ $det['tipo_licencia_nombre'] }}
-                                        </div>
+                                        </p>
                                     @endif
                                 </td>
 
                                 <td class="px-4 py-3">
                                     @if(($detalles[$index]['tipo_novedad'] ?? '') === 'tardanza')
                                         @if($this->esAdmin())
-                                            <div class="flex items-center space-x-2">
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="08:30 hs" 
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="08:30 hs"
                                                     wire:model.defer="detalles.{{ $index }}.hora_llegada"
-                                                    class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                                    class="fi-input w-28 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
                                                 >
-                                                <input 
-                                                    type="number" 
-                                                    placeholder="Min (ej. 15)" 
+                                                <input
+                                                    type="number"
+                                                    placeholder="Min (ej. 15)"
                                                     wire:model.defer="detalles.{{ $index }}.minutos_tardanza"
-                                                    class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                                    class="fi-input w-28 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
                                                 >
                                             </div>
                                         @else
-                                            <div class="text-xs text-gray-700 dark:text-gray-300">
+                                            <span class="text-sm text-gray-700 dark:text-gray-300">
                                                 {{ $det['hora_llegada'] ? $det['hora_llegada'].' hs' : '' }}
                                                 @if(!empty($det['minutos_tardanza']))
-                                                    <span class="font-medium text-purple-600 dark:text-purple-400">({{ $det['minutos_tardanza'] }} min)</span>
+                                                    <span class="font-medium">({{ $det['minutos_tardanza'] }} min)</span>
                                                 @endif
                                                 @if(empty($det['hora_llegada']) && empty($det['minutos_tardanza']))
                                                     <span class="text-gray-400">-</span>
                                                 @endif
-                                            </div>
+                                            </span>
                                         @endif
                                     @else
-                                        <span class="text-gray-400 text-xs">-</span>
+                                        <span class="text-sm text-gray-400">-</span>
                                     @endif
                                 </td>
 
                                 <td class="px-4 py-3">
                                     @if($this->esAdmin())
-                                        <input 
-                                            type="text" 
-                                            placeholder="Observaciones..." 
+                                        <input
+                                            type="text"
+                                            placeholder="Observaciones..."
                                             wire:model.defer="detalles.{{ $index }}.observaciones"
-                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs py-1 px-2"
+                                            class="fi-input w-full min-w-44 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
                                         >
                                     @else
-                                        <span class="text-xs text-gray-700 dark:text-gray-300">
+                                        <span class="text-sm text-gray-700 dark:text-gray-300">
                                             {{ $det['observaciones'] ?: '-' }}
                                         </span>
                                     @endif
                                 </td>
-
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-6 text-gray-500 dark:text-gray-400">
+                                <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                     No hay agentes registrados en el sistema.
                                 </td>
                             </tr>
@@ -366,40 +273,36 @@
                 </table>
             </div>
 
-            <div class="p-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-end gap-3">
+            <div class="mt-4 flex flex-wrap justify-end gap-2">
                 @if($this->esAdmin())
-                    <x-filament::button 
-                        color="info" 
-                        icon="heroicon-o-arrow-path" 
+                    <x-filament::button
+                        color="info"
+                        icon="heroicon-o-arrow-path"
                         wire:click="sincronizarAgentesYLicencias"
-                        class="bg-sky-500 hover:bg-sky-600 focus-visible:ring-sky-500"
                         :disabled="$this->esFechaFutura()"
                     >
-                        Sincronizar Licencias
+                        Sincronizar licencias
                     </x-filament::button>
 
-                    <x-filament::button 
-                        color="success" 
-                        icon="heroicon-o-check" 
+                    <x-filament::button
+                        color="success"
+                        icon="heroicon-o-check"
                         wire:click="guardarInforme"
-                        class="bg-emerald-500 hover:bg-emerald-600 focus-visible:ring-emerald-500"
                         :disabled="$this->esFechaFutura()"
                     >
-                        Guardar Cambios
+                        Guardar cambios
                     </x-filament::button>
                 @endif
 
-                <x-filament::button 
-                    color="warning" 
-                    icon="heroicon-o-arrow-down-tray" 
+                <x-filament::button
+                    color="warning"
+                    icon="heroicon-o-arrow-down-tray"
                     wire:click="prepararExportacion"
-                    class="shadow-sm"
                 >
                     Exportar PDF (Sec. General)
                 </x-filament::button>
             </div>
-        </div>
-
+        </x-filament::section>
     </div>
 
     <x-filament::modal id="confirmar-exportar-pdf" width="md" :visible="$mostrarModalExportar" wire:model.live="mostrarModalExportar">
@@ -412,7 +315,7 @@
                 <span class="font-medium text-gray-900 dark:text-white">{{ \Illuminate\Support\Carbon::parse($fecha)->format('d/m/Y') }}</span>
             </div>
             <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Total Plantilla</span>
+                <span class="text-gray-600 dark:text-gray-400">Total plantilla</span>
                 <span class="font-medium text-gray-900 dark:text-white">{{ count($detalles) }}</span>
             </div>
             <div class="flex justify-between">
@@ -424,7 +327,7 @@
                 <span class="font-medium text-gray-900 dark:text-white">{{ $resumenExportacion['licencia'] ?? 0 }}</span>
             </div>
             <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Falta Justificada</span>
+                <span class="text-gray-600 dark:text-gray-400">Falta justificada</span>
                 <span class="font-medium text-gray-900 dark:text-white">{{ $resumenExportacion['falta_justificada'] ?? 0 }}</span>
             </div>
             <div class="flex justify-between">

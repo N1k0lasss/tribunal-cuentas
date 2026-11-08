@@ -2,18 +2,17 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Models\Saldo;
 use App\Models\Solicitud;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-class MisSaldosStatsWidget extends BaseWidget
+class MisLicenciasStatsWidget extends BaseWidget
 {
     protected static ?int $sort = -1;
 
-    protected string $view = 'filament.admin.widgets.mis-saldos-stats-widget';
+    protected string $view = 'filament.admin.widgets.mis-licencias-stats-widget';
 
     public static function canView(): bool
     {
@@ -30,23 +29,11 @@ class MisSaldosStatsWidget extends BaseWidget
 
         $anioActual = (int) date('Y');
 
-        // Calcular licencias disponibles
-        /** @var int $diasDisponibles */
-        $saldos = Saldo::where('agente_id', $agenteId)
-            ->where('anio', $anioActual)
-            ->get();
-
-        $diasDisponibles = $saldos->sum(fn ($saldo) => $saldo->dias_otorgados - $saldo->dias_usados);
-
-        // Solicitudes aprobadas del año
-        /** @var int $solicitudesAprobadas */
         $solicitudesAprobadas = Solicitud::where('agente_id', $agenteId)
             ->where('estado', 'aprobado')
             ->whereYear('fecha_solicitud', $anioActual)
             ->count();
 
-        // Solicitudes en curso (pendientes / en revisión)
-        /** @var int $solicitudesPendientes */
         $solicitudesPendientes = Solicitud::where('agente_id', $agenteId)
             ->whereIn('estado', ['pendiente', 'en_revision'])
             ->count();
@@ -56,19 +43,8 @@ class MisSaldosStatsWidget extends BaseWidget
         $chartPendientes = $this->getMonthlyChart($agenteId, ['pendiente', 'en_revision']);
 
         return [
-            Stat::make('Días Disponibles', max(0, $diasDisponibles).' días')
-                ->description('Saldo para el año '.$anioActual.' (Clica para ver desglose)')
-                ->descriptionIcon('heroicon-m-chevron-down')
-                ->color('success')
-                ->chart([max(0, $diasDisponibles), max(0, $diasDisponibles)])
-                ->extraAttributes([
-                    'class' => 'ring-1 ring-success-600/20 cursor-pointer hover:ring-2 hover:ring-success-500/50 transition-all',
-                    'x-on:click' => 'activeTab = activeTab === \'disponibles\' ? null : \'disponibles\'',
-                    'title' => 'Haz clic para desplegar los detalles',
-                ]),
-
             Stat::make('Solicitudes Aprobadas', $solicitudesAprobadas)
-                ->description('Licencias finalizadas '.$anioActual.' (Clica para ver detalle)')
+                ->description('Licencias finalizadas '.$anioActual.' (Clic para ver detalle)')
                 ->descriptionIcon('heroicon-m-chevron-down')
                 ->color('info')
                 ->chart($chartAprobadas)
@@ -87,41 +63,6 @@ class MisSaldosStatsWidget extends BaseWidget
                     'class' => 'ring-1 ring-warning-600/20',
                 ]),
         ];
-    }
-
-    /**
-     * Desglose de saldos por tipo de licencia para el año actual.
-     *
-     * @return array<int, array{tipo: string, otorgados: int, usados: int, disponibles: int}>
-     */
-    public function getDetalleSaldos(): array
-    {
-        $agenteId = Auth::user()?->agente?->id;
-
-        if (! $agenteId) {
-            return [];
-        }
-
-        return Saldo::where('agente_id', $agenteId)
-            ->where('anio', (int) date('Y'))
-            ->get()
-            ->map(fn ($saldo) => [
-                'tipo' => $saldo->tipo_saldo,
-                'otorgados' => $saldo->dias_otorgados,
-                'usados' => $saldo->dias_usados,
-                'disponibles' => max(0, $saldo->dias_otorgados - $saldo->dias_usados),
-            ])
-            ->sortByDesc('disponibles')
-            ->values()
-            ->toArray();
-    }
-
-    /**
-     * Total de días disponibles del agente en el año actual.
-     */
-    public function getTotalDias(): int
-    {
-        return array_sum(array_column($this->getDetalleSaldos(), 'disponibles'));
     }
 
     /**
@@ -194,7 +135,6 @@ class MisSaldosStatsWidget extends BaseWidget
             $results = $query->get()
                 ->groupBy(fn ($solicitud) => $solicitud->fecha_solicitud->format('Y-m'))
                 ->map(fn ($group) => (object) ['total' => $group->count()]);
-
             for ($i = 5; $i >= 0; $i--) {
                 $date = now()->subMonths($i);
                 $key = $date->format('Y-m');
