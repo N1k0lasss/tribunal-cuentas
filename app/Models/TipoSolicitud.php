@@ -14,6 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 /**
  * @property int $id
  * @property string $nombre
+ * @property string|null $legajos_tipo_licencia
  * @property string|null $categoria
  * @property string|null $articulo_legal
  * @property int|null $duracion_maxima_dias
@@ -39,6 +40,7 @@ class TipoSolicitud extends Model
      */
     protected $fillable = [
         'nombre',
+        'legajos_tipo_licencia',
         'categoria',
         'articulo_legal',
         'duracion_maxima_dias',
@@ -76,6 +78,17 @@ class TipoSolicitud extends Model
     public function solicitudes(): HasMany
     {
         return $this->hasMany(Solicitud::class);
+    }
+
+    /**
+     * Indica si el régimen tiene un equivalente configurado en Legajos.
+     *
+     * El mapeo es un dato de negocio (no se infiere de `unidad_medida`): un
+     * tipo sin equivalente queda registrado como `no_aplica` y no se envía.
+     */
+    public function seEnviaALegajos(): bool
+    {
+        return filled($this->legajos_tipo_licencia);
     }
 
     public function getActivitylogOptions(): LogOptions

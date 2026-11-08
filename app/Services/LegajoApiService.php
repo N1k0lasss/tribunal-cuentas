@@ -7,6 +7,7 @@ use App\Models\LegajoApiCredential;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +19,7 @@ use Illuminate\Support\Facades\Log;
  * Configuración en .env: LEGAJOS_API_URL, LEGAJOS_API_TOKEN,
  * LEGAJOS_API_VERIFY_SSL y LEGAJOS_API_TIMEOUT.
  *
- * Fase actual: solo consulta de datos (GET). El alta de licencias
- * aprobadas (POST .../licencias) se incorporará en una próxima fase.
+ * Consulta datos del legajo y envía licencias aprobadas con su PDF firmado.
  */
 class LegajoApiService
 {
@@ -35,9 +35,10 @@ class LegajoApiService
     private array $memoria = [];
 
     /**
-     * Errores recientes por DNI (mensaje apto para el usuario + detalle técnico).
+     * Errores recientes por DNI (mensaje apto para el usuario, detalle técnico
+     * y código HTTP para no perder si el fallo es o no reintentable).
      *
-     * @var array<string, array{ts: float, mensaje: string, detalle: string|null}>
+     * @var array<string, array{ts: float, mensaje: string, detalle: string|null, code: int}>
      */
     private array $errores = [];
 
@@ -78,6 +79,9 @@ class LegajoApiService
                     'ts' => microtime(true),
                     'mensaje' => $e->getMessage(),
                     'detalle' => $e->detalle(),
+                    // Preservar el código es clave: si fue un 401 (credencial
+                    // rechazada), el reintento debe seguir siendo definitivo.
+                    'code' => (int) $e->getCode(),
                 ];
             }
 
@@ -94,8 +98,7 @@ class LegajoApiService
      */
     private function consultarPorDni(string $dni): ?array
     {
-        $url = rtrim((string) config('services.legajos.url'), '/')
-            .'/api/legajos/por-dni/'.urlencode($dni);
+        $url = $this->apiUrl('legajos/por-dni/'.urlencode($dni));
 
         try {
             $response = $this->client()->get($url);
@@ -113,6 +116,7 @@ class LegajoApiService
         if ($response->status() === 401) {
             throw new LegajoApiException(
                 'No se pudo consultar la API de Legajos: la credencial fue rechazada (token inválido o vencido).',
+                code: 401,
                 detalle: 'HTTP 401 para '.$url,
             );
         }
@@ -120,6 +124,7 @@ class LegajoApiService
         if (! $response->successful()) {
             throw new LegajoApiException(
                 'No se pudo consultar la API de Legajos en este momento. Vuelva a intentar en unos minutos.',
+                code: $response->status(),
                 detalle: 'HTTP '.$response->status().' para '.$url,
             );
         }
@@ -147,7 +152,11 @@ class LegajoApiService
             return;
         }
 
-        throw new LegajoApiException($error['mensaje'], detalle: $error['detalle']);
+        throw new LegajoApiException(
+            $error['mensaje'],
+            code: $error['code'],
+            detalle: $error['detalle'],
+        );
     }
 
     /**
@@ -157,7 +166,7 @@ class LegajoApiService
      */
     private function errorDeConexion(ConnectionException $e, string $contexto): LegajoApiException
     {
-        Log::warning('No se pudo conectar con la API de Legajos (' . $contexto . ').', [
+        Log::warning('No se pudo conectar con la API de Legajos ('.$contexto.').', [
             'error' => $e->getMessage(),
         ]);
 
@@ -195,7 +204,7 @@ class LegajoApiService
      */
     public function listarPersonas(): array
     {
-        $url = rtrim((string) config('services.legajos.url'), '/').'/api/personas';
+        $url = $this->apiUrl('personas');
 
         try {
             $response = $this->client()->get($url);
@@ -208,6 +217,7 @@ class LegajoApiService
         if ($response->status() === 401) {
             throw new LegajoApiException(
                 'No se pudo consultar la API de Legajos: la credencial fue rechazada (token inválido o vencido).',
+                code: 401,
                 detalle: 'HTTP 401 para '.$url,
             );
         }
@@ -215,6 +225,7 @@ class LegajoApiService
         if (! $response->successful()) {
             throw new LegajoApiException(
                 'No se pudo consultar la API de Legajos en este momento. Vuelva a intentar en unos minutos.',
+                code: $response->status(),
                 detalle: 'HTTP '.$response->status().' para '.$url,
             );
         }
@@ -269,6 +280,59 @@ class LegajoApiService
     }
 
     /**
+     * Obtiene el identificador interno del legajo activo para un DNI.
+     *
+     * @throws LegajoApiException
+     */
+    public function obtenerIdLegajo(string $dni): ?int
+    {
+        $datos = $this->obtenerPorDni($dni);
+        $id = $datos['legajo']['id'] ?? null;
+
+        return is_numeric($id) && (int) $id > 0 ? (int) $id : null;
+    }
+
+    /**
+     * Envía una licencia aprobada y su PDF firmado como multipart/form-data.
+     *
+     * @param  array<string, int|string|null>  $datos
+     *
+     * @throws LegajoApiException
+     * @throws ConnectionException
+     */
+    public function enviarLicenciaAprobada(int $legajoId, array $datos, string $rutaArchivo): Response
+    {
+        if (! is_file($rutaArchivo) || ! is_readable($rutaArchivo)) {
+            throw new LegajoApiException('No se encontró el PDF firmado para enviar.', code: 422);
+        }
+
+        $tamano = filesize($rutaArchivo);
+        $contenido = file_get_contents($rutaArchivo);
+
+        if ($tamano === false || $tamano > 10 * 1024 * 1024 || $contenido === false) {
+            throw new LegajoApiException('El PDF firmado supera el límite de 10 MB o no se pudo leer.', code: 422);
+        }
+
+        if (! str_starts_with($contenido, '%PDF-')) {
+            throw new LegajoApiException('El documento firmado no tiene un formato PDF válido.', code: 422);
+        }
+
+        $url = $this->apiUrl('legajos/'.$legajoId.'/licencias');
+
+        // El POST no se reintenta en el cliente HTTP: el outbox y el job son
+        // los únicos dueños de la política de reintentos. Reintentar un POST
+        // no idempotente puede duplicar la licencia o generar un falso 409.
+        //
+        // La clave es estable por solicitud: si Legajos implementa
+        // `Idempotency-Key`, un reintento devuelve el registro existente en
+        // lugar de crear otro. Si la ignora, no afecta el funcionamiento.
+        return $this->client(reintentar: false)
+            ->withHeaders(['Idempotency-Key' => 'licencia-'.$datos['solicitud_id']])
+            ->attach('archivo', $contenido, 'solicitud_'.$datos['solicitud_id'].'.pdf')
+            ->post($url, array_filter($datos, static fn (mixed $valor): bool => $valor !== null));
+    }
+
+    /**
      * Fecha de ingreso del legajo activo (fuente para calcular antigüedad).
      *
      * @throws LegajoApiException
@@ -316,7 +380,7 @@ class LegajoApiService
         return (int) $fecha->{$metodo}(now());
     }
 
-    private function client(): PendingRequest
+    private function client(bool $reintentar = true): PendingRequest
     {
         if (! $this->configurado()) {
             throw new LegajoApiException(
@@ -330,17 +394,19 @@ class LegajoApiService
             // timeout acota el caso "conecta pero no responde". Entre los dos
             // y la memoria de errores, la ficha no puede colgarse 30 s.
             ->connectTimeout((int) config('services.legajos.connect_timeout', 3))
-            ->timeout((int) config('services.legajos.timeout', 10))
-            // Reintenta solo ante cortes de conexión o errores 5xx (se detectaron
-            // cortes transitorios al probar); los 4xx (404/401) se resuelven abajo
-            // sin reintentar.
-            ->retry(
+            ->timeout((int) config('services.legajos.timeout', 10));
+
+        if ($reintentar) {
+            // Solo las consultas GET reintentan acá. El POST de licencias
+            // depende del job/outbox para no duplicar envíos.
+            $client = $client->retry(
                 times: 2,
                 sleepMilliseconds: 500,
                 when: fn ($exception) => ! $exception instanceof RequestException
                     || $exception->response->serverError(),
                 throw: false,
             );
+        }
 
         // El servidor de Legajos usa certificado autofirmado.
         if (! config('services.legajos.verify', true)) {
@@ -356,6 +422,14 @@ class LegajoApiService
     private function configurado(): bool
     {
         return filled(config('services.legajos.url')) && filled(LegajoApiCredential::currentToken());
+    }
+
+    private function apiUrl(string $ruta): string
+    {
+        $baseUrl = rtrim((string) config('services.legajos.url'), '/');
+        $baseUrl = preg_replace('#/api$#i', '', $baseUrl) ?? $baseUrl;
+
+        return $baseUrl.'/api/'.ltrim($ruta, '/');
     }
 
     /**

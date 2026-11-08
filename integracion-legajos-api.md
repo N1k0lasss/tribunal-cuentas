@@ -21,7 +21,7 @@ Se elige **API** en lugar de conexión directa a la base de datos porque cada ba
 
 - **Administración del token:** un usuario con rol `administrador` puede actualizar la credencial desde «Configuración → API de Legajos» en el panel. Se guarda cifrada en la base de datos; la pantalla muestra el momento de carga y estima el vencimiento a las 24 horas, sin volver a mostrar el token. `LEGAJOS_API_TOKEN` en `.env` se conserva como respaldo hasta que se cargue una credencial desde el panel. La actualización debe hacerse cuando Legajos entregue el nuevo token; no hay renovación automática. El vencimiento mostrado es estimado desde la carga y puede diferir si Legajos emitió el token antes.
 
-- **Formato:** REST + JSON.
+- **Formato:** consulta REST + JSON; alta de licencia en `multipart/form-data`.
 - **Autenticación:** token por API key enviado en el header `Authorization: Bearer <token>` (o `X-API-KEY: <token>`, a definir).
 - **Identificación del agente:** el punto de unión entre ambos sistemas es el **DNI** de la persona (campo `dni`, único en `personas`). El Sistema de Licencias guarda el `dni` de cada agente en su tabla `agentes`.
 - **Zona horaria (acuerdo fijo):** todos los timestamps se envían **SIEMPRE** en `America/Argentina/Buenos_Aires` (GMT-3). Argentina no tiene horario de verano, así que no hay cambios estacionales. Las fechas puras (inicio/fin de licencia) van como `YYYY-MM-DD` sin hora; los momentos (fecha de aprobación) van como `YYYY-MM-DD HH:MM:SS` en hora argentina. **No se envía nada en UTC**: si un equipo guarda en UTC internamente, debe convertir a hora argentina antes de enviar.
@@ -41,10 +41,10 @@ Hoy el Sistema de Licencias ya guarda localmente en su tabla `agentes` datos com
 
 El caso crítico es: **una licencia se aprueba en el Sistema de Licencias, pero el envío al legajo falla** (API caída, timeout, token inválido). Propuesta acordada:
 
-- Si el `POST` de licencia aprobada falla, **la aprobación no se revierte** (en Licencias queda aprobada igual), pero el registro queda en estado **"pendiente de sincronizar"** en el Sistema de Licencias.
-- El Sistema de Licencias **reintenta automáticamente** los envíos pendientes (por ejemplo: cada 5 minutos, con reintentos espaciados 5 → 15 → 30 → 60 minutos) hasta lograrlo.
-- Mientras haya envíos pendientes, se muestra un **aviso visible** en el panel (ej: "3 licencias sin registrar en el Legajo") para que un administrador pueda reintentarlo manualmente si hace falta.
-- **Importante para el Sistema de Legajos:** el endpoint debe ser **idempotente** (no duplicar). Para eso, el Sistema de Licencias envía un identificador único origen (`id_solicitud`) igual al id de su solicitud. Si el Sistema de Legajos ya recibió esa licencia, debe responder con la existente (o `200/409 con ok:true`) sin crear un registro nuevo en `documentos`.
+- Si el `POST` de licencia aprobada falla, **la aprobación no se revierte**; el envío permanece en la bandeja local.
+- El Sistema de Licencias reintenta automáticamente los errores transitorios con esperas de 5 → 15 → 30 → 60 minutos.
+- El administrador puede consultar pendientes, errores y conflictos en «Configuración → Envíos de licencias». Un HTTP `409` indica que el `solicitud_id` ya existe con otro legajo, otros datos o distinto archivo; no se reintenta automáticamente y la discrepancia debe resolverse con Legajos.
+- **Idempotencia confirmada por Legajos:** un reenvío idéntico (mismo legajo, datos y archivo) responde `200` sin duplicar; una licencia nueva responde `201`.
 
 ---
 
@@ -121,33 +121,27 @@ Registra la licencia que fue aprobada en el Sistema de Licencias. El Sistema de 
 POST /api/legajos/{legajo_id}/licencias
 ```
 
-**Body (JSON)**
+**Formato: `multipart/form-data`**
 
-```json
-{
-  "id_solicitud": 125,
-  "tipo_licencia": "Licencia ordinaria",
-  "fecha_inicio": "2026-10-01",
-  "fecha_fin": "2026-10-14",
-  "dias_solicitados": 14,
-  "motivo": "Licencia anual ordinaria",
-  "nro_resolucion": 123,
-  "fecha_aprobacion": "2026-09-20"
-}
-```
+El identificador de ruta es el `id` interno del legajo devuelto por la consulta por DNI (no `num_legajo`). El PDF va en el campo `archivo`.
 
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---|---|
-| `id_solicitud` | int | sí | **Identificador único de origen** (id de la solicitud en el Sistema de Licencias). Clave de idempotencia: si ya se registró, no duplicar |
-| `tipo_licencia` | string | sí | Nombre del tipo de solicitud (ej. "Licencia ordinaria", "Salud y Maternidad") |
-| `fecha_inicio` | date | sí | Fecha de inicio de la licencia |
-| `fecha_fin` | date | sí | Fecha de fin de la licencia |
-| `dias_solicitados` | int | sí | Cantidad de días |
-| `motivo` | string | no | Motivo declarado |
-| `nro_resolucion` | int | no | Número de resolución que aprobó la licencia |
-| `fecha_aprobacion` | date | sí | Fecha en que se aprobó la licencia (hora argentina) |
+| `archivo` | PDF, máximo 10 MB | sí | PDF final firmado de la solicitud |
+| `solicitud_id` | int, mínimo 1 | sí | Identificador único de origen en el Sistema de Licencias |
+| `tipo_licencia` | string, máximo 100 | sí | Nombre del tipo de solicitud |
+| `fecha_inicio` | `Y-m-d` | sí | Fecha de inicio |
+| `fecha_fin` | `Y-m-d` | sí | Fecha de fin, igual o posterior al inicio |
+| `dias_solicitados` | int, 1–366 | sí | Cantidad de días calculada en Licencias |
+| `motivo` | string, máximo 500 | no | Motivo declarado |
+| `nro_resolucion` | string, máximo 50 | no | Número/código de resolución |
+| `fecha_aprobacion` | `Y-m-d` | sí | Fecha en que se aprobó la licencia |
 
-**Respuesta exitosa — `201 Created`**
+Cada envío incluye la cabecera `Idempotency-Key: licencia-<solicitud_id>`, con el mismo valor que el campo `solicitud_id`. Pedimos que el endpoint la use (o que, como mínimo, `solicitud_id` sea único) para que un reintento no duplique la licencia.
+
+El envío queda registrado en una bandeja de salida local antes de intentar la llamada, para que un corte de red no revierta la aprobación. Los errores transitorios se reintentan automáticamente; el administrador puede revisar el estado en «Configuración → Envíos de licencias».
+
+**Respuestas que el cliente debe aceptar**
 
 ```json
 {
@@ -157,29 +151,30 @@ POST /api/legajos/{legajo_id}/licencias
 }
 ```
 
+El cliente considera `201 Created` y `200 OK` como enviados. Un `409 Conflict` queda en estado de conflicto para resolver diferencias; no equivale a un envío exitoso.
+
 **Errores**
 
 - `404 Not Found` → `legajo_id` inexistente.
 - `422 Unprocessable Entity` → validación fallida (falta un campo obligatorio, fechas inválidas, etc.). Se devuelve `{"message": "...", "errors": {...}}`.
 - `401 Unauthorized` → token inválido o faltante.
+- `409 Conflict` → el `solicitud_id` ya existe, pero con otro legajo, otros datos o distinto archivo.
 
 ---
 
-## 4. Preguntas a resolver en conjunto
+## 4. Acuerdos y confirmaciones pendientes con Legajos
 
-1. ¿Dónde va a vivir la API? ¿Es una nueva ruta en el Sistema de Legajos o un servicio aparte?
+1. La ruta acordada para el alta es `POST /api/legajos/{legajo_id}/licencias`; `{legajo_id}` es el ID interno.
 2. ¿Qué mecanismo de autenticación prefieren (Bearer token, API key en header, token en el path tipo `?api_token=`)?
-3. ¿Necesitan que el alta de licencia llegue con algún formato documental específico (tipo de documento, PDF adjunto, etc.) además de los campos JSON?
-4. ¿El sistema de Legajos expondrá también **listado** de licencias de un agente (para consulta histórica), o solo el alta?
-5. ¿Cuál es la URL de producción y la de test? (Nosotros la guardamos en nuestro `.env`.)
+3. ¿La URL `https://10.0.7.6` es un ambiente de prueba o producción?
 
 ---
 
 ## 5. Lo que haremos de nuestra parte
 
 - Guardar en nuestro `.env`: `URL` base de la API y `token` de autenticación.
-- Crear un servicio interno (`App\Services\LegajoApiService`) que centralice las llamadas.
+- Enviar el PDF firmado final y los datos como `multipart/form-data`, usando el `id` interno del legajo y el campo `solicitud_id`.
 - **Usar el legajo como fuente de verdad en vivo**: consultar `GET .../por-dni/{dni}` para obtener los datos del agente (no editar manualmente cargo/categoría/área/fecha de ingreso a partir de datos stale locales).
-- Llamar a `POST .../licencias` automáticamente cuando una solicitud pase a estado `aprobado`, enviando `id_solicitud` como clave de idempotencia.
-- **Reintentos y avisos**: registrar los envíos fallidos en estado "pendiente de sincronizar", reintentar automáticamente, y mostrar un aviso al administrador mientras haya pendientes.
+- Programar el envío en una bandeja de salida persistente al completarse la última firma; no bloquear ni revertir la aprobación si Legajos no responde.
+- **Reintentos y seguimiento**: reintentar errores transitorios cada 5, 15, 30 y 60 minutos; mostrar los estados y errores al administrador. Los HTTP 409 se revisan con Legajos para corregir la discrepancia.
 - Manejar los errores de la API (caída del servicio, timeout, token inválido) sin romper el flujo del Sistema de Licencias.

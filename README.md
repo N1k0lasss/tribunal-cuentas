@@ -123,7 +123,7 @@ El sistema consulta la API del **Sistema de Legajos** como fuente de verdad de l
 ### 1. Configurar credenciales en `.env`
 
 ```dotenv
-LEGAJOS_API_URL=https://<host-de-legajos>
+LEGAJOS_API_URL=https://<host-de-legajos>   # acepta también la base con /api
 LEGAJOS_API_TOKEN=<token-de-la-api>
 LEGAJOS_API_VERIFY_SSL=false   # el certificado de la API es autofirmado
 LEGAJOS_API_TIMEOUT=10
@@ -150,7 +150,45 @@ php artisan legajos:sync --dni=22456700
 
 Si la API no responde, el sistema sigue funcionando con los datos locales de la tabla `agentes`.
 
-### 3. Migraciones de la integración
+### 3. Envío de licencias aprobadas
+
+Al completarse la última firma, el sistema guarda el envío con el PDF firmado final y **encola** el job `EnviarLicenciaALegajos` con `->afterCommit()`: la aprobación responde sin esperar a Legajos y, si la transacción revierte, no se encola nada. Un error de red no revierte la aprobación.
+
+El job corre en la cola `legajos` y es el dueño de los reintentos (5 intentos con esperas de 5, 15, 30 y 60 minutos por defecto). Se configura con:
+
+```dotenv
+LEGAJOS_ENVIO_QUEUE=legajos
+LEGAJOS_ENVIO_TRIES=5
+LEGAJOS_ENVIO_TIMEOUT=30
+LEGAJOS_ENVIO_UNIQUE_FOR=7200
+```
+
+> ⚠️ **Es obligatorio tener un worker de cola activo.** Sin worker, los envíos quedan encolados en la tabla `jobs` y no se ejecutan. En desarrollo:
+
+```bash
+php artisan queue:work --queue=legajos,default
+```
+
+`composer dev` ya levanta el worker (`queue:listen --queue=legajos,default`), el planificador y Vite.
+
+En producción el worker debe estar supervisado para que se reinicie solo:
+
+- **Linux**: Supervisor o una unidad systemd con `Restart=always` ejecutando `php artisan queue:work --queue=legajos,default --sleep=3`.
+- **Windows**: NSSM o una Tarea Programada al inicio del sistema con el mismo comando.
+
+El planificador actúa como **red de seguridad del outbox** (no como el mecanismo principal): cada cinco minutos ejecuta `php artisan app:enviar-licencias-legajos`, que reencola los envíos pendientes vencidos y recupera los que quedaron en `procesando` por una interrupción. Debe estar activo con `php artisan schedule:run` cada minuto (cron del servidor) o `php artisan schedule:work` en desarrollo. El comando también se puede ejecutar manualmente.
+
+Los estados de cada envío se consultan en «Configuración → Envíos de licencias». Desde ahí también se puede **reintentar manualmente** un envío en `error` o en `conflicto`: el reintento se encola al instante y reinicia el ciclo de reintentos. Para los `409`, primero hay que resolver la discrepancia con Legajos y luego reintentar. Los HTTP 409 indican que ya existe el mismo `solicitud_id` con un legajo, datos o archivo distinto: quedan en revisión para resolver la discrepancia con Legajos y no se marcan como enviados. Si se confirma en Legajos que la licencia **sí** quedó registrada (por ejemplo, porque se perdió la respuesta `201`), el panel permite **Marcar enviado** sin volver a llamar a la API.
+
+#### Tipos sin equivalente en Legajos
+
+El envío se decide por el campo `legajos_tipo_licencia` de cada régimen legal («Configuración → Régimen Legal»), **no** por la unidad de medida. Si está vacío, la aprobación se registra igual, pero el envío queda en estado **`no_aplica`** y no se llama a la API: así no se generan errores `422` que parezcan fallas del sistema. Los cuatro tipos medidos en horas (franquicias y tardanzas) quedan sin mapeo hasta acordar su equivalencia con Legajos. Cuando se acuerde, se carga el equivalente en el régimen legal y los envíos nuevos se envían normalmente; los `no_aplica` anteriores se pueden reencolar desde el panel. Al reencolarlos se recalcula el tipo equivalente: si el campo sigue vacío, no se envía y el panel avisa.
+
+#### Idempotencia
+
+Cada POST incluye la cabecera `Idempotency-Key: licencia-{solicitud_id}`. Si Legajos la implementa, un reintento devuelve el registro existente en vez de duplicarlo. Si no la implementa, el contrato igual exige que `solicitud_id` sea único. El cliente HTTP no reintenta el POST por su cuenta: los reintentos los maneja el job con backoff, para evitar duplicados por doble capa.
+
+### 4. Migraciones de la integración
 
 Las migraciones ya están en el repo; se aplican con `php artisan migrate` (o `migrate:fresh` en un entorno limpio). Las específicas de la integración son:
 
