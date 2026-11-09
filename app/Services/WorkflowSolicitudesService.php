@@ -2,17 +2,21 @@
 
 namespace App\Services;
 
+use App\Jobs\EnviarLicenciaALegajos;
 use App\Models\Aprobacion;
 use App\Models\Documento;
+use App\Models\LegajoLicenciaEnvio;
 use App\Models\Solicitud;
 use App\Models\User;
-use App\Notifications\SolicitudSaludMaternidadAprobadaNotification;
 use App\Notifications\SolicitudResueltaNotification;
+use App\Notifications\SolicitudSaludMaternidadAprobadaNotification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class WorkflowSolicitudesService
 {
@@ -166,26 +170,72 @@ class WorkflowSolicitudesService
             ]);
         }
 
-        $aprobacion = $this->resolver($solicitud, $actor, $estado, $observacion);
+        $envioPendiente = null;
 
-        if (filled($numeroResolucion)) {
-            // El número puede venir desde el modal (compatibilidad) o ya estar
-            // persistido por el campo del formulario. En ambos casos se guarda;
-            // si la resolución ya existe, se respetan su fecha y su detalle.
-            $existente = $solicitud->resolucion()->first();
+        DB::transaction(function () use (
+            $solicitud,
+            $actor,
+            $estado,
+            $observacion,
+            $numeroResolucion,
+            $documentoFirmado,
+            &$envioPendiente,
+        ): void {
+            $aprobacion = $this->resolver($solicitud, $actor, $estado, $observacion);
 
-            $solicitud->resolucion()->updateOrCreate(
-                ['solicitud_id' => $solicitud->id],
-                [
-                    'numero' => $numeroResolucion,
-                    'fecha_emision' => $existente?->fecha_emision ?? now(),
-                    'detalle' => $existente?->detalle ?? 'Creada automáticamente al aprobar la solicitud.',
-                ]
-            );
-        }
+            if (filled($numeroResolucion)) {
+                // El número puede venir desde el modal (compatibilidad) o ya estar
+                // persistido por el campo del formulario. En ambos casos se guarda;
+                // si la resolución ya existe, se respetan su fecha y su detalle.
+                $existente = $solicitud->resolucion()->first();
 
-        if ($estado === 'aprobado' && filled($documentoFirmado)) {
-            $this->registrarDocumentoFirmado($solicitud, $aprobacion, $documentoFirmado, $actor);
+                $solicitud->resolucion()->updateOrCreate(
+                    ['solicitud_id' => $solicitud->id],
+                    [
+                        'numero' => $numeroResolucion,
+                        'fecha_emision' => $existente?->fecha_emision ?? now(),
+                        'detalle' => $existente?->detalle ?? 'Creada automáticamente al aprobar la solicitud.',
+                    ]
+                );
+            }
+
+            if ($estado === 'aprobado' && filled($documentoFirmado)) {
+                $this->registrarDocumentoFirmado($solicitud, $aprobacion, $documentoFirmado, $actor);
+            }
+
+            $solicitud->refresh();
+
+            if ($solicitud->estado === Solicitud::ESTADO_APROBADO) {
+                $documentoFinal = $solicitud->documentoFirmadoVigente();
+
+                if ($documentoFinal !== null) {
+                    $envioPendiente = app(LegajoLicenciaEnvioService::class)->programar($solicitud->loadMissing([
+                        'agente',
+                        'tipoSolicitud',
+                        'resolucion',
+                    ]), $documentoFinal);
+                }
+            }
+        });
+
+        // El envío se encola recién después del commit: si la aprobación
+        // revierte, no se envía nada. El planificador queda como red de
+        // seguridad para envíos que no hayan podido encolarse o reintentarse.
+        if ($envioPendiente?->estado === LegajoLicenciaEnvio::ESTADO_PENDIENTE) {
+            try {
+                EnviarLicenciaALegajos::dispatch($envioPendiente->id)->afterCommit();
+            } catch (Throwable $exception) {
+                Log::warning('No se pudo encolar el envío de la licencia; quedará pendiente para el planificador.', [
+                    'envio_id' => $envioPendiente->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        } elseif ($envioPendiente?->estado === LegajoLicenciaEnvio::ESTADO_NO_APLICA) {
+            Log::info('La licencia aprobada no se envía a Legajos: el tipo de solicitud no tiene equivalente configurado.', [
+                'envio_id' => $envioPendiente->id,
+                'solicitud_id' => $envioPendiente->solicitud_id,
+                'tipo_solicitud_id' => $solicitud->tipo_solicitud_id,
+            ]);
         }
 
         $solicitud->load('aprobaciones');

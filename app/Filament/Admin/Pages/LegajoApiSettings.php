@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Models\LegajoApiCredential;
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,9 @@ class LegajoApiSettings extends Page
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->hasRole('administrador') ?? false;
+        $usuario = Auth::user();
+
+        return $usuario instanceof User && $usuario->hasRole('administrador');
     }
 
     public function guardar(): void

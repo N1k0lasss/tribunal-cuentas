@@ -41,6 +41,11 @@ class TipoSolicitudResource extends Resource
                 TextInput::make('nombre')
                     ->required()
                     ->maxLength(255),
+                TextInput::make('legajos_tipo_licencia')
+                    ->label('Tipo equivalente en Legajos')
+                    ->maxLength(100)
+                    ->helperText('Nombre o código con el que Legajos registra este tipo. Si se deja vacío, la licencia no se envía a Legajos.')
+                    ->placeholder('Ej.: Receso de Enero'),
                 TextInput::make('categoria')
                     ->label('Categoría')
                     ->maxLength(255),
@@ -65,6 +70,10 @@ class TipoSolicitudResource extends Resource
                 TextColumn::make('nombre')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('legajos_tipo_licencia')
+                    ->label('Tipo en Legajos')
+                    ->placeholder('No se envía')
+                    ->toggleable(),
                 TextColumn::make('categoria')
                     ->label('Categoría')
                     ->sortable(),

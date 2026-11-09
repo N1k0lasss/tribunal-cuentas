@@ -382,6 +382,10 @@ class TipoSolicitudSeeder extends Seeder
         ];
 
         foreach ($tipos as $tipo) {
+            // Mapeo explícito con Legajos: los tipos en días se envían con su
+            // nombre; los tipos en horas quedan sin equivalente (no se envían)
+            // hasta acordar el mapeo con el equipo de Legajos.
+            $tipo['legajos_tipo_licencia'] = $tipo['unidad_medida'] === 'dias' ? $tipo['nombre'] : null;
             $tipo['created_at'] = $now;
             $tipo['updated_at'] = $now;
             DB::table('tipo_solicituds')->insert($tipo);

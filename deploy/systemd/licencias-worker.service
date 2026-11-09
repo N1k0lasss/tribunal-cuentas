@@ -1,0 +1,14 @@
+[Unit]
+Description=Worker de colas - Sistema de Licencias (Legajos)
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/licencias
+ExecStart=/usr/bin/php artisan queue:work --queue=legajos,default --tries=1 --max-time=3600 --sleep=3
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

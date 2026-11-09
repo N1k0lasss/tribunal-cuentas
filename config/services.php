@@ -56,6 +56,15 @@ return [
         'timeout' => env('LEGAJOS_API_TIMEOUT', 10),
         // Acota el caso "host caído" (no llega a establecer conexión).
         'connect_timeout' => env('LEGAJOS_API_CONNECT_TIMEOUT', 3),
+        // Envío de licencias aprobadas (outbox + job en cola).
+        'envio' => [
+            'queue' => env('LEGAJOS_ENVIO_QUEUE', 'legajos'),
+            'tries' => (int) env('LEGAJOS_ENVIO_TRIES', 5),
+            'timeout' => (int) env('LEGAJOS_ENVIO_TIMEOUT', 30),
+            // Cubre la ventana máxima de reintentos (5+15+30+60 minutos).
+            'unique_for' => (int) env('LEGAJOS_ENVIO_UNIQUE_FOR', 7200),
+            'reintentos' => [300, 900, 1800, 3600],
+        ],
     ],
 
 ];
