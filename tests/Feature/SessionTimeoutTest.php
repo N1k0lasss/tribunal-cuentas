@@ -44,6 +44,21 @@ test('el login NO muestra el aviso en un acceso normal', function () {
     $response->assertDontSee(SessionTimeout::MENSAJE);
 });
 
+test('el login muestra el aviso cuando viene por flash de sesión', function () {
+    $response = $this->withSession(['mensaje' => SessionTimeout::MENSAJE])
+        ->get(route('filament.admin.auth.login'));
+
+    $response->assertOk();
+    $response->assertSee(SessionTimeout::MENSAJE);
+});
+
+test('el aviso de sesión expirada es accesible', function () {
+    $response = $this->get(route('filament.admin.auth.login').'?sesion_expirada=1');
+
+    $response->assertOk();
+    $response->assertSee('role="alert"', false);
+});
+
 test('mantiene la sesión cuando hubo actividad reciente', function () {
     $user = User::factory()->create();
 

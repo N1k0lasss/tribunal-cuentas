@@ -4,10 +4,11 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\AgenteInfoWidget;
 use App\Filament\Admin\Widgets\LicenseStatsWidget;
-use App\Filament\Admin\Widgets\MisSaldosStatsWidget;
+use App\Filament\Admin\Widgets\MisLicenciasStatsWidget;
 use App\Filament\Admin\Widgets\ProximaFechaWidget;
 use App\Filament\Admin\Widgets\SolicitudesPendientesWidget;
 use App\Filament\Admin\Widgets\UsoLicenciasChartWidget;
+use App\Filament\Auth\Pages\PasswordRecovery;
 use App\Http\Middleware\BlockOutsideWorkingHours;
 use App\Http\Middleware\SessionTimeout;
 use Filament\Http\Middleware\Authenticate;
@@ -43,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->profile()
-            ->passwordReset()
+            ->passwordReset(PasswordRecovery::class)
             // ->emailVerification() // Desactivado temporalmente
             ->brandName('TCSE Licencias')
             ->brandLogo(fn () => view('filament.admin.logo'))
@@ -84,7 +85,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AgenteInfoWidget::class,
-                MisSaldosStatsWidget::class,
+                MisLicenciasStatsWidget::class,
                 LicenseStatsWidget::class,
                 SolicitudesPendientesWidget::class,
                 UsoLicenciasChartWidget::class,

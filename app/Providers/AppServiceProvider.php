@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\SmsSender;
 use App\Hashing\Sha256Hasher;
+use App\Http\Middleware\SessionTimeout;
 use App\Listeners\LogSuccessfulLogin;
 use App\Models\Solicitud;
 use App\Observers\SolicitudObserver;
@@ -46,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureDefaults();
 
+        self::ensureSessionOutlivesInactivity();
+
         Event::listen(
             Login::class,
             LogSuccessfulLogin::class
@@ -60,6 +63,24 @@ class AppServiceProvider extends ServiceProvider
             fn (): string => auth()->check()
                 ? View::make('components.session-timeout-script')->render()
                 : '',
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+            function (): string {
+                // Muestra el aviso de "sesión expirada por inactividad" en el login.
+                // Se toma del flash o, si la página de login ya consumió el flash
+                // con alguna petición Livewire, del parámetro de la URL.
+                $mensaje = session('mensaje');
+
+                if (! $mensaje && request()->boolean('sesion_expirada')) {
+                    $mensaje = SessionTimeout::MENSAJE;
+                }
+
+                return $mensaje
+                    ? View::make('filament.auth.session-expired-message', ['mensaje' => $mensaje])->render()
+                    : '';
+            },
         );
 
         Event::listen(Login::class, function ($event) {

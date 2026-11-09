@@ -69,7 +69,6 @@ class BlockOutsideWorkingHours
         $criticalPaths = [
             $filamentPath . '/solicituds',
             $filamentPath . '/aprobacions',
-            $filamentPath . '/saldos',
             $filamentPath . '/documentos',
         ];
 
@@ -114,7 +113,6 @@ class BlockOutsideWorkingHours
                     if ($class) {
                         if (str_contains($class, 'Solicitud') || 
                             str_contains($class, 'Aprobacion') || 
-                            str_contains($class, 'Saldo') || 
                             str_contains($class, 'Documento') || 
                             str_contains($class, 'SolicitudesPendientesWidget')) {
                             return true;
@@ -128,7 +126,6 @@ class BlockOutsideWorkingHours
             if ($content && (
                 str_contains($content, 'Solicitud') || 
                 str_contains($content, 'Aprobacion') || 
-                str_contains($content, 'Saldo') || 
                 str_contains($content, 'Documento') || 
                 str_contains($content, 'SolicitudesPendientesWidget')
             )) {

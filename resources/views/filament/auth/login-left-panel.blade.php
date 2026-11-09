@@ -632,4 +632,153 @@
     }
     .fi-simple-main-ctn { justify-content: center; }
 }
+
+/* ── Recuperación de contraseña ─────────────────── */
+.tcse-recovery {
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 auto;
+    color: #1f2937;
+    font-family: 'Inter', sans-serif;
+}
+
+.tcse-recovery__header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.tcse-recovery__icon {
+    display: flex;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #1a365d;
+    background: rgba(26, 54, 93, 0.08);
+}
+
+.tcse-recovery__icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+.tcse-recovery__header h1 {
+    margin: 0;
+    color: #1a365d;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.tcse-recovery__header p {
+    margin: 0.45rem 0 0;
+    color: #64748b;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.tcse-recovery__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tcse-recovery__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.tcse-recovery__field > span {
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tcse-recovery__control {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.55rem;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tcse-recovery__control:focus {
+    border-color: #6b1c5e;
+    box-shadow: 0 0 0 3px rgba(107, 28, 94, 0.12);
+}
+
+.tcse-recovery__code {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+}
+
+.tcse-recovery__button {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: linear-gradient(135deg, #1a365d, #6b1c5e);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.tcse-recovery__button:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.tcse-recovery__error {
+    color: #b42318;
+    font-size: 0.75rem;
+}
+
+.tcse-recovery__back {
+    display: block;
+    margin-top: 1.15rem;
+    color: #1a365d;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+
+.tcse-recovery__back:hover {
+    color: #6b1c5e;
+    text-decoration: underline;
+}
+
+.dark .tcse-recovery {
+    color: #e5e7eb;
+}
+
+.dark .tcse-recovery__header h1,
+.dark .tcse-recovery__field > span {
+    color: #e5e7eb;
+}
+
+.dark .tcse-recovery__header p {
+    color: #94a3b8;
+}
+
+.dark .tcse-recovery__control {
+    border-color: #475569;
+    background: #1e293b;
+    color: #e5e7eb;
+}
 </style>

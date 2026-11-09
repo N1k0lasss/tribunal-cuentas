@@ -23,7 +23,6 @@ class WorkflowSolicitudesService
     public function __construct(
         private readonly DelegacionService $delegacionService,
         private readonly WorkflowAuditoriaService $auditoriaService,
-        private readonly SaldoLicenciaService $saldoLicenciaService,
     ) {}
 
     public function resolver(Solicitud $solicitud, User $actor, string $estado, ?string $observacion = null): Aprobacion
@@ -83,7 +82,6 @@ class WorkflowSolicitudesService
 
                 if ($siguienteEtapa === null) {
                     $solicitud->update(['estado' => Solicitud::ESTADO_APROBADO]);
-                    $this->saldoLicenciaService->consumirSaldoPorAprobacion($solicitud);
                 } else {
                     $solicitud->update(['estado' => Solicitud::ESTADO_EN_REVISION]);
                 }
